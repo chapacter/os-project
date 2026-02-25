@@ -1,76 +1,15 @@
 import sys
-from sprites import *
 
+import pygame
 
-class Map:
-    def __init__(self):
-        self.MAP_WIDTH = int(WIN_WIDTH / TILESIZE * 1.3) #100
-        self.MAP_HEIGHT = int(WIN_HEIGHT / TILESIZE)  # 50
-        self.digger = {
-            'wallCountdown': int(self.MAP_WIDTH * self.MAP_HEIGHT / 2),
-            'padding': 2,
-            'x': int(self.MAP_WIDTH / 2),
-            'y': int(self.MAP_HEIGHT / 2)
-        }
-        self.spawn_count = {
-            'P': 1,
-            'W': 1,
-            'E': random.randint(10, 20)
-        }
+from entity.enemy import Enemy
+from entity.player import Player
+from items.weapon import Weapon
+from map import Map
+from map.tilemap import Block, Ground
+from settings import *
+from sprites import Spritesheet
 
-    def objectsSpawn(self, obj):
-        while self.spawn_count[f'{obj}'] > 0:
-            self.y1 = random.randint(self.digger['padding'], self.MAP_HEIGHT - self.digger['padding'])
-            self.x1 = random.randint(self.digger['padding'], self.MAP_WIDTH - self.digger['padding'])
-            if self.level[self.y1][self.x1] == ' ':
-                self.level[self.y1][self.x1] = f'{obj}'
-                self.spawn_count[f'{obj}'] -= 1
-
-    def move(self):
-        self.roll = random.randint(1, 4)
-
-        if self.roll == 1 and self.x > self.digger['padding']:
-            self.digger['x'] -= 1
-        if self.roll == 2 and self.x < self.MAP_WIDTH - self.digger['padding'] - 1:
-            self.digger['x'] += 1
-        if self.roll == 3 and self.y > self.digger['padding']:
-            self.digger['y'] -= 1
-        if self.roll == 4 and self.y < self.MAP_HEIGHT - self.digger['padding'] - 1:
-            self.digger['y'] += 1
-
-    def getLevelRow(self):
-        return ['B'] * self.MAP_WIDTH
-
-    def create(self):
-        self.level = [self.getLevelRow() for _ in range(self.MAP_HEIGHT)]
-        while self.digger['wallCountdown'] >= 0:
-            self.x = self.digger['x']
-            self.y = self.digger['y']
-
-            self.move()
-
-            if self.level[self.y][self.x] == 'B':
-                self.level[self.y][self.x] = ' '
-                self.digger['wallCountdown'] -= 1
-
-            if self.digger['wallCountdown'] < 0:
-                self.level[int(self.MAP_HEIGHT / 2)][int(self.MAP_WIDTH / 2)] = 'P'
-
-                self.objectsSpawn('E')
-                self.objectsSpawn('W')
-        # for row in self.level:
-        #     print(''.join(row))
-
-
-class Spritesheet:
-    def __init__(self, path):
-        self.spritesheet = pygame.image.load(path).convert()
-
-    def get_image(self, x, y, width, height):
-        sprite = pygame.Surface([width, height])
-        sprite.blit(self.spritesheet, (0, 0), (x, y, width, height))
-        sprite.set_colorkey(BLACK)
-        return sprite
 
 class Game:
     def __init__(self):
@@ -86,10 +25,14 @@ class Game:
         self.enemy_collided = False
         self.block_collided = False
 
-    def createTileMap(self):
-        map = Map()
-        map.create()
-        for i, row in enumerate(map.level):
+    def create_tile_map(self):
+        map_width = int(WIN_WIDTH / TILESIZE * 1.3)
+        map_height = int(WIN_HEIGHT / TILESIZE)
+
+        map_gen = Map(map_width, map_height)
+        level = map_gen.create()
+
+        for i, row in enumerate(level):
             for j, column in enumerate(row):
                 Ground(self, j, i)
                 if column == 'B':
@@ -114,7 +57,7 @@ class Game:
         self.characters = pygame.sprite.LayeredUpdates()
         # self.explosion = pygame.sprite.LayeredUpdates()
         # self.tree = pygame.sprite.LayeredUpdates()
-        self.createTileMap()
+        self.create_tile_map()
 
     def update(self):
         self.all_sprites.update()
@@ -166,7 +109,6 @@ class Game:
 
 game = Game()
 game.create()
-
 
 while game.running:
     game.main()
