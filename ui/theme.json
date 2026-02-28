@@ -1,0 +1,17 @@
+{
+  "theme": {
+    "font_path": "assets/arial.ttf",
+    "font_size": "18",
+    "colours": {
+      "dark_bg": "#2D2D2D",
+      "normal_bg": "#3D3D3D",
+      "hovered_bg": "#4D4D4D",
+      "selected_bg": "#5D5D5D",
+      "text": "#FFFFFF",
+      "text_shadow": "#000000",
+      "title_text": "#FFD700",
+      "button_text": "#FFFFFF",
+      "button_hovered": "#FFFF00"
+    }
+  }
+}
