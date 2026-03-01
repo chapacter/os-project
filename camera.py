@@ -14,6 +14,12 @@ class Camera:
         self.scroll_x = 0
         self.scroll_y = 0
 
+        self.target_x = 0
+        self.target_y = 0
+        self.follow_speed = 0.15
+
+        self.clamp_to_map = True
+
         self.parallax_layers = []
 
     def set_map_size(self, map_width, map_height):
@@ -35,18 +41,30 @@ class Camera:
         return pos[0] - self.scroll_x, pos[1] - self.scroll_y
 
     def center_on(self, x, y):
+        self.target_x = x
+        self.target_y = y
+
         camera_x = x - self.screen_width // 2
         camera_y = y - self.screen_height // 2
 
-        camera_x = max(0, min(camera_x, self.map_width - self.screen_width))
-        camera_y = max(0, min(camera_y, self.map_height - self.screen_height))
+        if self.clamp_to_map:
+            if self.map_width > self.screen_width:
+                camera_x = max(0, min(camera_x, self.map_width - self.screen_width))
+            else:
+                camera_x = (self.map_width - self.screen_width) // 2
+
+            if self.map_height > self.screen_height:
+                camera_y = max(0, min(camera_y, self.map_height - self.screen_height))
+            else:
+                camera_y = (self.map_height - self.screen_height) // 2
 
         self.scroll_x = camera_x
         self.scroll_y = camera_y
 
     def follow_sprite(self, sprite):
         if sprite and hasattr(sprite, "rect"):
-            self.center_on(sprite.rect.centerx, sprite.rect.centery)
+            self.target_x = sprite.rect.centerx
+            self.target_y = sprite.rect.centery
 
     def move(self, dx, dy):
         self.scroll_x += dx
@@ -61,6 +79,27 @@ class Camera:
         self._shake_original_y = self.scroll_y
 
     def update(self, dt):
+        target_scroll_x = self.target_x - self.screen_width // 2
+        target_scroll_y = self.target_y - self.screen_height // 2
+
+        self.scroll_x += (target_scroll_x - self.scroll_x) * self.follow_speed
+        self.scroll_y += (target_scroll_y - self.scroll_y) * self.follow_speed
+
+        if self.clamp_to_map:
+            if self.map_width > self.screen_width:
+                self.scroll_x = max(
+                    0, min(self.scroll_x, self.map_width - self.screen_width)
+                )
+            else:
+                self.scroll_x = (self.map_width - self.screen_width) // 2
+
+            if self.map_height > self.screen_height:
+                self.scroll_y = max(
+                    0, min(self.scroll_y, self.map_height - self.screen_height)
+                )
+            else:
+                self.scroll_y = (self.map_height - self.screen_height) // 2
+
         if hasattr(self, "_shake_timer") and self._shake_timer < self._shake_duration:
             import random
 

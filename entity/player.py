@@ -64,14 +64,6 @@ class Player(pygame.sprite.Sprite):
         self.rect.x = self.rect.x + self.x_change
         self.rect.y = self.rect.y + self.y_change
 
-        pressed = pygame.key.get_pressed()
-        if (
-                pressed[pygame.K_w]
-                or pressed[pygame.K_a]
-                or pressed[pygame.K_s]
-                or pressed[pygame.K_d]
-        ):
-
         self.collide_block()
         self.collide_enemy()
         self.collide_weapon()
@@ -119,7 +111,9 @@ class Player(pygame.sprite.Sprite):
 
         if self.direction == "down":
             if self.y_change == 0:
-                self.image = self.game.player_spritesheet.get_image(0, 52, self.width, self.height)
+                self.image = self.game.player_spritesheet.get_image(
+                    0, 52, self.width, self.height
+                )
             else:
                 self.image = down[math.floor(self.animationCounter)]
                 self.animationCounter += 0.2
@@ -128,7 +122,9 @@ class Player(pygame.sprite.Sprite):
 
         if self.direction == "up":
             if self.y_change == 0:
-                self.image = self.game.player_spritesheet.get_image(1, 27, self.width, self.height)
+                self.image = self.game.player_spritesheet.get_image(
+                    1, 27, self.width, self.height
+                )
             else:
                 self.image = up[math.floor(self.animationCounter)]
                 self.animationCounter += 0.2
@@ -137,7 +133,9 @@ class Player(pygame.sprite.Sprite):
 
         if self.direction == "left":
             if self.x_change == 0:
-                self.image = self.game.player_spritesheet.get_image(1, 79, self.width, self.height)
+                self.image = self.game.player_spritesheet.get_image(
+                    1, 79, self.width, self.height
+                )
             else:
                 self.image = left[math.floor(self.animationCounter)]
                 self.animationCounter += 0.2
@@ -146,7 +144,9 @@ class Player(pygame.sprite.Sprite):
 
         if self.direction == "right":
             if self.x_change == 0:
-                self.image = self.game.player_spritesheet.get_image(1, 1, self.width, self.height)
+                self.image = self.game.player_spritesheet.get_image(
+                    1, 1, self.width, self.height
+                )
             else:
                 self.image = right[math.floor(self.animationCounter)]
                 self.animationCounter += 0.2
@@ -155,7 +155,9 @@ class Player(pygame.sprite.Sprite):
 
     def collide_block(self):
         pressed = pygame.key.get_pressed()
-        collide = pygame.sprite.spritecollide(self, self.game.blocks, False, pygame.sprite.collide_rect_ratio(0.85))
+        collide = pygame.sprite.spritecollide(
+            self, self.game.blocks, False, pygame.sprite.collide_rect_ratio(0.85)
+        )
 
         if collide:
             self.game.block_collided = True
@@ -172,7 +174,9 @@ class Player(pygame.sprite.Sprite):
 
     def collide_enemy(self):
         pressed = pygame.key.get_pressed()
-        collide = pygame.sprite.spritecollide(self, self.game.enemies, False, pygame.sprite.collide_rect_ratio(0.85))
+        collide = pygame.sprite.spritecollide(
+            self, self.game.enemies, False, pygame.sprite.collide_rect_ratio(0.85)
+        )
 
         if collide:
             self.game.enemy_collided = True

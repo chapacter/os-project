@@ -198,10 +198,13 @@ class Game:
             group.empty()
 
     def create_tile_map(self):
+        map_width_tiles = 0
+        map_height_tiles = 0
+
         if MAP_GENERATOR == "walker":
-            map_width = int(WIN_WIDTH / TILESIZE * 1.3)
-            map_height = int(WIN_HEIGHT / TILESIZE)
-            map_gen = Map(map_width, map_height)
+            map_width_tiles = int(WIN_WIDTH / TILESIZE * 1.3)
+            map_height_tiles = int(WIN_HEIGHT / TILESIZE)
+            map_gen = Map(map_width_tiles, map_height_tiles)
             level = map_gen.create()
 
             for i, row in enumerate(level):
@@ -220,6 +223,21 @@ class Game:
         else:
             self.init_world()
             self.load_zone(0, 0)
+            map_width_tiles = WORLD_ZONE_WIDTH
+            map_height_tiles = WORLD_ZONE_HEIGHT
+
+        if (
+                self.camera_enabled
+                and hasattr(self, "camera")
+                and (map_width_tiles > 0 or map_height_tiles > 0)
+        ):
+            if MAP_GENERATOR == "walker":
+                map_w = map_width_tiles * TILESIZE
+                map_h = map_height_tiles * TILESIZE
+            else:
+                map_w = map_width_tiles * TILESIZE
+                map_h = map_height_tiles * TILESIZE
+            self.camera.set_map_size(map_w, map_h)
 
     def load_tmx_map(self, filename):
         self.mode = GameMode.TMX
@@ -481,7 +499,11 @@ class Game:
                 self.fade_callback = None
 
     def check_zone_transition(self):
+        # Отключено для walker и tmx - пока не адаптировано
         if self.mode != GameMode.WORLD:
+            return
+
+        if MAP_GENERATOR == "walker" or MAP_GENERATOR == "tmx":
             return
 
         if not hasattr(self, "player"):
@@ -547,9 +569,9 @@ class Game:
                     self.check_zone_transition()
                     self.handle_camera_movement()
                     self.update()
-                    if self.camera:
-                        self.camera.follow_sprite(self.player)
-                        self.camera.update(1.0 / 60.0)
+                if self.camera:
+                    self.camera.follow_sprite(self.player)
+                    self.camera.update(1.0 / 60.0)
                 self.hud.update(time_delta)
 
             self.draw()
