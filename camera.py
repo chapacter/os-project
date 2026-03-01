@@ -1,4 +1,5 @@
 import pygame
+
 from settings import *
 
 
@@ -21,7 +22,7 @@ class Camera:
 
     def apply(self, sprite):
         if hasattr(sprite, "rect"):
-            return sprite.rect.copy()
+            return self.apply_rect(sprite.rect)
         return pygame.Rect(0, 0, 0, 0)
 
     def apply_rect(self, rect):
@@ -52,7 +53,6 @@ class Camera:
         self.scroll_y += dy
 
     def shake(self, intensity=5, duration=0.2):
-        import random
 
         self._shake_intensity = intensity
         self._shake_duration = duration

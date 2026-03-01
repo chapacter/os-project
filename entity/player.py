@@ -40,19 +40,21 @@ class Player(pygame.sprite.Sprite):
 
     def move(self):
         from effects.particle import Particle
+
         Particle(self.game, self.rect.x, self.rect.y)
 
         pressed = pygame.key.get_pressed()
-        if pressed[pygame.K_a]:
+
+        if pressed[pygame.K_a] or pressed[pygame.K_LEFT]:
             self.x_change -= PLAYER_SPEED
             self.direction = "left"
-        elif pressed[pygame.K_d]:
+        elif pressed[pygame.K_d] or pressed[pygame.K_RIGHT]:
             self.x_change += PLAYER_SPEED
             self.direction = "right"
-        if pressed[pygame.K_w]:
+        if pressed[pygame.K_w] or pressed[pygame.K_UP]:
             self.y_change -= PLAYER_SPEED
             self.direction = "up"
-        elif pressed[pygame.K_s]:
+        elif pressed[pygame.K_s] or pressed[pygame.K_DOWN]:
             self.y_change += PLAYER_SPEED
             self.direction = "down"
 
@@ -61,6 +63,15 @@ class Player(pygame.sprite.Sprite):
         self.animation()
         self.rect.x = self.rect.x + self.x_change
         self.rect.y = self.rect.y + self.y_change
+
+        pressed = pygame.key.get_pressed()
+        if (
+                pressed[pygame.K_w]
+                or pressed[pygame.K_a]
+                or pressed[pygame.K_s]
+                or pressed[pygame.K_d]
+        ):
+
         self.collide_block()
         self.collide_enemy()
         self.collide_weapon()
@@ -70,33 +81,41 @@ class Player(pygame.sprite.Sprite):
         self.y_change = 0
 
     def animation(self):
-        down = [self.game.player_spritesheet.get_image(0, 52, self.width, self.height),
-                self.game.player_spritesheet.get_image(26, 52, self.width, self.height),
-                self.game.player_spritesheet.get_image(52, 52, self.width, self.height),
-                self.game.player_spritesheet.get_image(78, 52, self.width, self.height),
-                self.game.player_spritesheet.get_image(104, 52, self.width, self.height),
-                self.game.player_spritesheet.get_image(130, 52, self.width, self.height)]
+        down = [
+            self.game.player_spritesheet.get_image(0, 52, self.width, self.height),
+            self.game.player_spritesheet.get_image(26, 52, self.width, self.height),
+            self.game.player_spritesheet.get_image(52, 52, self.width, self.height),
+            self.game.player_spritesheet.get_image(78, 52, self.width, self.height),
+            self.game.player_spritesheet.get_image(104, 52, self.width, self.height),
+            self.game.player_spritesheet.get_image(130, 52, self.width, self.height),
+        ]
 
-        left = [self.game.player_spritesheet.get_image(0, 78, self.width, self.height),
-                self.game.player_spritesheet.get_image(26, 78, self.width, self.height),
-                self.game.player_spritesheet.get_image(52, 78, self.width, self.height),
-                self.game.player_spritesheet.get_image(78, 78, self.width, self.height),
-                self.game.player_spritesheet.get_image(104, 78, self.width, self.height),
-                self.game.player_spritesheet.get_image(130, 78, self.width, self.height)]
+        left = [
+            self.game.player_spritesheet.get_image(0, 78, self.width, self.height),
+            self.game.player_spritesheet.get_image(26, 78, self.width, self.height),
+            self.game.player_spritesheet.get_image(52, 78, self.width, self.height),
+            self.game.player_spritesheet.get_image(78, 78, self.width, self.height),
+            self.game.player_spritesheet.get_image(104, 78, self.width, self.height),
+            self.game.player_spritesheet.get_image(130, 78, self.width, self.height),
+        ]
 
-        right = [self.game.player_spritesheet.get_image(0, 0, self.width, self.height),
-                 self.game.player_spritesheet.get_image(26, 0, self.width, self.height),
-                 self.game.player_spritesheet.get_image(52, 0, self.width, self.height),
-                 self.game.player_spritesheet.get_image(78, 0, self.width, self.height),
-                 self.game.player_spritesheet.get_image(104, 0, self.width, self.height),
-                 self.game.player_spritesheet.get_image(130, 0, self.width, self.height)]
+        right = [
+            self.game.player_spritesheet.get_image(0, 0, self.width, self.height),
+            self.game.player_spritesheet.get_image(26, 0, self.width, self.height),
+            self.game.player_spritesheet.get_image(52, 0, self.width, self.height),
+            self.game.player_spritesheet.get_image(78, 0, self.width, self.height),
+            self.game.player_spritesheet.get_image(104, 0, self.width, self.height),
+            self.game.player_spritesheet.get_image(130, 0, self.width, self.height),
+        ]
 
-        up = [self.game.player_spritesheet.get_image(0, 26, self.width, self.height),
-              self.game.player_spritesheet.get_image(26, 26, self.width, self.height),
-              self.game.player_spritesheet.get_image(52, 26, self.width, self.height),
-              self.game.player_spritesheet.get_image(78, 26, self.width, self.height),
-              self.game.player_spritesheet.get_image(104, 26, self.width, self.height),
-              self.game.player_spritesheet.get_image(130, 26, self.width, self.height)]
+        up = [
+            self.game.player_spritesheet.get_image(0, 26, self.width, self.height),
+            self.game.player_spritesheet.get_image(26, 26, self.width, self.height),
+            self.game.player_spritesheet.get_image(52, 26, self.width, self.height),
+            self.game.player_spritesheet.get_image(78, 26, self.width, self.height),
+            self.game.player_spritesheet.get_image(104, 26, self.width, self.height),
+            self.game.player_spritesheet.get_image(130, 26, self.width, self.height),
+        ]
 
         if self.direction == "down":
             if self.y_change == 0:
@@ -179,6 +198,7 @@ class Player(pygame.sprite.Sprite):
             if self.sword_equipped:
                 if pressed[pygame.K_j]:
                     from projectiles.bullet import Bullet
+
                     Bullet(self.game, self.rect.x, self.rect.y)
                     self.shoot_state = "wait"
 

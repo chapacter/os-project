@@ -67,7 +67,7 @@ class Game:
         self.physics_enabled = False
 
         self.camera = None
-        self.camera_enabled = False
+        self.camera_enabled = True
 
         self.audio_enabled = False
         self.audio = audio_manager
@@ -323,6 +323,7 @@ class Game:
         self.game_state = "playing"
         self.current_zone = (0, 0)
         self.current_dungeon_floor = 1
+        self.main_menu.hide()
         self.create()
         self.hud.show()
 
@@ -334,6 +335,7 @@ class Game:
                 self.game_state = "playing"
                 self.current_zone = tuple(save_data.get("zone", (0, 0)))
                 self.current_dungeon_floor = save_data.get("floor", 1)
+                self.main_menu.hide()
                 self.create()
                 self.hud.show()
             except Exception as e:
@@ -384,6 +386,11 @@ class Game:
         if self.physics_enabled and self.physics:
             self.physics.update(1.0 / 60.0)
 
+        if hasattr(self, "player") and self.player:
+            print(
+                f"Game update: player at x={self.player.rect.x}, y={self.player.rect.y}"
+            )
+
         if (
                 self.camera_enabled
                 and self.camera
@@ -421,11 +428,13 @@ class Game:
             self.main_menu.draw(self.sc)
         elif self.game_state == "paused":
             self.sc.fill(BLACK)
-            self.all_sprites.draw(self.sc)
+            for sprite in self.all_sprites.sprites():
+                self.sc.blit(sprite.image, self.camera.apply(sprite))
             self.pause_menu.draw(self.sc)
         elif self.game_state == "playing":
             self.sc.fill(BLACK)
-            self.all_sprites.draw(self.sc)
+            for sprite in self.all_sprites.sprites():
+                self.sc.blit(sprite.image, self.camera.apply(sprite))
             self.hud.draw(self.sc)
 
         if self.is_fading:
@@ -515,19 +524,12 @@ class Game:
                 self.player.rect.x += offset_x * TILESIZE
                 self.player.rect.y += offset_y * TILESIZE
 
+                self.fade_in()
+
             self.fade_out(do_transition)
 
-    def camera(self):
-        if self.enemy_collided == False and self.block_collided == False:
-            pressed = pygame.key.get_pressed()
-
-            if pressed[pygame.K_LEFT] or pressed[pygame.K_a]:
-                for i, sprite in enumerate(self.all_sprites):
-                    sprite.rect.x += PLAYER_SPEED
-
-            elif pressed[pygame.K_RIGHT] or pressed[pygame.K_d]:
-                for i, sprite in enumerate(self.all_sprites):
-                    sprite.rect.x -= PLAYER_SPEED
+    def handle_camera_movement(self):
+        pass
 
     def main(self):
         while self.running:
@@ -543,8 +545,11 @@ class Game:
                 self.update_fade()
                 if not self.is_fading or self.fade_direction == -1:
                     self.check_zone_transition()
-                    self.camera()
+                    self.handle_camera_movement()
                     self.update()
+                    if self.camera:
+                        self.camera.follow_sprite(self.player)
+                        self.camera.update(1.0 / 60.0)
                 self.hud.update(time_delta)
 
             self.draw()
