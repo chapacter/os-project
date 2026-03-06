@@ -24,6 +24,7 @@ class Room:
         self.visible = False
         self.enemy_count = 0
         self.enemies_spawned = False
+        self.door_positions = {}  # {direction: (x, y)}
 
     def has_door(self, direction):
         return self.doors.get(direction, False)
@@ -31,6 +32,12 @@ class Room:
     def set_door(self, direction, value=True):
         if direction in self.doors:
             self.doors[direction] = value
+
+    def set_door_position(self, direction, x, y):
+        self.door_positions[direction] = (x, y)
+
+    def get_door_position(self, direction):
+        return self.door_positions.get(direction)
 
     def connect_to(self, other, direction):
         self.set_door(direction, True)

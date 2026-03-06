@@ -206,9 +206,9 @@ class Game:
 
         self.spawn_dungeon_enemies()
 
-        start_x, start_y = self.dungeon_generator.get_center_position()
+        start_x, start_y = self.dungeon_generator.get_start_position()
         print(
-            f"[DEBUG] Dungeon center: {start_x}, {start_y}, map_size: {self.dungeon_generator.map_width}x{self.dungeon_generator.map_height}"
+            f"[DEBUG] Player spawn position: {start_x}, {start_y}, map_size: {self.dungeon_generator.map_width}x{self.dungeon_generator.map_height}"
         )
         self.player = Player(self, start_x, start_y)
         print(f"[DEBUG] Player created at: {self.player.rect.x}, {self.player.rect.y}")
@@ -271,11 +271,15 @@ class Game:
                 print(f"[DEBUG] Room {gx},{gy} already spawned enemies, skipping")
                 continue
             room.enemy_count = 0
-            room.enemies_spawned = True
             print(
                 f"[DEBUG] Room {gx},{gy} spawning enemies, type: {room.room_type.value}"
             )
+            # Skip START rooms - no enemies here
+            if room.room_type.value == "start":
+                room.enemies_spawned = True
+                continue
             if room.room_type.value in ["enemy", "elite", "boss"]:
+                room.enemies_spawned = True
                 room_x = gx * room_unit_width + wall_thickness + 3
                 room_y = gy * room_unit_height + wall_thickness + 2
                 if room.room_type.value == "boss":
