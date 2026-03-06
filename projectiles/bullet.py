@@ -22,7 +22,7 @@ class Bullet(pygame.sprite.Sprite):
         self.rect.y = self.y
 
         self.direction = game.player.direction
-        self.damage = 1
+        self.damage = 3
 
     def move(self):
         if self.direction == "right":
