@@ -17,8 +17,8 @@ class Player(pygame.sprite.Sprite):
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
-        self.width = TILESIZE
-        self.height = TILESIZE
+        self.width = CHARACTER_SIZE
+        self.height = CHARACTER_SIZE
 
         self.x_change = 0
         self.y_change = 0
@@ -30,7 +30,7 @@ class Player(pygame.sprite.Sprite):
         self.rect.y = self.y
 
         self.direction = "right"
-        self.sword_equipped = False
+        self.sword_equipped = True
 
         self.counter = 0
         self.wait_time = 10

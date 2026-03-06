@@ -18,7 +18,7 @@ class Camera:
         self.target_y = 0
         self.follow_speed = 0.15
 
-        self.clamp_to_map = True
+        self.clamp_to_map = False
 
         self.parallax_layers = []
 

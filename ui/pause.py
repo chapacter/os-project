@@ -21,6 +21,22 @@ class PauseMenu:
         self.overlay = pygame.Surface((WIN_WIDTH, WIN_HEIGHT))
         self.overlay.set_alpha(128)
 
+        seed_rect = pygame.Rect(20, 20, 400, 30)
+        self.seed_label = UILabel(
+            relative_rect=seed_rect,
+            text="World Seed: --",
+            manager=self.manager,
+            object_id="seed_label",
+        )
+
+        coord_rect = pygame.Rect(20, 55, 400, 30)
+        self.coord_label = UILabel(
+            relative_rect=coord_rect,
+            text="Coords: --",
+            manager=self.manager,
+            object_id="coord_label",
+        )
+
         title_rect = pygame.Rect(center_x - 100, center_y - 120, 200, 50)
         self.title_label = UILabel(
             relative_rect=title_rect,
@@ -105,6 +121,16 @@ class PauseMenu:
 
     def show(self):
         self.is_active = True
+        if hasattr(self.game, "world_seed") and self.game.world_seed is not None:
+            self.seed_label.set_text(f"World Seed: {self.game.world_seed}")
+
+        if hasattr(self.game, "player") and self.game.player:
+            px = self.game.player.rect.x
+            py = self.game.player.rect.y
+            zone = getattr(self.game, "current_zone", (0, 0))
+            self.coord_label.set_text(f"Coords: Zone {zone} ({px}, {py})")
+        else:
+            self.coord_label.set_text("Coords: --")
 
     def hide(self):
         self.is_active = False
