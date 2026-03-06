@@ -17,8 +17,8 @@ class Enemy(pygame.sprite.Sprite):
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
-        self.width = TILESIZE
-        self.height = TILESIZE
+        self.width = CHARACTER_SIZE
+        self.height = CHARACTER_SIZE
 
         self.x_change = 0
         self.y_change = 0
@@ -215,8 +215,36 @@ class Enemy(pygame.sprite.Sprite):
         self.healthbar.damage(ENEMY_HEALTH, self.health)
 
         if self.health <= 0:
+            self.on_death()
             self.kill()
             self.healthbar.kill_bar()
+
+    def on_death(self):
+        if not hasattr(self, "game") or not self.game:
+            return
+
+        if not hasattr(self.game, "dungeon_generator"):
+            return
+
+        tile_x = int(self.rect.x / TILESIZE)
+        tile_y = int(self.rect.y / TILESIZE)
+
+        room_tile_width = self.game.dungeon_generator.room_tile_width
+        room_tile_height = self.game.dungeon_generator.room_tile_height
+        wall_thickness = self.game.dungeon_generator.wall_thickness
+        room_unit_width = room_tile_width + wall_thickness * 2
+        room_unit_height = room_tile_height + wall_thickness * 2
+
+        room_x = tile_x // room_unit_width
+        room_y = tile_y // room_unit_height
+        room_coord = (room_x, room_y)
+
+        room = self.game.dungeon_generator.rooms.get(room_coord)
+        if room and room.enemy_count > 0:
+            room.enemy_count -= 1
+            print(
+                f"[DEBUG] Enemy killed, room {room_coord} now has {room.enemy_count} enemies"
+            )
 
 
 class Enemy_Healthbar(Healthbar):

@@ -21,6 +21,9 @@ class Room:
         self.width = random.randint(3, 5)
         self.height = random.randint(3, 5)
         self.visited = False
+        self.visible = False
+        self.enemy_count = 0
+        self.enemies_spawned = False
 
     def has_door(self, direction):
         return self.doors.get(direction, False)
@@ -37,5 +40,22 @@ class Room:
     def is_passable(self):
         return any(self.doors.values())
 
+    def set_visible(self, value=True):
+        self.visible = value
+
+    def set_visited(self, value=True):
+        self.visited = value
+
+    def get_neighbor_coords(self, direction):
+        if direction == "north":
+            return (self.x, self.y - 1)
+        elif direction == "south":
+            return (self.x, self.y + 1)
+        elif direction == "east":
+            return (self.x + 1, self.y)
+        elif direction == "west":
+            return (self.x - 1, self.y)
+        return None
+
     def __repr__(self):
-        return f"Room({self.x}, {self.y}, {self.room_type.value})"
+        return f"Room({self.x}, {self.y}, {self.room_type.value}, visible={self.visible}, visited={self.visited})"
