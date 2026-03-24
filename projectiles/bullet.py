@@ -1,5 +1,6 @@
 import pygame
 
+from effects.effect import Effect
 from settings import *
 
 
@@ -16,7 +17,7 @@ class Bullet(pygame.sprite.Sprite):
         self.width = TILESIZE - 2
         self.height = TILESIZE - 2
 
-        self.image = game.bullet_spritesheet.get_image(0, 0, self.width, self.height)
+        self.image, _ = game.effects_spritesheet.get_effect("bullet", SPRITE_EFFECTS)
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
@@ -42,6 +43,7 @@ class Bullet(pygame.sprite.Sprite):
     def collide_enemy(self):
         collide = pygame.sprite.spritecollide(self, self.game.enemies, False)
         if collide:
+            Effect(self.game, self.rect.centerx, self.rect.centery, "hit")
             collide[0].damage(self.damage)
             self.kill()
 
@@ -64,7 +66,7 @@ class Enemy_Bullet(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        self.image = game.bullet_spritesheet.get_image(0, 0, self.width, self.height)
+        self.image, _ = game.effects_spritesheet.get_effect("bullet", SPRITE_EFFECTS)
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
@@ -90,6 +92,7 @@ class Enemy_Bullet(pygame.sprite.Sprite):
     def collide_player(self):
         collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, False)
         if collide:
+            Effect(self.game, self.rect.centerx, self.rect.centery, "hit")
             collide[0].damage(self.damage)
             self.kill()
 

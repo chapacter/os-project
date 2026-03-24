@@ -33,10 +33,10 @@ class Game:
         self.clock = pygame.time.Clock()
         self.terrain_spritesheet = Spritesheet("assets/tileset.png")
         self.mc_spritesheet = Spritesheet("assets/mctileset.png")
-        self.player_spritesheet = Spritesheet("assets/player.png")
+        self.player_spritesheet = Spritesheet(SPRITE_PLAYER["sheet"])
         self.enemy_spritesheet = Spritesheet("assets/enemy.png")
         self.weapon_spritesheet = Spritesheet("assets/sword.png")
-        self.bullet_spritesheet = Spritesheet("assets/powerBall.png")
+        self.effects_spritesheet = Spritesheet("assets/effects.png")
 
         self.running = True
         self.enemy_collided = False
@@ -95,9 +95,9 @@ class Game:
         self.world = self.world_generator.pregenerate_all_zones()
 
     def load_zone(self, zone_x, zone_y):
-        print(f"[DEBUG] load_zone called: ({zone_x}, {zone_y})")
+        # print(f"[DEBUG] load_zone called: ({zone_x}, {zone_y})")
         self.clear_sprites()
-        print(f"[DEBUG] After clear_sprites: {len(self.all_sprites)} sprites")
+        # print(f"[DEBUG] After clear_sprites: {len(self.all_sprites)} sprites")
 
         zone_w = WORLD_ZONE_WIDTH
         zone_h = WORLD_ZONE_HEIGHT

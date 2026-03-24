@@ -17,6 +17,12 @@ class Entity(pygame.sprite.Sprite):
 
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
 
+        self.hitbox = pygame.Rect(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT)
+        self.hitbox.center = self.rect.center
+
+    def update_hitbox(self):
+        self.hitbox.center = self.rect.center
+
 
 class Healthbar(pygame.sprite.Sprite):
     def __init__(self, game, x, y, entity=None):

@@ -14,8 +14,8 @@ class Particle(pygame.sprite.Sprite):
         self.image = pygame.Surface((4, 4))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
-        self.rect.x = x + random.choice([-1, 0, 1, 5, 10, 15])
-        self.rect.y = y + TILESIZE
+        self.rect.centerx = x + random.choice([-2, -1, 0, 1, 2])
+        self.rect.centery = y + 2
 
         self.lifetime = 4
         self.counter = 0

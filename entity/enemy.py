@@ -1,8 +1,9 @@
-import math
 import random
 
 import pygame
 
+from effects.effect import Effect
+from effects.particle import Particle
 from entity.base import Healthbar
 from settings import *
 
@@ -36,10 +37,27 @@ class Enemy(pygame.sprite.Sprite):
             self.health = ENEMY_HEALTH
             self.ENEMY_SPEED_MOD = 1
 
-        self.image = game.enemy_spritesheet.get_image(0, 0, self.width, self.height)
+        # Предзагрузка анимаций (3 кадра на направление)
+        self.frame_move = 3
+        self.animations = {}
+        direction_map = {"down": 0, "left": 1, "right": 2, "up": 3}
+
+        for direction, row in direction_map.items():
+            frames = []
+            for col in range(self.frame_move):
+                sprite = game.enemy_spritesheet.get_image(
+                    col * 32, row * 32, self.width, self.height
+                )
+                frames.append(sprite)
+            self.animations[direction] = frames
+
+        self.image = self.animations["down"][0]
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+
+        self.hitbox = pygame.Rect(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT)
+        self.hitbox.center = self.rect.center
 
         self.direction = random.choice(["left", "right", "up", "down"])
         self.number_steps = random.choice([30, 40, 50, 60, 70, 80, 90])
@@ -47,11 +65,15 @@ class Enemy(pygame.sprite.Sprite):
         self.current_steps = 0
 
         self.state = "moving"
-        self.animation_counter = 1
+        self.animation_counter = 0
 
         self.shoot_counter = 0
         self.wait_shoot = random.choice([10, 20, 30, 40, 50, 60, 70, 80, 90])
         self.shoot_state = "halt"
+
+        self.particle_counter = 0
+
+        Effect(self.game, self.rect.centerx, self.rect.centery, "death")
 
     def shoot(self):
         self.shoot_counter += 1
@@ -97,6 +119,17 @@ class Enemy(pygame.sprite.Sprite):
                     Enemy_Bullet(self.game, self.rect.x, self.rect.y)
                     self.shoot_state = "halt"
 
+            max_health = (
+                ENEMY_HEALTH * 5
+                if self.is_boss
+                else (ENEMY_HEALTH * 2 if self.is_elite else ENEMY_HEALTH)
+            )
+            if self.health < max_health * 0.3:
+                self.particle_counter += 1
+                if self.particle_counter >= 3:
+                    self.particle_counter = 0
+                    Particle(self.game, self.rect.centerx, self.rect.centery)
+
         elif self.state == "stalling":
             self.current_steps += 1
             if self.current_steps == self.stall_steps:
@@ -105,79 +138,22 @@ class Enemy(pygame.sprite.Sprite):
                 self.direction = random.choice(["left", "right", "up", "down"])
 
     def animation(self):
-        down = [
-            self.game.enemy_spritesheet.get_image(0, 0, self.width, self.height),
-            self.game.enemy_spritesheet.get_image(32, 0, self.width, self.height),
-            self.game.enemy_spritesheet.get_image(64, 0, self.width, self.height),
-        ]
-
-        left = [
-            self.game.enemy_spritesheet.get_image(0, 32, self.width, self.height),
-            self.game.enemy_spritesheet.get_image(32, 32, self.width, self.height),
-            self.game.enemy_spritesheet.get_image(64, 32, self.width, self.height),
-        ]
-
-        right = [
-            self.game.enemy_spritesheet.get_image(0, 64, self.width, self.height),
-            self.game.enemy_spritesheet.get_image(32, 64, self.width, self.height),
-            self.game.enemy_spritesheet.get_image(64, 64, self.width, self.height),
-        ]
-
-        up = [
-            self.game.enemy_spritesheet.get_image(0, 96, self.width, self.height),
-            self.game.enemy_spritesheet.get_image(32, 96, self.width, self.height),
-            self.game.enemy_spritesheet.get_image(64, 96, self.width, self.height),
-        ]
-
-        if self.direction == "down":
-            if self.y_change == 0:
-                self.image = self.game.enemy_spritesheet.get_image(
-                    0, 0, self.width, self.height
-                )
-            else:
-                self.image = down[math.floor(self.animation_counter)]
-                self.animation_counter += 0.2
-                if self.animation_counter >= 3:
-                    self.animation_counter = 0
-
-        if self.direction == "up":
-            if self.y_change == 0:
-                self.image = self.game.enemy_spritesheet.get_image(
-                    32, 96, self.width, self.height
-                )
-            else:
-                self.image = up[math.floor(self.animation_counter)]
-                self.animation_counter += 0.2
-                if self.animation_counter >= 3:
-                    self.animation_counter = 0
-
-        if self.direction == "left":
-            if self.x_change == 0:
-                self.image = self.game.enemy_spritesheet.get_image(
-                    32, 32, self.width, self.height
-                )
-            else:
-                self.image = left[math.floor(self.animation_counter)]
-                self.animation_counter += 0.2
-                if self.animation_counter >= 3:
-                    self.animation_counter = 0
-
-        if self.direction == "right":
-            if self.x_change == 0:
-                self.image = self.game.enemy_spritesheet.get_image(
-                    32, 64, self.width, self.height
-                )
-            else:
-                self.image = right[math.floor(self.animation_counter)]
-                self.animation_counter += 0.2
-                if self.animation_counter >= 3:
-                    self.animation_counter = 0
+        if self.x_change == 0 and self.y_change == 0:
+            # Idle - первый кадр
+            self.image = self.animations[self.direction][0]
+        else:
+            frame_index = int(self.animation_counter) % self.frame_move
+            self.image = self.animations[self.direction][frame_index]
+            self.animation_counter += 0.2
+            if self.animation_counter >= self.frame_move:
+                self.animation_counter = 0
 
     def update(self):
         self.move()
         self.animation()
         self.rect.x = self.rect.x + self.x_change
         self.rect.y = self.rect.y + self.y_change
+        self.hitbox.center = self.rect.center
         self.x_change = 0
         self.y_change = 0
         if self.current_steps == self.number_steps:
@@ -190,7 +166,12 @@ class Enemy(pygame.sprite.Sprite):
         self.shoot()
 
     def collide_block(self):
-        collide = pygame.sprite.spritecollide(self, self.game.blocks, False)
+        collide = False
+        for block in self.game.blocks:
+            if self.hitbox.colliderect(block.rect):
+                collide = True
+                break
+
         if collide:
             if self.direction == "left":
                 self.rect.x += PLAYER_SPEED
@@ -215,6 +196,7 @@ class Enemy(pygame.sprite.Sprite):
         self.healthbar.damage(ENEMY_HEALTH, self.health)
 
         if self.health <= 0:
+            Effect(self.game, self.rect.centerx, self.rect.centery, "death")
             self.on_death()
             self.kill()
             self.healthbar.kill_bar()
