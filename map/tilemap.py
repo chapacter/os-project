@@ -29,12 +29,12 @@ class Block(pygame.sprite.Sprite):
 
 class Ground(pygame.sprite.Sprite):
     TILE_MAP = {
-        ".": (0, 3),  # GRASS → Floor
+        ".": (0, 5),  # GRASS → Floor
         ":": (2, 0),  # SAND → Cobblestone
         "T": (3, 0),  # FOREST → Planks
         "B": (2, 0),  # MOUNTAIN → Cobblestone
         "S": (2, 0),  # SWAMP → Cobblestone
-        "~": (5, 0),  # WATER → Water
+        "~": (5, 2),  # WATER → Water
         "L": (2, 0),  # LAVA → Cobblestone
         "V": (3, 0),  # VILLAGE → Planks
         "H": (3, 0),  # HOUSE → Planks
@@ -75,7 +75,7 @@ class DungeonEntrance(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        self.image = game.terrain_spritesheet.get_image(1, 1, self.width, self.height)
+        self.image = game.terrain_spritesheet.get_image(1, 5, self.width, self.height)
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
@@ -146,7 +146,7 @@ class Water(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        self.image = game.terrain_spritesheet.get_image(5, 0, self.width, self.height)
+        self.image = game.terrain_spritesheet.get_image(5, 2, self.width, self.height)
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y

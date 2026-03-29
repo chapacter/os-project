@@ -83,7 +83,7 @@ ENEMY_TYPES = {
     3: {
         "sheet": "assets/reaper_blade.png",
         "grid": (3, 4),
-        "sprite_size": (26, 36),
+        "sprite_size": (32, 36),
         "weight": 1,
     },
 }
