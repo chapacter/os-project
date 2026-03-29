@@ -1,7 +1,7 @@
 import configparser
 import os
 
-CONFIG_FILE = "../config.ini"
+CONFIG_FILE = "config.ini"
 
 config = configparser.ConfigParser()
 
@@ -21,6 +21,10 @@ def load_config():
     else:
         config["Window"] = {}
         config["Display"] = {}
+        config["Audio"] = {}
+
+    if "Audio" not in config:
+        config["Audio"] = {}
 
     screen_w, screen_h = get_screen_resolution()
     config["Display"]["screen_width"] = str(screen_w)
@@ -35,6 +39,11 @@ def load_config():
 
     if "scale" not in config["Window"]:
         config["Window"]["scale"] = str(calculate_initial_scale(screen_w, screen_h))
+
+    if "music_volume" not in config["Audio"]:
+        config["Audio"]["music_volume"] = "0.5"
+    if "sfx_volume" not in config["Audio"]:
+        config["Audio"]["sfx_volume"] = "0.5"
 
     save_config()
     return config
@@ -86,6 +95,24 @@ def get_scale():
 
 def set_scale(scale):
     config["Window"]["scale"] = str(scale)
+    save_config()
+
+
+def get_music_volume():
+    return config.getfloat("Audio", "music_volume", fallback=0.7)
+
+
+def set_music_volume(volume):
+    config["Audio"]["music_volume"] = str(volume)
+    save_config()
+
+
+def get_sfx_volume():
+    return config.getfloat("Audio", "sfx_volume", fallback=0.8)
+
+
+def set_sfx_volume(volume):
+    config["Audio"]["sfx_volume"] = str(volume)
     save_config()
 
 

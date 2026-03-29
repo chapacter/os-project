@@ -2,16 +2,31 @@ import os
 
 import pygame
 
+from utils.config import (
+    get_music_volume,
+    get_sfx_volume,
+    set_music_volume,
+    set_sfx_volume,
+)
+
 
 class AudioManager:
     def __init__(self):
         self.initialized = False
-        self.music_volume = 0.7
-        self.sfx_volume = 0.8
+        self.music_volume = 0.5
+        self.sfx_volume = 0.5
 
         self.sounds = {}
         self.music_playing = False
         self.current_music = None
+
+    def sync_from_config(self):
+        self.music_volume = get_music_volume()
+        self.sfx_volume = get_sfx_volume()
+        if self.initialized:
+            pygame.mixer.music.set_volume(self.music_volume)
+            for sound in self.sounds.values():
+                sound.set_volume(self.sfx_volume)
 
     def init(self, frequency=44100, size=-16, channels=2, buffer=512):
         try:
@@ -26,19 +41,21 @@ class AudioManager:
 
     def load_sound(self, name, filepath):
         if not self.initialized:
+            print(f"[DEBUG] Cannot load sound '{name}': mixer not initialized")
             return None
 
         if not os.path.exists(filepath):
-            print(f"Sound file not found: {filepath}")
+            print(f"[DEBUG] Sound file not found: {filepath}")
             return None
 
         try:
             sound = pygame.mixer.Sound(filepath)
             sound.set_volume(self.sfx_volume)
             self.sounds[name] = sound
+            print(f"[DEBUG] Loaded sound: {name} -> {filepath}")
             return sound
         except pygame.error as e:
-            print(f"Failed to load sound {name}: {e}")
+            print(f"[DEBUG] Failed to load sound {name}: {e}")
             return None
 
     def play_sound(self, name, loops=0, fade_ms=0):
@@ -47,9 +64,12 @@ class AudioManager:
 
         if name in self.sounds:
             try:
+                print(f"[DEBUG] Playing sound: {name}")
                 self.sounds[name].play(loops=loops, fade_ms=fade_ms)
             except pygame.error as e:
-                print(f"Failed to play sound {name}: {e}")
+                print(f"[DEBUG] Failed to play sound {name}: {e}")
+        else:
+            print(f"[DEBUG] Sound not found: {name}")
 
     def stop_sound(self, name):
         if name in self.sounds:
@@ -63,6 +83,23 @@ class AudioManager:
         self.sfx_volume = max(0.0, min(1.0, volume))
         for sound in self.sounds.values():
             sound.set_volume(self.sfx_volume)
+
+    def adjust_sfx_volume(self, delta):
+        new_volume = max(0.0, min(1.0, self.sfx_volume + delta))
+        self.sfx_volume = new_volume
+        set_sfx_volume(new_volume)
+        for sound in self.sounds.values():
+            sound.set_volume(new_volume)
+
+    def set_music_volume(self, volume):
+        self.music_volume = max(0.0, min(1.0, volume))
+        pygame.mixer.music.set_volume(self.music_volume)
+
+    def adjust_music_volume(self, delta):
+        new_volume = max(0.0, min(1.0, self.music_volume + delta))
+        self.music_volume = new_volume
+        set_music_volume(new_volume)
+        pygame.mixer.music.set_volume(new_volume)
 
     def load_music(self, filepath):
         if not self.initialized:

@@ -3,6 +3,7 @@ import pygame
 from effects.effect import Effect
 from effects.particle import Particle
 from projectiles.bullet import Bullet
+from utils.audio import audio_manager
 from utils.settings import *
 
 
@@ -239,17 +240,21 @@ class Player(pygame.sprite.Sprite):
         if self.shoot_state == "shoot":
             if self.sword_equipped:
                 if pressed[pygame.K_j]:
+                    print("[DEBUG] Attack triggered")
                     Bullet(self.game, self.rect.x, self.rect.y)
                     self.action_state = "attack"
                     self.action_frame = 0
                     self.shoot_state = "wait"
+                    audio_manager.play_sound("swipe")
 
     def dodge_roll(self):
+        print("[DEBUG] Dodge triggered")
         self.is_dodging = True
         self.action_state = "dodge"
         self.action_frame = 0
         self.dodge_state = "cooldown"
         self.dodge_cooldown_counter = -20
+        audio_manager.play_sound("evade")
 
     def dodge_cooldown_update(self):
         if self.dodge_state == "cooldown":
@@ -267,6 +272,8 @@ class Player(pygame.sprite.Sprite):
 
     def damage(self, amount):
         self.health = self.health - amount
+        print(f"[DEBUG] Player damaged, health: {self.health}")
+        audio_manager.play_sound("hit")
 
         if self.health <= 0:
             self.kill()

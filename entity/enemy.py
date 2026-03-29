@@ -6,6 +6,7 @@ from effects.effect import Effect
 from effects.particle import Particle
 from entity.base import Healthbar
 from utils import weighted_choice
+from utils.audio import audio_manager
 from utils.settings import *
 
 
@@ -204,6 +205,8 @@ class Enemy(pygame.sprite.Sprite):
     def damage(self, amount):
         self.health = self.health - amount
         self.healthbar.damage(ENEMY_HEALTH, self.health)
+        # print(f"[DEBUG] Enemy damaged, health: {self.health}")
+        audio_manager.play_sound("hit")
 
         if self.health <= 0:
             Effect(self.game, self.rect.centerx, self.rect.centery, "death")

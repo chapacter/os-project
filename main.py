@@ -31,6 +31,7 @@ class GameMode:
 class Game:
     def __init__(self):
         config.load_config()
+        audio_manager.sync_from_config()
         self.scale = config.get_scale()
         self.sc = self.create_window()
         self.clock = pygame.time.Clock()
@@ -42,6 +43,19 @@ class Game:
         }
         self.weapon_spritesheet = Spritesheet("assets/sword.png")
         self.effects_spritesheet = Spritesheet("assets/effects.png")
+
+        audio_manager.init()
+        audio_manager.load_sound("hit", "assets/sounds/Hit.wav")
+        audio_manager.load_sound("swipe", "assets/sounds/Swipe.wav")
+        audio_manager.load_sound("evade", "assets/sounds/Evade.wav")
+        audio_manager.load_sound("pause", "assets/sounds/Pause.wav")
+        audio_manager.load_sound("unpause", "assets/sounds/Unpause.wav")
+        audio_manager.load_sound("menu_select", "assets/sounds/Menu Select.wav")
+        audio_manager.load_sound("menu_move", "assets/sounds/Menu Move.wav")
+        audio_manager.load_music("assets/sounds/Music.mp3")
+        audio_manager.play_music()
+        print(f"[DEBUG] Audio initialized: {audio_manager.initialized}")
+        print(f"[DEBUG] Loaded sounds: {list(audio_manager.sounds.keys())}")
 
         self.running = True
         self.enemy_collided = False
@@ -579,6 +593,7 @@ class Game:
         if self.game_state == "playing":
             self.game_state = "paused"
             self.pause_menu.show()
+            audio_manager.play_sound("pause")
 
     def resume(self):
         if self.game_state == "paused":
@@ -637,6 +652,10 @@ class Game:
                         sys.exit()
                 elif event.key == pygame.K_F11:
                     self.toggle_fullscreen()
+                elif event.key == pygame.K_MINUS or event.key == pygame.K_KP_MINUS:
+                    audio_manager.adjust_sfx_volume(-0.05)
+                elif event.key == pygame.K_EQUALS or event.key == pygame.K_KP_PLUS:
+                    audio_manager.adjust_sfx_volume(0.05)
 
             if event.type == pygame.VIDEORESIZE:
                 if config.get_window_mode() == "windowed":

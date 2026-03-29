@@ -2,6 +2,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
 
+from utils.audio import audio_manager
 from utils.settings import WIN_WIDTH, WIN_HEIGHT
 
 
@@ -80,7 +81,10 @@ class MainMenu:
 
     def handle_event(self, event):
         self.manager.process_events(event)
+        if event.type == pygame_gui.UI_BUTTON_ON_HOVERED:
+            audio_manager.play_sound("menu_move")
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
+            audio_manager.play_sound("menu_select")
             if event.ui_object_id == "new_game_button":
                 self.is_active = False
                 self.game.start_new_game()
