@@ -236,16 +236,51 @@ class Player(pygame.sprite.Sprite):
             self.sword_equipped = True
 
     def attack(self):
-        pressed = pygame.key.get_pressed()
-        if self.shoot_state == "shoot":
-            if self.sword_equipped:
-                if pressed[pygame.K_j]:
-                    print("[DEBUG] Attack triggered")
-                    Bullet(self.game, self.rect.x, self.rect.y)
-                    self.action_state = "attack"
-                    self.action_frame = 0
-                    self.shoot_state = "wait"
-                    audio_manager.play_sound("swipe")
+        if self.shoot_state != "shoot":
+            return
+        if not self.sword_equipped:
+            return
+
+        pressed_keys = pygame.key.get_pressed()
+        pressed_mouse = pygame.mouse.get_pressed()
+
+        if pressed_keys[pygame.K_j]:
+            self._attack_direction()
+        elif pressed_mouse[0]:
+            self._attack_cursor()
+
+    def _attack_direction(self):
+        start_x = self.hitbox.centerx
+        start_y = self.hitbox.centery
+
+        direction_offsets = {
+            "right": (100, 0),
+            "left": (-100, 0),
+            "up": (0, 100),
+            "down": (0, -100),
+        }
+        offset = direction_offsets.get(self.direction, (100, 0))
+
+        Bullet(self.game, start_x, start_y, start_x + offset[0], start_y + offset[1])
+        self._finish_attack()
+
+    def _attack_cursor(self):
+        mouse_world = self.game.camera.to_world(pygame.mouse.get_pos())
+
+        Bullet(
+            self.game,
+            self.hitbox.centerx,
+            self.hitbox.centery,
+            mouse_world[0],
+            mouse_world[1],
+        )
+        self._finish_attack()
+
+    def _finish_attack(self):
+        self.action_state = "attack"
+        self.action_frame = 0
+        self.shoot_state = "wait"
+        audio_manager.play_sound("swipe")
 
     def dodge_roll(self):
         print("[DEBUG] Dodge triggered")

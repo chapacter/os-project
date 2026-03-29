@@ -5,6 +5,7 @@ import pygame
 from effects.effect import Effect
 from effects.particle import Particle
 from entity.base import Healthbar
+from projectiles.bullet import Enemy_Bullet
 from utils import weighted_choice
 from utils.audio import audio_manager
 from utils.settings import *
@@ -97,38 +98,29 @@ class Enemy(pygame.sprite.Sprite):
             if self.direction == "left":
                 self.x_change -= ENEMY_SPEED
                 self.current_steps += 1
-                if self.shoot_state == "shoot":
-                    from projectiles.bullet import Enemy_Bullet
-
-                    Enemy_Bullet(self.game, self.rect.x, self.rect.y)
-                    self.shoot_state = "halt"
-
             elif self.direction == "right":
                 self.x_change += ENEMY_SPEED
                 self.current_steps += 1
-                if self.shoot_state == "shoot":
-                    from projectiles.bullet import Enemy_Bullet
-
-                    Enemy_Bullet(self.game, self.rect.x, self.rect.y)
-                    self.shoot_state = "halt"
-
             elif self.direction == "up":
                 self.y_change -= ENEMY_SPEED
                 self.current_steps += 1
-                if self.shoot_state == "shoot":
-                    from projectiles.bullet import Enemy_Bullet
-
-                    Enemy_Bullet(self.game, self.rect.x, self.rect.y)
-                    self.shoot_state = "halt"
-
             elif self.direction == "down":
                 self.y_change += ENEMY_SPEED
                 self.current_steps += 1
-                if self.shoot_state == "shoot":
-                    from projectiles.bullet import Enemy_Bullet
 
-                    Enemy_Bullet(self.game, self.rect.x, self.rect.y)
-                    self.shoot_state = "halt"
+            if self.shoot_state == "shoot":
+                player = self.game.player
+                start_x = self.hitbox.centerx
+                start_y = self.hitbox.centery
+                target_x = player.hitbox.centerx
+                target_y = player.hitbox.centery
+                offset = 0.15
+                target_x += random.randint(-50, 50) * offset
+                target_y += random.randint(-50, 50) * offset
+                Enemy_Bullet(
+                    self.game, start_x, start_y, target_x, target_y, scatter=0.3
+                )
+                self.shoot_state = "halt"
 
             max_health = (
                 ENEMY_HEALTH * 5
@@ -237,9 +229,9 @@ class Enemy(pygame.sprite.Sprite):
         room = self.game.dungeon_generator.rooms.get(room_coord)
         if room and room.enemy_count > 0:
             room.enemy_count -= 1
-            print(
-                f"[DEBUG] Enemy killed, room {room_coord} now has {room.enemy_count} enemies"
-            )
+            # print(
+            #     f"[DEBUG] Enemy killed, room {room_coord} now has {room.enemy_count} enemies"
+            # )
 
 
 class Enemy_Healthbar(Healthbar):
