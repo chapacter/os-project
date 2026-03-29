@@ -7,6 +7,7 @@ import pygame
 import pygame_gui
 import pytmx
 
+import config
 from audio import audio_manager
 from camera import Camera
 from entity.enemy import Enemy
@@ -29,7 +30,9 @@ class GameMode:
 
 class Game:
     def __init__(self):
-        self.sc = pygame.display.set_mode((WIN_WIDTH, WIN_HEIGHT))
+        config.load_config()
+        self.scale = config.get_scale()
+        self.sc = self.create_window()
         self.clock = pygame.time.Clock()
         self.terrain_spritesheet = Spritesheet("assets/tileset.png")
         self.mc_spritesheet = Spritesheet("assets/mctileset.png")
@@ -76,6 +79,56 @@ class Game:
 
         self.audio_enabled = False
         self.audio = audio_manager
+
+        self.render_surface = None
+        self.target_scale = self.scale
+        self.current_scale = self.scale
+        self.scale_speed = 0.1
+
+    def create_window(self):
+        mode = config.get_window_mode()
+        screen_w, screen_h = config.get_screen_size()
+
+        flags = 0
+        width = WIN_WIDTH
+        height = WIN_HEIGHT
+
+        if mode == "fullscreen":
+            flags = pygame.FULLSCREEN
+            width = screen_w
+            height = screen_h
+        elif mode == "borderless":
+            flags = pygame.NOFRAME
+            width = screen_w
+            height = screen_h
+        elif mode == "windowed":
+            width, height = config.get_window_size()
+
+        self.sc = pygame.display.set_mode((width, height), flags)
+        self.render_surface = pygame.Surface(
+            (int(width / self.scale), int(height / self.scale))
+        )
+        self.fade_surface = pygame.Surface((width, height))
+        return self.sc
+
+    def toggle_fullscreen(self):
+        next_mode = config.get_next_window_mode()
+        config.set_window_mode(next_mode)
+        self.sc = self.create_window()
+        self.render_surface = pygame.Surface(
+            (
+                int(self.sc.get_width() / self.current_scale),
+                int(self.sc.get_height() / self.current_scale),
+            )
+        )
+        self.fade_surface = pygame.Surface((self.sc.get_width(), self.sc.get_height()))
+        if hasattr(self, "camera"):
+            self.camera.screen_width = self.render_surface.get_width()
+            self.camera.screen_height = self.render_surface.get_height()
+        if hasattr(self, "ui_manager"):
+            self.ui_manager = pygame_gui.UIManager(
+                (self.sc.get_width(), self.sc.get_height())
+            )
 
     def init_ui(self):
         from ui.menu import MainMenu
@@ -419,6 +472,14 @@ class Game:
             self.player = Player(self, 5, 5)
 
     def create(self):
+        self.render_surface = pygame.Surface(
+            (
+                int(self.sc.get_width() / self.current_scale),
+                int(self.sc.get_height() / self.current_scale),
+            )
+        )
+        self.fade_surface = pygame.Surface((self.sc.get_width(), self.sc.get_height()))
+
         self.all_sprites = pygame.sprite.LayeredUpdates()
         self.blocks = pygame.sprite.LayeredUpdates()
         self.water = pygame.sprite.LayeredUpdates()
@@ -444,7 +505,9 @@ class Game:
     def init_camera(self):
         map_w = WORLD_ZONE_WIDTH * TILESIZE if self.mode == GameMode.WORLD else 2000
         map_h = WORLD_ZONE_HEIGHT * TILESIZE if self.mode == GameMode.WORLD else 2000
-        self.camera = Camera(WIN_WIDTH, WIN_HEIGHT, map_w, map_h)
+        camera_w = self.render_surface.get_width()
+        camera_h = self.render_surface.get_height()
+        self.camera = Camera(camera_w, camera_h, map_w, map_h)
 
     def init_physics_world(self):
         if self.physics:
@@ -532,7 +595,24 @@ class Game:
             self.game_state = "playing"
             self.pause_menu.hide()
 
+    def update_scale(self):
+        if abs(self.current_scale - self.target_scale) > 0.005:
+            self.current_scale += (
+                                          self.target_scale - self.current_scale
+                                  ) * self.scale_speed
+
+            self.render_surface = pygame.Surface(
+                (
+                    int(self.sc.get_width() / self.current_scale),
+                    int(self.sc.get_height() / self.current_scale),
+                )
+            )
+            if hasattr(self, "camera"):
+                self.camera.screen_width = self.render_surface.get_width()
+                self.camera.screen_height = self.render_surface.get_height()
+
     def update(self):
+        self.update_scale()
         self.all_sprites.update()
 
         if self.physics_enabled and self.physics:
@@ -568,6 +648,34 @@ class Game:
                     else:
                         pygame.quit()
                         sys.exit()
+                elif event.key == pygame.K_F11:
+                    self.toggle_fullscreen()
+
+            if event.type == pygame.VIDEORESIZE:
+                if config.get_window_mode() == "windowed":
+                    config.set_window_size(event.w, event.h)
+                    self.sc = self.create_window()
+                    self.render_surface = pygame.Surface(
+                        (
+                            int(self.sc.get_width() / self.current_scale),
+                            int(self.sc.get_height() / self.current_scale),
+                        )
+                    )
+                    self.fade_surface = pygame.Surface(
+                        (self.sc.get_width(), self.sc.get_height())
+                    )
+                    if hasattr(self, "camera"):
+                        self.camera.screen_width = self.render_surface.get_width()
+                        self.camera.screen_height = self.render_surface.get_height()
+                    if hasattr(self, "ui_manager"):
+                        self.ui_manager = pygame_gui.UIManager(
+                            (self.sc.get_width(), self.sc.get_height())
+                        )
+
+            if event.type == pygame.MOUSEWHEEL:
+                new_target = max(0.25, min(4.0, self.target_scale + event.y * 0.1))
+                self.target_scale = round(new_target, 1)
+                config.set_scale(self.target_scale)
 
             if self.game_state == "menu":
                 self.main_menu.handle_event(event)
@@ -579,18 +687,26 @@ class Game:
             self.sc.fill(BLACK)
             self.main_menu.draw(self.sc)
         elif self.game_state == "paused":
-            self.sc.fill(BLACK)
+            self.render_surface.fill(BLACK)
             for sprite in self.all_sprites.sprites():
                 if self.is_sprite_in_active_zone(sprite):
-                    self.sc.blit(sprite.image, self.camera.apply(sprite))
+                    self.render_surface.blit(sprite.image, self.camera.apply(sprite))
+            scaled = pygame.transform.scale(
+                self.render_surface, (self.sc.get_width(), self.sc.get_height())
+            )
+            self.sc.blit(scaled, (0, 0))
             self.pause_menu.draw(self.sc)
         elif self.game_state == "playing":
-            self.sc.fill(BLACK)
+            self.render_surface.fill(BLACK)
             drawn = 0
             for sprite in self.all_sprites.sprites():
                 if self.is_sprite_in_active_zone(sprite):
-                    self.sc.blit(sprite.image, self.camera.apply(sprite))
+                    self.render_surface.blit(sprite.image, self.camera.apply(sprite))
                     drawn += 1
+            scaled = pygame.transform.scale(
+                self.render_surface, (self.sc.get_width(), self.sc.get_height())
+            )
+            self.sc.blit(scaled, (0, 0))
             if not hasattr(self, "_debug_drawn") or drawn > 0:
                 print(f"[DEBUG] Drawn sprites: {drawn}")
                 self._debug_drawn = True
