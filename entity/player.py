@@ -2,16 +2,14 @@ import pygame
 
 from effects.effect import Effect
 from effects.particle import Particle
-from entity.base import Healthbar
 from projectiles.bullet import Bullet
-from settings import *
+from utils.settings import *
 
 
 class Player(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
         self._layer = PLAYER_LAYER
-        self.healthbar = Player_Healthbar(game, self, x, y)
 
         self.groups = game.all_sprites, game.mainPlayer
         pygame.sprite.Sprite.__init__(self, self.groups)
@@ -269,13 +267,6 @@ class Player(pygame.sprite.Sprite):
 
     def damage(self, amount):
         self.health = self.health - amount
-        self.healthbar.damage(PLAYER_HEALTH, self.health)
 
         if self.health <= 0:
             self.kill()
-            self.healthbar.kill_bar()
-
-
-class Player_Healthbar(Healthbar):
-    def __init__(self, game, player, x, y):
-        super().__init__(game, x, y, player)

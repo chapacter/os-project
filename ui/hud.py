@@ -2,7 +2,7 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UILabel
 
-from settings import WIN_WIDTH, WIN_HEIGHT
+from utils.settings import WIN_WIDTH, WIN_HEIGHT
 
 
 class HUD:

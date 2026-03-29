@@ -61,6 +61,33 @@ SPRITE_ENEMY = {
     "hitbox_size": 26,
 }
 
+ENEMY_TYPES = {
+    0: {
+        "sheet": "assets/enemy.png",
+        "grid": (3, 4),
+        "sprite_size": (32, 32),
+        "weight": 3,
+    },
+    1: {
+        "sheet": "assets/ghost.png",
+        "grid": (3, 4),
+        "sprite_size": (26, 36),
+        "weight": 1,
+    },
+    2: {
+        "sheet": "assets/reaper.png",
+        "grid": (3, 4),
+        "sprite_size": (26, 36),
+        "weight": 1,
+    },
+    3: {
+        "sheet": "assets/reaper_blade.png",
+        "grid": (3, 4),
+        "sprite_size": (26, 36),
+        "weight": 1,
+    },
+}
+
 SPRITE_EFFECTS = {
     "sheet": "assets/effects.png",
     "sheet_size": (320, 128),

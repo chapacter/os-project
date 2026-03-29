@@ -3,7 +3,7 @@ import os
 import pygame
 
 from items.base import Item
-from settings import *
+from utils.settings import *
 
 
 class Berry(Item):

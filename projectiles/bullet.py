@@ -1,7 +1,7 @@
 import pygame
 
 from effects.effect import Effect
-from settings import *
+from utils.settings import *
 
 
 class Bullet(pygame.sprite.Sprite):
@@ -90,11 +90,12 @@ class Enemy_Bullet(pygame.sprite.Sprite):
             self.kill()
 
     def collide_player(self):
-        collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, False)
-        if collide:
-            Effect(self.game, self.rect.centerx, self.rect.centery, "hit")
-            collide[0].damage(self.damage)
-            self.kill()
+        for player in self.game.mainPlayer:
+            if self.rect.colliderect(player.hitbox):
+                Effect(self.game, self.rect.centerx, self.rect.centery, "hit")
+                player.damage(self.damage)
+                self.kill()
+                break
 
     def update(self):
         self.move()

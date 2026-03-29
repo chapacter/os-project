@@ -2,7 +2,7 @@ import random
 
 import pygame
 
-from settings import *
+from utils.settings import *
 
 
 class Particle(pygame.sprite.Sprite):

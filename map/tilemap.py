@@ -1,6 +1,6 @@
 import pygame
 
-from settings import *
+from utils.settings import *
 
 
 class GameMode:
@@ -21,7 +21,7 @@ class Block(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        self.image = game.terrain_spritesheet.get_image(0, 19, self.width, self.height)
+        self.image = game.terrain_spritesheet.get_image(0, 0, self.width, self.height)
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
@@ -29,16 +29,16 @@ class Block(pygame.sprite.Sprite):
 
 class Ground(pygame.sprite.Sprite):
     TILE_MAP = {
-        ".": (0, 0),  # GRASS → трава
-        ":": (1, 2),  # SAND → песок
-        "T": (1, 4),  # FOREST → кора дерева
-        "B": (0, 1),  # MOUNTAIN → камень
-        "S": (1, 3),  # SWAMP → гравий
-        "~": (1, 2),  # WATER → песок
-        "L": (1, 10),  # LAVA → красный камень
-        "V": (0, 4),  # VILLAGE → доски
-        "H": (0, 4),  # HOUSE → доски
-        "N": (0, 4),  # NPC → доски
+        ".": (0, 3),  # GRASS → Floor
+        ":": (2, 0),  # SAND → Cobblestone
+        "T": (3, 0),  # FOREST → Planks
+        "B": (2, 0),  # MOUNTAIN → Cobblestone
+        "S": (2, 0),  # SWAMP → Cobblestone
+        "~": (5, 0),  # WATER → Water
+        "L": (2, 0),  # LAVA → Cobblestone
+        "V": (3, 0),  # VILLAGE → Planks
+        "H": (3, 0),  # HOUSE → Planks
+        "N": (3, 0),  # NPC → Planks
     }
 
     def __init__(self, game, x, y, terrain_type="."):
@@ -52,11 +52,10 @@ class Ground(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        tile_pos = self.TILE_MAP.get(terrain_type, (0, 0))
-        margin = (37 - 32) // 2
-        src_x = tile_pos[1] * 37 + margin
-        src_y = tile_pos[0] * 37 + margin
-        self.image = game.mc_spritesheet.get_image(src_x, src_y, 32, 32)
+        tile_pos = self.TILE_MAP.get(terrain_type, (2, 0))
+        src_x = tile_pos[1] * 32
+        src_y = tile_pos[0] * 32
+        self.image = game.terrain_spritesheet.get_image(src_x, src_y, 32, 32)
         if self.width != 32 or self.height != 32:
             self.image = pygame.transform.scale(self.image, (self.width, self.height))
         self.rect = self.image.get_rect()
@@ -76,7 +75,7 @@ class DungeonEntrance(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        self.image = game.terrain_spritesheet.get_image(0, 0, self.width, self.height)
+        self.image = game.terrain_spritesheet.get_image(1, 1, self.width, self.height)
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
@@ -99,12 +98,8 @@ class Portal(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        try:
-            self.image = pygame.image.load("assets/portal.png").convert_alpha()
-            self.image = pygame.transform.scale(self.image, (self.width, self.height))
-        except:
-            self.image = pygame.Surface((self.width, self.height))
-            self.image.fill((128, 0, 128))
+        self.image = game.terrain_spritesheet.get_image(1, 2, 32, 32)
+        self.image = pygame.transform.scale(self.image, (self.width, self.height))
 
         self.rect = self.image.get_rect()
         self.rect.x = self.x
@@ -132,14 +127,7 @@ class Decoration(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        if decor_type == "tree":
-            self.image = game.terrain_spritesheet.get_image(
-                0, 40, self.width, self.height
-            )
-        else:
-            self.image = game.terrain_spritesheet.get_image(
-                0, 19, self.width, self.height
-            )
+        self.image = game.terrain_spritesheet.get_image(1, 0, self.width, self.height)
 
         self.rect = self.image.get_rect()
         self.rect.x = self.x
@@ -158,7 +146,7 @@ class Water(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        self.image = game.terrain_spritesheet.get_image(0, 52, self.width, self.height)
+        self.image = game.terrain_spritesheet.get_image(5, 0, self.width, self.height)
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y

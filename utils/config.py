@@ -1,7 +1,7 @@
 import configparser
 import os
 
-CONFIG_FILE = "config.ini"
+CONFIG_FILE = "../config.ini"
 
 config = configparser.ConfigParser()
 
@@ -91,7 +91,7 @@ def set_scale(scale):
 
 def calculate_initial_scale(screen_w, screen_h):
     max_room_height_tiles = 16
-    from settings import TILESIZE
+    from utils.settings import TILESIZE
 
     max_room_height_px = max_room_height_tiles * TILESIZE
     scale = screen_h / max_room_height_px

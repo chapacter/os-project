@@ -5,11 +5,12 @@ import pygame
 from effects.effect import Effect
 from effects.particle import Particle
 from entity.base import Healthbar
-from settings import *
+from utils import weighted_choice
+from utils.settings import *
 
 
 class Enemy(pygame.sprite.Sprite):
-    def __init__(self, game, x, y, is_boss=False, is_elite=False):
+    def __init__(self, game, x, y, is_boss=False, is_elite=False, enemy_type=None):
         self.game = game
         self._layer = PLAYER_LAYER
         self.healthbar = Enemy_Healthbar(game, self, x, y)
@@ -18,11 +19,6 @@ class Enemy(pygame.sprite.Sprite):
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
-        self.width = CHARACTER_SIZE
-        self.height = CHARACTER_SIZE
-
-        self.x_change = 0
-        self.y_change = 0
 
         self.is_boss = is_boss
         self.is_elite = is_elite
@@ -37,16 +33,30 @@ class Enemy(pygame.sprite.Sprite):
             self.health = ENEMY_HEALTH
             self.ENEMY_SPEED_MOD = 1
 
-        # Предзагрузка анимаций (3 кадра на направление)
+        type_weights = {k: v["weight"] for k, v in ENEMY_TYPES.items()}
+        self.enemy_type = (
+            enemy_type if enemy_type is not None else weighted_choice(type_weights)
+        )
+
+        cfg = ENEMY_TYPES[self.enemy_type]
+        self.width = cfg["sprite_size"][0]
+        self.height = cfg["sprite_size"][1]
+
+        self.x_change = 0
+        self.y_change = 0
+
         self.frame_move = 3
         self.animations = {}
         direction_map = {"down": 0, "left": 1, "right": 2, "up": 3}
 
+        spritesheet = game.enemy_spritesheets[self.enemy_type]
+        sprite_w, sprite_h = cfg["sprite_size"]
+
         for direction, row in direction_map.items():
             frames = []
             for col in range(self.frame_move):
-                sprite = game.enemy_spritesheet.get_image(
-                    col * 32, row * 32, self.width, self.height
+                sprite = spritesheet.get_image(
+                    col * sprite_w, row * sprite_h, self.width, self.height
                 )
                 frames.append(sprite)
             self.animations[direction] = frames

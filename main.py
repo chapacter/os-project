@@ -7,9 +7,6 @@ import pygame
 import pygame_gui
 import pytmx
 
-import config
-from audio import audio_manager
-from camera import Camera
 from entity.enemy import Enemy
 from entity.player import Player
 from items.weapon import Weapon
@@ -17,9 +14,12 @@ from map.dungeon_generator import DungeonGenerator
 from map.tilemap import Block, Ground
 from map.tmx_loader import TiledLoader
 from map.world_generator import WorldGenerator
-from physics import PhysicsEngine
-from settings import *
 from sprites import Spritesheet
+from utils import config
+from utils.audio import audio_manager
+from utils.camera import Camera
+from utils.physics import PhysicsEngine
+from utils.settings import *
 
 
 class GameMode:
@@ -34,10 +34,12 @@ class Game:
         self.scale = config.get_scale()
         self.sc = self.create_window()
         self.clock = pygame.time.Clock()
-        self.terrain_spritesheet = Spritesheet("assets/tileset.png")
-        self.mc_spritesheet = Spritesheet("assets/mctileset.png")
+        self.terrain_spritesheet = Spritesheet("assets/blocs.png")
         self.player_spritesheet = Spritesheet(SPRITE_PLAYER["sheet"])
-        self.enemy_spritesheet = Spritesheet("assets/enemy.png")
+        self.enemy_spritesheets = {
+            enemy_type: Spritesheet(cfg["sheet"])
+            for enemy_type, cfg in ENEMY_TYPES.items()
+        }
         self.weapon_spritesheet = Spritesheet("assets/sword.png")
         self.effects_spritesheet = Spritesheet("assets/effects.png")
 
@@ -156,15 +158,13 @@ class Game:
         zone_h = WORLD_ZONE_HEIGHT
 
         if (zone_x, zone_y) not in self.world:
-            print(f"[DEBUG] Generating new zone ({zone_x}, {zone_y})")
+            # print(f"[DEBUG] Generating new zone ({zone_x}, {zone_y})")
             self.world[(zone_x, zone_y)] = self.world_generator.get_zone_at(
                 zone_x, zone_y
             )
 
         level = self.world[(zone_x, zone_y)]
-        print(
-            f"[DEBUG] Zone size: {len(level)} rows x {len(level[0]) if level else 0} cols"
-        )
+        # print(f"[DEBUG] Zone size: {len(level)} rows x {len(level[0]) if level else 0} cols")
 
         sprite_count = 0
         ground_count = 0
@@ -211,10 +211,8 @@ class Game:
         if not in_sprites:
             self.player = Player(self, 2, 2)
 
-        print(
-            f"[DEBUG] Created {sprite_count} sprites ({ground_count} ground), total: {len(self.all_sprites)}, player_in_sprites: {in_sprites}"
-        )
-        print(f"[DEBUG] Player rect after load: {self.player.rect}")
+        # print(f"[DEBUG] Created {sprite_count} sprites ({ground_count} ground), total: {len(self.all_sprites)}, player_in_sprites: {in_sprites}")
+        # print(f"[DEBUG] Player rect after load: {self.player.rect}")
         if hasattr(self, "camera"):
             print(
                 f"[DEBUG] Camera: pos=({self.camera.scroll_x}, {self.camera.scroll_y}), map_size=({self.camera.map_width}, {self.camera.map_height})"
@@ -260,24 +258,18 @@ class Game:
         self.spawn_dungeon_enemies()
 
         start_x, start_y = self.dungeon_generator.get_start_position()
-        print(
-            f"[DEBUG] Player spawn position: {start_x}, {start_y}, map_size: {self.dungeon_generator.map_width}x{self.dungeon_generator.map_height}"
-        )
+        # print(f"[DEBUG] Player spawn position: {start_x}, {start_y}, map_size: {self.dungeon_generator.map_width}x{self.dungeon_generator.map_height}")
         self.player = Player(self, start_x, start_y)
-        print(f"[DEBUG] Player created at: {self.player.rect.x}, {self.player.rect.y}")
+        # print(f"[DEBUG] Player created at: {self.player.rect.x}, {self.player.rect.y}")
 
         if hasattr(self, "camera"):
             self.camera.set_map_size(
                 self.dungeon_generator.map_width * TILESIZE,
                 self.dungeon_generator.map_height * TILESIZE,
             )
-            print(
-                f"[DEBUG] Camera map_size set to: {self.camera.map_width}x{self.camera.map_height}"
-            )
+            # print(f"[DEBUG] Camera map_size set to: {self.camera.map_width}x{self.camera.map_height}")
             self.camera.center_on(self.player.rect.x, self.player.rect.y)
-            print(
-                f"[DEBUG] Camera centered: scroll={self.camera.scroll_x},{self.camera.scroll_y}"
-            )
+            # print(f"[DEBUG] Camera centered: scroll={self.camera.scroll_x},{self.camera.scroll_y}")
 
     def create_dungeon_doors(self):
         from map.door import Door
@@ -316,12 +308,10 @@ class Game:
             if not room:
                 continue
             if room.enemy_count > 0:
-                print(
-                    f"[DEBUG] Room {gx},{gy} already has {room.enemy_count} enemies, skipping spawn"
-                )
+                # print(f"[DEBUG] Room {gx},{gy} already has {room.enemy_count} enemies, skipping spawn")
                 continue
             if room.enemies_spawned:
-                print(f"[DEBUG] Room {gx},{gy} already spawned enemies, skipping")
+                # print(f"[DEBUG] Room {gx},{gy} already spawned enemies, skipping")
                 continue
             room.enemy_count = 0
             print(
@@ -360,7 +350,7 @@ class Game:
                         room.enemy_count += 1
                         total_enemies += 1
 
-        print(f"[DEBUG] Spawned {total_enemies} enemies")
+        # print(f"[DEBUG] Spawned {total_enemies} enemies")
 
     def exit_dungeon(self, go_deeper=False):
         if go_deeper and self.current_dungeon_floor < DUNGEON_FLOORS:
@@ -432,7 +422,7 @@ class Game:
 
         if not result or not result["map"] or not result["map"].tmx_data:
             print(f"Failed to load TMX map: {filename}")
-            return
+            # return
 
         self.current_tmx_map = result["map"]
 
@@ -552,7 +542,7 @@ class Game:
                 self.create()
                 self.hud.show()
             except Exception as e:
-                print(f"Error loading save: {e}")
+                # print(f"Error loading save: {e}")
                 self.start_new_game()
         else:
             self.start_new_game()
@@ -568,7 +558,7 @@ class Game:
         try:
             with open("savegame.json", "w") as f:
                 json.dump(save_data, f)
-            print("Game saved!")
+            # print("Game saved!")
         except Exception as e:
             print(f"Error saving game: {e}")
 
@@ -618,10 +608,7 @@ class Game:
         if self.physics_enabled and self.physics:
             self.physics.update(1.0 / 60.0)
 
-        if hasattr(self, "player") and self.player:
-            print(
-                f"Game update: player at x={self.player.rect.x}, y={self.player.rect.y}"
-            )
+        # if hasattr(self, "player") and self.player: print(f"Game update: player at x={self.player.rect.x}, y={self.player.rect.y}")
 
         if (
                 self.camera_enabled
@@ -708,7 +695,7 @@ class Game:
             )
             self.sc.blit(scaled, (0, 0))
             if not hasattr(self, "_debug_drawn") or drawn > 0:
-                print(f"[DEBUG] Drawn sprites: {drawn}")
+                # print(f"[DEBUG] Drawn sprites: {drawn}")
                 self._debug_drawn = True
             self.hud.draw(self.sc)
 
@@ -789,24 +776,22 @@ class Game:
         zone_w = WORLD_ZONE_WIDTH
         zone_h = WORLD_ZONE_HEIGHT
 
-        print(
-            f"[DEBUG] check_zone_transition: player_tile=({player_tile_x}, {player_tile_y}), current_zone={self.current_zone}, zone_size=({zone_w}, {zone_h})"
-        )
+        # print(f"[DEBUG] check_zone_transition: player_tile=({player_tile_x}, {player_tile_y}), current_zone={self.current_zone}, zone_size=({zone_w}, {zone_h})")
 
         new_zone = None
 
         if player_tile_x < 1:
             new_zone = (self.current_zone[0] - 1, self.current_zone[1])
-            print(f"[DEBUG] Transition left to {new_zone}")
+            # print(f"[DEBUG] Transition left to {new_zone}")
         elif player_tile_x >= zone_w - 2:
             new_zone = (self.current_zone[0] + 1, self.current_zone[1])
-            print(f"[DEBUG] Transition right to {new_zone}")
+            # print(f"[DEBUG] Transition right to {new_zone}")
         elif player_tile_y < 1:
             new_zone = (self.current_zone[0], self.current_zone[1] - 1)
-            print(f"[DEBUG] Transition up to {new_zone}")
+            # print(f"[DEBUG] Transition up to {new_zone}")
         elif player_tile_y >= zone_h - 2:
             new_zone = (self.current_zone[0], self.current_zone[1] + 1)
-            print(f"[DEBUG] Transition down to {new_zone}")
+            # print(f"[DEBUG] Transition down to {new_zone}")
 
         if new_zone and -1 <= new_zone[0] <= 1 and -1 <= new_zone[1] <= 1:
 
@@ -870,9 +855,7 @@ class Game:
             if self._is_player_fully_inside_room():
                 room = self.dungeon_generator.rooms.get(player_room_coord)
                 if room and room.enemy_count == 0:
-                    print(
-                        f"[DEBUG] Spawning enemies in current room {player_room_coord}"
-                    )
+                    # print( f"[DEBUG] Spawning enemies in current room {player_room_coord}")
                     self.spawn_dungeon_enemies(player_room_coord)
 
         player_room = self.dungeon_generator.rooms.get(player_room_coord)
@@ -927,9 +910,9 @@ class Game:
         return is_inside
 
     def transition_to_room(self, room_coord, direction):
-        print(f"[DEBUG] transition_to_room: {room_coord}, direction: {direction}")
+        # print(f"[DEBUG] transition_to_room: {room_coord}, direction: {direction}")
         if room_coord not in self.dungeon_generator.rooms:
-            print(f"[DEBUG] Room {room_coord} not in dungeon_generator.rooms")
+            # print(f"[DEBUG] Room {room_coord} not in dungeon_generator.rooms")
             return
 
         room = self.dungeon_generator.rooms[room_coord]
@@ -943,9 +926,7 @@ class Game:
         room_unit_width = room_tile_width + wall_thickness * 2
         room_unit_height = room_tile_height + wall_thickness * 2
 
-        print(
-            f"[DEBUG] Transitioned to room {room_coord}, player stays at {self.player.rect.x}, {self.player.rect.y}"
-        )
+        # print(f"[DEBUG] Transitioned to room {room_coord}, player stays at {self.player.rect.x}, {self.player.rect.y}")
 
     def _show_room(self, room_coord):
         if room_coord not in self.dungeon_generator.rooms:
@@ -999,9 +980,7 @@ class Game:
 
                         Decoration(self, j, i, "tree")
 
-        print(
-            f"[DEBUG] _rebuild_visible_rooms: added {visible_count} new rooms, total built: {len(self._dungeon_built_rooms)}"
-        )
+        # print(f"[DEBUG] _rebuild_visible_rooms: added {visible_count} new rooms, total built: {len(self._dungeon_built_rooms)}")
 
     def handle_camera_movement(self):
         pass

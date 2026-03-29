@@ -1,6 +1,6 @@
 import pygame
 
-from settings import *
+from utils.settings import *
 
 
 class Effect(pygame.sprite.Sprite):
