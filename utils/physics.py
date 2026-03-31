@@ -1,6 +1,11 @@
 import pymunk
 import pymunk.pygame_util
 
+COLLISION_BLOCK = 1
+COLLISION_WATER = 2
+COLLISION_ENTITY = 3
+COLLISION_PLAYER = 4
+
 
 class PhysicsEngine:
     def __init__(self):
@@ -9,6 +14,9 @@ class PhysicsEngine:
 
         self.bodies = {}
         self.shapes = {}
+        self.shape_to_entity = {}
+
+        self.collision_flags = {}
 
     def update(self, dt=1.0 / 60.0):
         self.space.step(dt)
@@ -18,7 +26,7 @@ class PhysicsEngine:
         shape = pymunk.Poly.create_box(body, (width, height))
         shape.elasticity = 0.0
         shape.friction = 0.5
-        shape.collision_type = 1 if name != "water" else 2
+        shape.collision_type = COLLISION_BLOCK
 
         pos = (x + width / 2, y + height / 2)
         shape.body.position = pos
@@ -28,6 +36,26 @@ class PhysicsEngine:
 
         return shape
 
+    def add_entity_body(
+            self, x, y, width, height, name=None, collision_type=COLLISION_ENTITY
+    ):
+        body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
+        body.position = (x + width / 2, y + height / 2)
+
+        shape = pymunk.Poly.create_box(body, (width, height))
+        shape.elasticity = 0.0
+        shape.friction = 0.0
+        shape.collision_type = collision_type
+
+        self.space.add(body, shape)
+
+        if name:
+            self.bodies[name] = body
+            self.shapes[name] = shape
+            self.shape_to_entity[shape] = name
+
+        return body, shape
+
     def add_dynamic_body(self, x, y, width, height, mass=1.0, name=None):
         moment = pymunk.moment_for_box(mass, (width, height))
         body = pymunk.Body(mass, moment)
@@ -36,7 +64,7 @@ class PhysicsEngine:
         shape = pymunk.Poly.create_box(body, (width, height))
         shape.elasticity = 0.3
         shape.friction = 0.5
-        shape.collision_type = 3
+        shape.collision_type = COLLISION_ENTITY
 
         self.space.add(body, shape)
 
@@ -52,7 +80,7 @@ class PhysicsEngine:
         shape = pymunk.Poly.create_box(body, (width, height))
         shape.elasticity = 0.0
         shape.friction = 0.5
-        shape.collision_type = 1
+        shape.collision_type = COLLISION_BLOCK
 
         self.space.add(body, shape)
 
@@ -92,13 +120,16 @@ class PhysicsEngine:
             body = self.bodies[name]
             for shape in body.shapes:
                 self.space.remove(shape)
+                self.shape_to_entity.pop(shape, None)
             self.space.remove(body)
             del self.bodies[name]
+            self.shapes.pop(name, None)
 
     def remove_shape(self, name):
         if name in self.shapes:
             shape = self.shapes[name]
             self.space.remove(shape)
+            self.shape_to_entity.pop(shape, None)
             del self.shapes[name]
 
     def create_collision_handler(
@@ -110,18 +141,33 @@ class PhysicsEngine:
             post_solve_handler=None,
             separate_handler=None,
     ):
-        handler = self.space.add_collision_handler(type_a, type_b)
+        self.space.on_collision(
+            type_a,
+            type_b,
+            begin=begin_handler,
+            pre_solve=pre_solve_handler,
+            post_solve=post_solve_handler,
+            separate=separate_handler,
+        )
 
-        if begin_handler:
-            handler.begin = begin_handler
-        if pre_solve_handler:
-            handler.pre_solve = pre_solve_handler
-        if post_solve_handler:
-            handler.post_solve = post_solve_handler
-        if separate_handler:
-            handler.separate = separate_handler
+    def setup_entity_block_handler(self):
+        def pre_solve(arbiter, space, data):
+            shape_a = arbiter.shapes[0]
+            shape_b = arbiter.shapes[1]
 
-        return handler
+            entity_name = self.shape_to_entity.get(shape_a) or self.shape_to_entity.get(
+                shape_b
+            )
+            if entity_name:
+                self.collision_flags[entity_name] = True
+            return False
+
+        self.create_collision_handler(
+            COLLISION_PLAYER, COLLISION_BLOCK, pre_solve_handler=pre_solve
+        )
+        self.create_collision_handler(
+            COLLISION_ENTITY, COLLISION_BLOCK, pre_solve_handler=pre_solve
+        )
 
     def get_objects_at_point(self, x, y):
         point_query = self.space.point_query_nearest((x, y), 0, pymunk.ShapeFilter())
@@ -132,6 +178,9 @@ class PhysicsEngine:
     def get_objects_in_rect(self, x, y, width, height):
         rect = pymunk.BB(x, y, x + width, y + height)
         return self.space.shape_query(rect)
+
+    def clear_collision_flags(self):
+        self.collision_flags.clear()
 
 
 class PhysicsEntity:

@@ -24,18 +24,15 @@ class Player(pygame.sprite.Sprite):
         self.offset_x = self.sprite_cfg["offset"][0]
         self.offset_y = self.sprite_cfg["offset"][1]
 
-        self.x_change = 0
-        self.y_change = 0
+        self.velocity = pygame.math.Vector2(0, 0)
         self.frame_move = 6
         self.frame_attack = 4
         self.frame_dodge = 5
 
-        # Предзагрузка анимаций
         self.animations = {}
         direction_map = {"right": 0, "up": 1, "down": 2, "left": 3}
         animation_offsets = {"move": 0, "attack": 6, "dodge": 10}
 
-        # Анимация движения (6 кадров)
         self.animations["move"] = {}
         for direction, row in direction_map.items():
             frames = []
@@ -46,7 +43,6 @@ class Player(pygame.sprite.Sprite):
                 frames.append(sprite)
             self.animations["move"][direction] = frames
 
-        # Анимация атаки (4 кадра)
         self.animations["attack"] = {}
         for direction, row in direction_map.items():
             frames = []
@@ -57,7 +53,6 @@ class Player(pygame.sprite.Sprite):
                 frames.append(sprite)
             self.animations["attack"][direction] = frames
 
-        # Анимация переката (5 кадров)
         self.animations["dodge"] = {}
         for direction, row in direction_map.items():
             frames = []
@@ -95,6 +90,29 @@ class Player(pygame.sprite.Sprite):
 
         self.health = PLAYER_HEALTH
 
+        self.physics_name = "player"
+        self.is_input_active = False
+
+        if game.physics_enabled and game.physics:
+            from utils.physics import COLLISION_PLAYER
+
+            game.physics.add_entity_body(
+                self.rect.x,
+                self.rect.y,
+                self.hitbox.width,
+                self.hitbox.height,
+                name=self.physics_name,
+                collision_type=COLLISION_PLAYER,
+            )
+
+    def get_direction_from_velocity(self):
+        vx, vy = self.velocity.x, self.velocity.y
+        if abs(vx) > abs(vy):
+            return "right" if vx > 0 else "left"
+        elif vy != 0:
+            return "down" if vy > 0 else "up"
+        return self.direction
+
     def move(self):
         pressed = pygame.key.get_pressed()
 
@@ -106,29 +124,38 @@ class Player(pygame.sprite.Sprite):
             self.dodge_roll()
 
         if self.is_dodging:
-            if self.direction == "left":
-                self.x_change -= PLAYER_SPEED
-            elif self.direction == "right":
-                self.x_change += PLAYER_SPEED
-            elif self.direction == "up":
-                self.y_change -= PLAYER_SPEED
-            elif self.direction == "down":
-                self.y_change += PLAYER_SPEED
+            if self.dodge_velocity and self.dodge_velocity.length() > 0:
+                self.dodge_velocity *= 0.92
+                self.velocity = self.dodge_velocity
+            else:
+                self.velocity = pygame.math.Vector2(0, 0)
         else:
+            input_vec = pygame.math.Vector2(0, 0)
             if pressed[pygame.K_a] or pressed[pygame.K_LEFT]:
-                self.x_change -= PLAYER_SPEED
+                input_vec.x -= 1
                 self.direction = "left"
-            elif pressed[pygame.K_d] or pressed[pygame.K_RIGHT]:
-                self.x_change += PLAYER_SPEED
+            if pressed[pygame.K_d] or pressed[pygame.K_RIGHT]:
+                input_vec.x += 1
                 self.direction = "right"
             if pressed[pygame.K_w] or pressed[pygame.K_UP]:
-                self.y_change -= PLAYER_SPEED
+                input_vec.y -= 1
                 self.direction = "up"
-            elif pressed[pygame.K_s] or pressed[pygame.K_DOWN]:
-                self.y_change += PLAYER_SPEED
+            if pressed[pygame.K_s] or pressed[pygame.K_DOWN]:
+                input_vec.y += 1
                 self.direction = "down"
 
-        if self.x_change != 0 or self.y_change != 0:
+            if input_vec.length() > 0:
+                input_vec = input_vec.normalize()
+                self.velocity = input_vec * PLAYER_SPEED
+                self.direction = self.get_direction_from_velocity()
+                self.is_input_active = True
+            else:
+                self.velocity *= 0.80
+                self.is_input_active = False
+                if self.velocity.length() < 0.2:
+                    self.velocity = pygame.math.Vector2(0, 0)
+
+        if self.velocity.length() > 0:
             self.grass_counter += 1
             if self.grass_counter >= 5:
                 self.grass_counter = 0
@@ -143,18 +170,37 @@ class Player(pygame.sprite.Sprite):
     def update(self):
         self.move()
         self.animation()
-        self.rect.x = self.rect.x + self.x_change
-        self.rect.y = self.rect.y + self.y_change
-        self.hitbox.center = self.rect.center
 
-        self.collide_block()
+        self.hitbox.x += self.velocity.x
+        for block in self.game.blocks:
+            if self.hitbox.colliderect(block.rect):
+                self.game.block_collided = True
+                if self.velocity.x > 0:
+                    self.hitbox.right = block.rect.left
+                else:
+                    self.hitbox.left = block.rect.right
+                self.velocity.x = 0
+                break
+        else:
+            self.game.block_collided = False
+
+        self.hitbox.y += self.velocity.y
+        for block in self.game.blocks:
+            if self.hitbox.colliderect(block.rect):
+                if self.velocity.y > 0:
+                    self.hitbox.bottom = block.rect.top
+                else:
+                    self.hitbox.top = block.rect.bottom
+                self.velocity.y = 0
+                break
+
+        self.rect.center = self.hitbox.center
+
         self.collide_enemy()
         self.collide_weapon()
         self.attack()
         self.dodge_cooldown_update()
         self.wait_after_shoot()
-        self.x_change = 0
-        self.y_change = 0
 
     def animation(self):
         if self.action_state == "attack":
@@ -178,57 +224,43 @@ class Player(pygame.sprite.Sprite):
                 self.action_state = "move"
                 self.action_frame = 0
 
-        else:  # move
-            if self.x_change == 0 and self.y_change == 0:
-                self.image = self.animations["move"][self.direction][0]
-            else:
+        else:
+            if self.is_input_active and self.velocity.length() > 0:
                 frame_index = int(self.action_frame) % self.frame_move
                 self.image = self.animations["move"][self.direction][frame_index]
                 self.action_frame += 0.8
                 if self.action_frame >= self.frame_move:
                     self.action_frame = 0
-
-    def collide_block(self):
-        pressed = pygame.key.get_pressed()
-        collide = False
-        for block in self.game.blocks:
-            if self.hitbox.colliderect(block.rect):
-                collide = True
-                break
-
-        if collide:
-            self.game.block_collided = True
-            if pressed[pygame.K_a]:
-                self.rect.x += PLAYER_SPEED
-            elif pressed[pygame.K_d]:
-                self.rect.x -= PLAYER_SPEED
-            if pressed[pygame.K_w]:
-                self.rect.y += PLAYER_SPEED
-            elif pressed[pygame.K_s]:
-                self.rect.y -= PLAYER_SPEED
-        else:
-            self.game.block_collided = False
+            else:
+                self.image = self.animations["move"][self.direction][0]
 
     def collide_enemy(self):
-        pressed = pygame.key.get_pressed()
-        collide = False
+        MAX_PUSH = 3
         for enemy in self.game.enemies:
             if self.hitbox.colliderect(enemy.rect):
-                collide = True
-                break
-
-        if collide:
-            self.game.enemy_collided = True
-            if pressed[pygame.K_a]:
-                self.rect.x += PLAYER_SPEED
-            elif pressed[pygame.K_d]:
-                self.rect.x -= PLAYER_SPEED
-            elif pressed[pygame.K_w]:
-                self.rect.y += PLAYER_SPEED
-            elif pressed[pygame.K_s]:
-                self.rect.y -= PLAYER_SPEED
-        else:
-            self.game.enemy_collided = False
+                self.game.enemy_collided = True
+                overlap_x = min(
+                    self.rect.right - enemy.rect.left,
+                    enemy.rect.right - self.rect.left,
+                )
+                overlap_y = min(
+                    self.rect.bottom - enemy.rect.top,
+                    enemy.rect.bottom - self.rect.top,
+                )
+                if overlap_x < overlap_y:
+                    push = min(overlap_x, MAX_PUSH)
+                    if self.rect.centerx < enemy.rect.centerx:
+                        self.rect.x -= push
+                    else:
+                        self.rect.x += push
+                else:
+                    push = min(overlap_y, MAX_PUSH)
+                    if self.rect.centery < enemy.rect.centery:
+                        self.rect.y -= push
+                    else:
+                        self.rect.y += push
+                return
+        self.game.enemy_collided = False
 
     def collide_weapon(self):
         collide = pygame.sprite.spritecollide(self, self.game.weapons, True)
@@ -283,12 +315,24 @@ class Player(pygame.sprite.Sprite):
         audio_manager.play_sound("swipe")
 
     def dodge_roll(self):
-        print("[DEBUG] Dodge triggered")
         self.is_dodging = True
         self.action_state = "dodge"
         self.action_frame = 0
         self.dodge_state = "cooldown"
         self.dodge_cooldown_counter = -20
+        dodge_speed = PLAYER_SPEED * 2.0
+        if self.velocity.length() > 0:
+            self.dodge_velocity = self.velocity.normalize() * dodge_speed
+        else:
+            dir_map = {
+                "left": pygame.math.Vector2(-1, 0),
+                "right": pygame.math.Vector2(1, 0),
+                "up": pygame.math.Vector2(0, -1),
+                "down": pygame.math.Vector2(0, 1),
+            }
+            self.dodge_velocity = (
+                    dir_map.get(self.direction, pygame.math.Vector2(1, 0)) * dodge_speed
+            )
         audio_manager.play_sound("evade")
 
     def dodge_cooldown_update(self):

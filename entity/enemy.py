@@ -44,8 +44,7 @@ class Enemy(pygame.sprite.Sprite):
         self.width = cfg["sprite_size"][0]
         self.height = cfg["sprite_size"][1]
 
-        self.x_change = 0
-        self.y_change = 0
+        self.velocity = pygame.math.Vector2(0, 0)
 
         self.frame_move = 3
         self.animations = {}
@@ -87,6 +86,24 @@ class Enemy(pygame.sprite.Sprite):
 
         Effect(self.game, self.rect.centerx, self.rect.centery, "death")
 
+        self.physics_name = f"enemy_{id(self)}"
+        if game.physics_enabled and game.physics:
+            game.physics.add_entity_body(
+                self.rect.x,
+                self.rect.y,
+                self.hitbox.width,
+                self.hitbox.height,
+                name=self.physics_name,
+            )
+
+    def get_direction_from_velocity(self):
+        vx, vy = self.velocity.x, self.velocity.y
+        if abs(vx) > abs(vy):
+            return "right" if vx > 0 else "left"
+        elif vy != 0:
+            return "down" if vy > 0 else "up"
+        return self.direction
+
     def shoot(self):
         self.shoot_counter += 1
         if self.shoot_counter >= self.wait_shoot:
@@ -95,18 +112,16 @@ class Enemy(pygame.sprite.Sprite):
 
     def move(self):
         if self.state == "moving":
-            if self.direction == "left":
-                self.x_change -= ENEMY_SPEED
-                self.current_steps += 1
-            elif self.direction == "right":
-                self.x_change += ENEMY_SPEED
-                self.current_steps += 1
-            elif self.direction == "up":
-                self.y_change -= ENEMY_SPEED
-                self.current_steps += 1
-            elif self.direction == "down":
-                self.y_change += ENEMY_SPEED
-                self.current_steps += 1
+            dir_map = {
+                "left": pygame.math.Vector2(-1, 0),
+                "right": pygame.math.Vector2(1, 0),
+                "up": pygame.math.Vector2(0, -1),
+                "down": pygame.math.Vector2(0, 1),
+            }
+            move_dir = dir_map.get(self.direction, pygame.math.Vector2(1, 0))
+            speed = ENEMY_SPEED * self.ENEMY_SPEED_MOD
+            self.velocity = move_dir * speed
+            self.current_steps += 1
 
             if self.shoot_state == "shoot":
                 player = self.game.player
@@ -134,6 +149,7 @@ class Enemy(pygame.sprite.Sprite):
                     Particle(self.game, self.rect.centerx, self.rect.centery)
 
         elif self.state == "stalling":
+            self.velocity = pygame.math.Vector2(0, 0)
             self.current_steps += 1
             if self.current_steps == self.stall_steps:
                 self.state = "moving"
@@ -141,8 +157,7 @@ class Enemy(pygame.sprite.Sprite):
                 self.direction = random.choice(["left", "right", "up", "down"])
 
     def animation(self):
-        if self.x_change == 0 and self.y_change == 0:
-            # Idle - первый кадр
+        if self.velocity.length() == 0:
             self.image = self.animations[self.direction][0]
         else:
             frame_index = int(self.animation_counter) % self.frame_move
@@ -154,11 +169,10 @@ class Enemy(pygame.sprite.Sprite):
     def update(self):
         self.move()
         self.animation()
-        self.rect.x = self.rect.x + self.x_change
-        self.rect.y = self.rect.y + self.y_change
+        self.rect.x += self.velocity.x
+        self.rect.y += self.velocity.y
         self.hitbox.center = self.rect.center
-        self.x_change = 0
-        self.y_change = 0
+
         if self.current_steps == self.number_steps:
             if self.state != "stalling":
                 self.current_steps = 0
@@ -169,25 +183,21 @@ class Enemy(pygame.sprite.Sprite):
         self.shoot()
 
     def collide_block(self):
-        collide = False
         for block in self.game.blocks:
             if self.hitbox.colliderect(block.rect):
-                collide = True
-                break
-
-        if collide:
-            if self.direction == "left":
-                self.rect.x += PLAYER_SPEED
-                self.direction = "right"
-            elif self.direction == "right":
-                self.rect.x -= PLAYER_SPEED
-                self.direction = "left"
-            elif self.direction == "up":
-                self.rect.y += PLAYER_SPEED
-                self.direction = "down"
-            elif self.direction == "down":
-                self.rect.y -= PLAYER_SPEED
-                self.direction = "up"
+                if self.direction == "left":
+                    self.rect.x += ENEMY_SPEED
+                    self.direction = "right"
+                elif self.direction == "right":
+                    self.rect.x -= ENEMY_SPEED
+                    self.direction = "left"
+                elif self.direction == "up":
+                    self.rect.y += ENEMY_SPEED
+                    self.direction = "down"
+                elif self.direction == "down":
+                    self.rect.y -= ENEMY_SPEED
+                    self.direction = "up"
+                return
 
     def collide_player(self):
         collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, True)
@@ -197,7 +207,6 @@ class Enemy(pygame.sprite.Sprite):
     def damage(self, amount):
         self.health = self.health - amount
         self.healthbar.damage(ENEMY_HEALTH, self.health)
-        # print(f"[DEBUG] Enemy damaged, health: {self.health}")
         audio_manager.play_sound("hit")
 
         if self.health <= 0:
@@ -205,6 +214,8 @@ class Enemy(pygame.sprite.Sprite):
             self.on_death()
             self.kill()
             self.healthbar.kill_bar()
+            if self.game.physics and hasattr(self, "physics_name"):
+                self.game.physics.remove_body(self.physics_name)
 
     def on_death(self):
         if not hasattr(self, "game") or not self.game:
@@ -229,9 +240,6 @@ class Enemy(pygame.sprite.Sprite):
         room = self.game.dungeon_generator.rooms.get(room_coord)
         if room and room.enemy_count > 0:
             room.enemy_count -= 1
-            # print(
-            #     f"[DEBUG] Enemy killed, room {room_coord} now has {room.enemy_count} enemies"
-            # )
 
 
 class Enemy_Healthbar(Healthbar):

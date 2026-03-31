@@ -88,7 +88,7 @@ class Game:
         self.hud = None
 
         self.physics = None
-        self.physics_enabled = False
+        self.physics_enabled = True
 
         self.camera = None
         self.camera_enabled = True
@@ -387,6 +387,10 @@ class Game:
             self.characters,
         ]:
             group.empty()
+        if self.physics:
+            for name in list(self.physics.bodies.keys()):
+                self.physics.remove_body(name)
+            self.physics.clear_collision_flags()
 
     def create_tile_map(self):
         map_width_tiles = 0
@@ -517,6 +521,7 @@ class Game:
         if self.physics:
             del self.physics
         self.physics = PhysicsEngine()
+        self.physics.setup_entity_block_handler()
 
     def create_physics_for_block(self, block):
         if self.physics and self.physics_enabled:
@@ -618,12 +623,14 @@ class Game:
 
     def update(self):
         self.update_scale()
-        self.all_sprites.update()
 
         if self.physics_enabled and self.physics:
+            self.physics.clear_collision_flags()
+            self.sync_physics_positions()
             self.physics.update(1.0 / 60.0)
+            self.sync_entity_positions()
 
-        # if hasattr(self, "player") and self.player: print(f"Game update: player at x={self.player.rect.x}, y={self.player.rect.y}")
+        self.all_sprites.update()
 
         if (
                 self.camera_enabled
@@ -633,6 +640,27 @@ class Game:
         ):
             self.camera.follow_sprite(self.player)
             self.camera.update(1.0 / 60.0)
+
+    def sync_physics_positions(self):
+        if not self.physics:
+            return
+        if hasattr(self, "player") and self.player and self.player in self.mainPlayer:
+            if self.player.physics_name in self.physics.bodies:
+                pos = self.physics.get_position(self.player.physics_name)
+                self.physics.set_position(
+                    self.player.physics_name,
+                    (self.player.rect.centerx, self.player.rect.centery),
+                )
+
+    def sync_entity_positions(self):
+        if not self.physics:
+            return
+        if hasattr(self, "player") and self.player:
+            if self.player.physics_name in self.physics.bodies:
+                pos = self.physics.get_position(self.player.physics_name)
+                self.player.rect.centerx = pos[0]
+                self.player.rect.centery = pos[1]
+                self.player.hitbox.center = self.player.rect.center
 
     def events(self):
         time_delta = self.clock.tick(60) / 1000.0

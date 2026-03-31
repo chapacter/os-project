@@ -26,6 +26,15 @@ class Block(pygame.sprite.Sprite):
         self.rect.x = self.x
         self.rect.y = self.y
 
+        if game.physics_enabled and game.physics:
+            game.physics.add_static_block(
+                self.rect.x,
+                self.rect.y,
+                self.rect.width,
+                self.rect.height,
+                f"block_{self.rect.x}_{self.rect.y}",
+            )
+
 
 class Ground(pygame.sprite.Sprite):
     TILE_MAP = {
