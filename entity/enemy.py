@@ -45,6 +45,10 @@ class Enemy(pygame.sprite.Sprite):
         self.height = cfg["sprite_size"][1]
 
         self.velocity = pygame.math.Vector2(0, 0)
+        self.knockback_velocity = pygame.math.Vector2(0, 0)
+
+        self.hit_flash_timer = 0
+        self.hit_flash_duration = 2
 
         self.frame_move = 3
         self.animations = {}
@@ -87,8 +91,10 @@ class Enemy(pygame.sprite.Sprite):
         Effect(self.game, self.rect.centerx, self.rect.centery, "death")
 
         self.physics_name = f"enemy_{id(self)}"
+        self.body = None
+        self.shape = None
         if game.physics_enabled and game.physics:
-            game.physics.add_entity_body(
+            self.body, self.shape = game.physics.add_entity_body(
                 self.rect.x,
                 self.rect.y,
                 self.hitbox.width,
@@ -169,38 +175,82 @@ class Enemy(pygame.sprite.Sprite):
     def update(self):
         self.move()
         self.animation()
-        self.rect.x += self.velocity.x
-        self.rect.y += self.velocity.y
-        self.hitbox.center = self.rect.center
+
+        if self.hit_flash_timer > 0:
+            mask = pygame.mask.from_surface(self.image)
+            white_silhouette = mask.to_surface(
+                setcolor=(255, 255, 255, 180), unsetcolor=(0, 0, 0, 0)
+            )
+            self.image.blit(white_silhouette, (0, 0))
+            self.hit_flash_timer -= 1
+
+        if self.knockback_velocity.length() > 0:
+            self.hitbox.x += self.knockback_velocity.x
+            for block in self.game.blocks:
+                if self.hitbox.colliderect(block.rect):
+                    if self.knockback_velocity.x > 0:
+                        self.hitbox.right = block.rect.left
+                    else:
+                        self.hitbox.left = block.rect.right
+                    self.knockback_velocity.x = 0
+                    break
+            self.hitbox.y += self.knockback_velocity.y
+            for block in self.game.blocks:
+                if self.hitbox.colliderect(block.rect):
+                    if self.knockback_velocity.y > 0:
+                        self.hitbox.bottom = block.rect.top
+                    else:
+                        self.hitbox.top = block.rect.bottom
+                    self.knockback_velocity.y = 0
+                    break
+            self.knockback_velocity *= ENEMY_KNOCKBACK_DECAY
+            if self.knockback_velocity.length() < 0.1:
+                self.knockback_velocity = pygame.math.Vector2(0, 0)
+
+        self.hitbox.x += self.velocity.x
+        for block in self.game.blocks:
+            if self.hitbox.colliderect(block.rect):
+                if self.velocity.x > 0:
+                    self.hitbox.right = block.rect.left
+                    self.direction = "left"
+                else:
+                    self.hitbox.left = block.rect.right
+                    self.direction = "right"
+                self.velocity.x = 0
+                break
+
+        self.hitbox.y += self.velocity.y
+        for block in self.game.blocks:
+            if self.hitbox.colliderect(block.rect):
+                if self.velocity.y > 0:
+                    self.hitbox.bottom = block.rect.top
+                    self.direction = "up"
+                else:
+                    self.hitbox.top = block.rect.bottom
+                    self.direction = "down"
+                self.velocity.y = 0
+                break
+
+        self.rect.center = self.hitbox.center
+
+        if self.body:
+            self.game.physics.set_body_velocity(self.physics_name, self.velocity)
+            self.game.physics.sync_entity_to_body(self.physics_name, self.rect)
 
         if self.current_steps == self.number_steps:
             if self.state != "stalling":
                 self.current_steps = 0
             self.number_steps = random.choice([30, 40, 50, 60, 70, 80, 90])
             self.state = "stalling"
-        self.collide_block()
         self.collide_player()
         self.shoot()
 
-    def collide_block(self):
-        for block in self.game.blocks:
-            if self.hitbox.colliderect(block.rect):
-                if self.direction == "left":
-                    self.rect.x += ENEMY_SPEED
-                    self.direction = "right"
-                elif self.direction == "right":
-                    self.rect.x -= ENEMY_SPEED
-                    self.direction = "left"
-                elif self.direction == "up":
-                    self.rect.y += ENEMY_SPEED
-                    self.direction = "down"
-                elif self.direction == "down":
-                    self.rect.y -= ENEMY_SPEED
-                    self.direction = "up"
-                return
+    def take_knockback(self, direction, force):
+        self.knockback_velocity = direction * force
+        self.hit_flash_timer = self.hit_flash_duration
 
     def collide_player(self):
-        collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, True)
+        collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, False)
         if collide:
             pass
 
