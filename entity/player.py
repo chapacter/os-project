@@ -2,12 +2,13 @@ import pygame
 
 from effects.effect import Effect
 from effects.particle import Particle
+from entity.base import VectorEntity
 from projectiles.bullet import Bullet
 from utils.audio import audio_manager
 from utils.settings import *
 
 
-class Player(pygame.sprite.Sprite):
+class Player(VectorEntity, pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
         self._layer = PLAYER_LAYER
@@ -24,7 +25,6 @@ class Player(pygame.sprite.Sprite):
         self.offset_x = self.sprite_cfg["offset"][0]
         self.offset_y = self.sprite_cfg["offset"][1]
 
-        self.velocity = pygame.math.Vector2(0, 0)
         self.frame_move = 6
         self.frame_attack = 4
         self.frame_dodge = 5
@@ -70,7 +70,8 @@ class Player(pygame.sprite.Sprite):
         self.hitbox = pygame.Rect(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT)
         self.hitbox.center = self.rect.center
 
-        self.direction = "right"
+        VectorEntity.__init__(self, game, "player", 4)
+
         self.sword_equipped = True
 
         self.counter = 0
@@ -90,28 +91,10 @@ class Player(pygame.sprite.Sprite):
 
         self.health = PLAYER_HEALTH
 
-        self.physics_name = "player"
         self.is_input_active = False
 
-        if game.physics_enabled and game.physics:
-            from utils.physics import COLLISION_PLAYER
-
-            game.physics.add_entity_body(
-                self.rect.x,
-                self.rect.y,
-                self.hitbox.width,
-                self.hitbox.height,
-                name=self.physics_name,
-                collision_type=COLLISION_PLAYER,
-            )
-
-    def get_direction_from_velocity(self):
-        vx, vy = self.velocity.x, self.velocity.y
-        if abs(vx) > abs(vy):
-            return "right" if vx > 0 else "left"
-        elif vy != 0:
-            return "down" if vy > 0 else "up"
-        return self.direction
+        self.knockback_duration_remaining = 0
+        self.contact_knockback_cooldown = 0
 
     def move(self):
         pressed = pygame.key.get_pressed()
@@ -171,30 +154,16 @@ class Player(pygame.sprite.Sprite):
         self.move()
         self.animation()
 
-        self.hitbox.x += self.velocity.x
-        for block in self.game.blocks:
-            if self.hitbox.colliderect(block.rect):
-                self.game.block_collided = True
-                if self.velocity.x > 0:
-                    self.hitbox.right = block.rect.left
-                else:
-                    self.hitbox.left = block.rect.right
-                self.velocity.x = 0
-                break
-        else:
-            self.game.block_collided = False
+        if self.knockback_duration_remaining > 0:
+            self.knockback_velocity *= KNOCKBACK_DECAY
+            self.knockback_duration_remaining -= 1
+            if self.knockback_velocity.length() < 0.1:
+                self.knockback_velocity = pygame.math.Vector2(0, 0)
 
-        self.hitbox.y += self.velocity.y
-        for block in self.game.blocks:
-            if self.hitbox.colliderect(block.rect):
-                if self.velocity.y > 0:
-                    self.hitbox.bottom = block.rect.top
-                else:
-                    self.hitbox.top = block.rect.bottom
-                self.velocity.y = 0
-                break
+        if self.contact_knockback_cooldown > 0:
+            self.contact_knockback_cooldown -= 1
 
-        self.rect.center = self.hitbox.center
+        self.apply_movement()
 
         self.collide_enemy()
         self.collide_weapon()
@@ -224,6 +193,13 @@ class Player(pygame.sprite.Sprite):
                 self.action_state = "move"
                 self.action_frame = 0
 
+        elif self.knockback_duration_remaining > 0:
+            total = len(self.animations["dodge"][self.direction])
+            frame = max(0, total - 1 - int(self.action_frame))
+            frame = min(frame, total - 1)
+            self.image = self.animations["dodge"][self.direction][frame]
+            self.action_frame += 0.5
+
         else:
             if self.is_input_active and self.velocity.length() > 0:
                 frame_index = int(self.action_frame) % self.frame_move
@@ -237,8 +213,23 @@ class Player(pygame.sprite.Sprite):
     def collide_enemy(self):
         MAX_PUSH = 3
         for enemy in self.game.enemies:
-            if self.hitbox.colliderect(enemy.rect):
+            if self.hitbox.colliderect(enemy.hitbox):
                 self.game.enemy_collided = True
+
+                if self.contact_knockback_cooldown <= 0:
+                    contact_dir = pygame.math.Vector2(
+                        self.rect.centerx - enemy.rect.centerx,
+                        self.rect.centery - enemy.rect.centery,
+                    )
+                    if contact_dir.length() > 0:
+                        contact_dir = contact_dir.normalize()
+                    self.knockback_velocity = (
+                            contact_dir * CONTACT_KNOCKBACK_FORCE * 0.7
+                            + self.velocity * 0.3
+                    )
+                    self.knockback_duration_remaining = KNOCKBACK_DURATION
+                    self.contact_knockback_cooldown = CONTACT_KNOCKBACK_INTERVAL
+
                 overlap_x = min(
                     self.rect.right - enemy.rect.left,
                     enemy.rect.right - self.rect.left,
@@ -285,26 +276,39 @@ class Player(pygame.sprite.Sprite):
         start_x = self.hitbox.centerx
         start_y = self.hitbox.centery
 
-        direction_offsets = {
-            "right": (100, 0),
-            "left": (-100, 0),
-            "up": (0, 100),
-            "down": (0, -100),
-        }
-        offset = direction_offsets.get(self.direction, (100, 0))
+        if self.velocity.length() > 0:
+            attack_dir = self.velocity.normalize() * 100
+        else:
+            dir_map = {
+                "right": (100, 0),
+                "left": (-100, 0),
+                "up": (0, 100),
+                "down": (0, -100),
+            }
+            attack_dir = pygame.math.Vector2(*dir_map.get(self.direction, (100, 0)))
 
-        Bullet(self.game, start_x, start_y, start_x + offset[0], start_y + offset[1])
+        force = SWORD_KNOCKBACK_FORCE if self.sword_equipped else BULLET_KNOCKBACK_FORCE
+        Bullet(
+            self.game,
+            start_x,
+            start_y,
+            start_x + attack_dir.x,
+            start_y + attack_dir.y,
+            knockback_force=force,
+        )
         self._finish_attack()
 
     def _attack_cursor(self):
         mouse_world = self.game.camera.to_world(pygame.mouse.get_pos())
 
+        force = SWORD_KNOCKBACK_FORCE if self.sword_equipped else BULLET_KNOCKBACK_FORCE
         Bullet(
             self.game,
             self.hitbox.centerx,
             self.hitbox.centery,
             mouse_world[0],
             mouse_world[1],
+            knockback_force=force,
         )
         self._finish_attack()
 
@@ -351,7 +355,6 @@ class Player(pygame.sprite.Sprite):
 
     def damage(self, amount):
         self.health = self.health - amount
-        print(f"[DEBUG] Player damaged, health: {self.health}")
         audio_manager.play_sound("hit")
 
         if self.health <= 0:

@@ -8,7 +8,16 @@ from utils.settings import *
 
 
 class Bullet(pygame.sprite.Sprite):
-    def __init__(self, game, start_x, start_y, target_x, target_y, scatter=0):
+    def __init__(
+            self,
+            game,
+            start_x,
+            start_y,
+            target_x,
+            target_y,
+            scatter=0,
+            knockback_force=None,
+    ):
         self.game = game
         self._layer = PLAYER_LAYER
         self.groups = game.all_sprites, game.bullets
@@ -22,6 +31,11 @@ class Bullet(pygame.sprite.Sprite):
             angle += random.uniform(-scatter, scatter)
         self.dx = math.cos(angle) * BULLET_SPEED
         self.dy = math.sin(angle) * BULLET_SPEED
+
+        self.hit_dir = pygame.math.Vector2(self.dx, self.dy)
+        if self.hit_dir.length() > 0:
+            self.hit_dir = self.hit_dir.normalize()
+        self.knockback_force = knockback_force or BULLET_KNOCKBACK_FORCE
 
         self.x = start_x
         self.y = start_y
@@ -50,11 +64,22 @@ class Bullet(pygame.sprite.Sprite):
             self.kill()
 
     def collide_enemy(self):
-        collide = pygame.sprite.spritecollide(self, self.game.enemies, False)
-        if collide:
-            Effect(self.game, self.rect.centerx, self.rect.centery, "hit")
-            collide[0].damage(self.damage)
-            self.kill()
+        for enemy in self.game.enemies:
+            if self.rect.colliderect(enemy.hitbox):
+                knockback_dir = pygame.math.Vector2(
+                    enemy.rect.centerx - self.rect.centerx,
+                    enemy.rect.centery - self.rect.centery,
+                )
+                if knockback_dir.length() > 0:
+                    knockback_dir = knockback_dir.normalize()
+                else:
+                    knockback_dir = self.hit_dir.copy()
+
+                Effect(self.game, self.rect.centerx, self.rect.centery, "hit")
+                enemy.take_knockback(knockback_dir, self.knockback_force)
+                enemy.damage(self.damage)
+                self.kill()
+                break
 
     def update(self):
         self.move()

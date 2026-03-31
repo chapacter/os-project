@@ -5,6 +5,7 @@ COLLISION_BLOCK = 1
 COLLISION_WATER = 2
 COLLISION_ENTITY = 3
 COLLISION_PLAYER = 4
+COLLISION_BULLET = 5
 
 
 class PhysicsEngine:
@@ -18,7 +19,7 @@ class PhysicsEngine:
 
         self.collision_flags = {}
 
-    def update(self, dt=1.0 / 60.0):
+    def step(self, dt=1.0 / 60.0):
         self.space.step(dt)
 
     def add_static_block(self, x, y, width, height, name=None):
@@ -73,47 +74,9 @@ class PhysicsEngine:
 
         return body, shape
 
-    def add_kinematic_body(self, x, y, width, height, name=None):
-        body = pymunk.Body(body_type=pymunk.Body.KINEMATIC)
-        body.position = (x + width / 2, y + height / 2)
-
-        shape = pymunk.Poly.create_box(body, (width, height))
-        shape.elasticity = 0.0
-        shape.friction = 0.5
-        shape.collision_type = COLLISION_BLOCK
-
-        self.space.add(body, shape)
-
-        if name:
-            self.bodies[name] = body
-
-        return body, shape
-
-    def apply_force(self, name, force):
-        if name in self.bodies:
-            self.bodies[name].apply_force_at_local_point(force)
-
-    def apply_impulse(self, name, impulse):
-        if name in self.bodies:
-            self.bodies[name].apply_impulse_at_local_point(impulse)
-
     def set_velocity(self, name, velocity):
         if name in self.bodies:
             self.bodies[name].velocity = velocity
-
-    def get_velocity(self, name):
-        if name in self.bodies:
-            return self.bodies[name].velocity
-        return (0, 0)
-
-    def get_position(self, name):
-        if name in self.bodies:
-            return self.bodies[name].position
-        return (0, 0)
-
-    def set_position(self, name, position):
-        if name in self.bodies:
-            self.bodies[name].position = position
 
     def remove_body(self, name):
         if name in self.bodies:
@@ -169,53 +132,36 @@ class PhysicsEngine:
             COLLISION_ENTITY, COLLISION_BLOCK, pre_solve_handler=pre_solve
         )
 
-    def get_objects_at_point(self, x, y):
-        point_query = self.space.point_query_nearest((x, y), 0, pymunk.ShapeFilter())
-        if point_query:
-            return point_query.shape
-        return None
+    def setup_entity_entity_handler(self):
+        def post_solve(arbiter, space, data):
+            shape_a = arbiter.shapes[0]
+            shape_b = arbiter.shapes[1]
+            name_a = self.shape_to_entity.get(shape_a)
+            name_b = self.shape_to_entity.get(shape_b)
 
-    def get_objects_in_rect(self, x, y, width, height):
-        rect = pymunk.BB(x, y, x + width, y + height)
-        return self.space.shape_query(rect)
+            if name_a:
+                self.collision_flags[f"{name_a}_entity"] = True
+            if name_b:
+                self.collision_flags[f"{name_b}_entity"] = True
+            return True
+
+        self.create_collision_handler(
+            COLLISION_ENTITY, COLLISION_ENTITY, post_solve_handler=post_solve
+        )
+        self.create_collision_handler(
+            COLLISION_PLAYER, COLLISION_ENTITY, post_solve_handler=post_solve
+        )
+
+    def sync_entity_to_body(self, name, rect):
+        if name in self.bodies:
+            self.bodies[name].position = (rect.centerx, rect.centery)
+
+    def set_body_velocity(self, name, velocity):
+        if name in self.bodies:
+            self.bodies[name].velocity = (velocity.x, velocity.y)
 
     def clear_collision_flags(self):
         self.collision_flags.clear()
-
-
-class PhysicsEntity:
-    def __init__(self, physics, x, y, width, height, mass=1.0, name=None):
-        self.physics = physics
-        self.name = name
-        self.width = width
-        self.height = height
-
-        self.body, self.shape = physics.add_dynamic_body(
-            x, y, width, height, mass, name
-        )
-
-    def get_position(self):
-        pos = self.body.position
-        return pos.x - self.width / 2, pos.y - self.height / 2
-
-    def set_position(self, x, y):
-        self.body.position = (x + self.width / 2, y + self.height / 2)
-
-    def get_velocity(self):
-        return self.body.velocity
-
-    def set_velocity(self, vx, vy):
-        self.body.velocity = (vx, vy)
-
-    def apply_impulse(self, impulse):
-        self.body.apply_impulse_at_local_point(impulse)
-
-    def apply_force(self, force):
-        self.body.apply_force_at_local_point(force)
-
-    def destroy(self):
-        if self.name and self.name in self.physics.bodies:
-            self.physics.remove_body(self.name)
 
 
 def create_physics_world():
