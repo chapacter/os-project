@@ -4,14 +4,14 @@ import pygame
 
 from effects.effect import Effect
 from effects.particle import Particle
-from entity.base import Healthbar, VectorEntity
+from entity.base import Healthbar
 from projectiles.bullet import Enemy_Bullet
 from utils import weighted_choice
 from utils.audio import audio_manager
 from utils.settings import *
 
 
-class Enemy(VectorEntity, pygame.sprite.Sprite):
+class Enemy(pygame.sprite.Sprite):
     def __init__(self, game, x, y, is_boss=False, is_elite=False, enemy_type=None):
         self.game = game
         self._layer = PLAYER_LAYER
@@ -44,6 +44,8 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.width = cfg["sprite_size"][0]
         self.height = cfg["sprite_size"][1]
 
+        self.velocity = pygame.math.Vector2(0, 0)
+
         self.frame_move = 3
         self.animations = {}
         direction_map = {"down": 0, "left": 1, "right": 2, "up": 3}
@@ -68,9 +70,6 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.hitbox = pygame.Rect(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT)
         self.hitbox.center = self.rect.center
 
-        physics_name = f"enemy_{id(self)}"
-        VectorEntity.__init__(self, game, physics_name, 3)
-
         self.direction = random.choice(["left", "right", "up", "down"])
         self.number_steps = random.choice([30, 40, 50, 60, 70, 80, 90])
         self.stall_steps = 120
@@ -85,10 +84,25 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
 
         self.particle_counter = 0
 
-        self.hit_flash_timer = 0
-        self.hit_flash_duration = 2
-
         Effect(self.game, self.rect.centerx, self.rect.centery, "death")
+
+        self.physics_name = f"enemy_{id(self)}"
+        if game.physics_enabled and game.physics:
+            game.physics.add_entity_body(
+                self.rect.x,
+                self.rect.y,
+                self.hitbox.width,
+                self.hitbox.height,
+                name=self.physics_name,
+            )
+
+    def get_direction_from_velocity(self):
+        vx, vy = self.velocity.x, self.velocity.y
+        if abs(vx) > abs(vy):
+            return "right" if vx > 0 else "left"
+        elif vy != 0:
+            return "down" if vy > 0 else "up"
+        return self.direction
 
     def shoot(self):
         self.shoot_counter += 1
@@ -155,33 +169,38 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
     def update(self):
         self.move()
         self.animation()
-
-        if self.hit_flash_timer > 0:
-            mask = pygame.mask.from_surface(self.image)
-            white_silhouette = mask.to_surface(
-                setcolor=(255, 255, 255, 180), unsetcolor=(0, 0, 0, 0)
-            )
-            self.image.blit(white_silhouette, (0, 0))
-            self.hit_flash_timer -= 1
-
-        self.decay_knockback(ENEMY_KNOCKBACK_DECAY)
-
-        self.apply_movement()
+        self.rect.x += self.velocity.x
+        self.rect.y += self.velocity.y
+        self.hitbox.center = self.rect.center
 
         if self.current_steps == self.number_steps:
             if self.state != "stalling":
                 self.current_steps = 0
             self.number_steps = random.choice([30, 40, 50, 60, 70, 80, 90])
             self.state = "stalling"
+        self.collide_block()
         self.collide_player()
         self.shoot()
 
-    def take_knockback(self, direction, force):
-        self.knockback_velocity = direction * force
-        self.hit_flash_timer = self.hit_flash_duration
+    def collide_block(self):
+        for block in self.game.blocks:
+            if self.hitbox.colliderect(block.rect):
+                if self.direction == "left":
+                    self.rect.x += ENEMY_SPEED
+                    self.direction = "right"
+                elif self.direction == "right":
+                    self.rect.x -= ENEMY_SPEED
+                    self.direction = "left"
+                elif self.direction == "up":
+                    self.rect.y += ENEMY_SPEED
+                    self.direction = "down"
+                elif self.direction == "down":
+                    self.rect.y -= ENEMY_SPEED
+                    self.direction = "up"
+                return
 
     def collide_player(self):
-        collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, False)
+        collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, True)
         if collide:
             pass
 

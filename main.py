@@ -339,30 +339,14 @@ class Game:
                 room.enemies_spawned = True
                 room_x = gx * room_unit_width + wall_thickness + 3
                 room_y = gy * room_unit_height + wall_thickness + 2
-                if room.room_type.value == "boss":
-                    for _ in range(1):
-                        Enemy(self, room_x, room_y, is_boss=True)
-                        room.enemy_count += 1
-                        total_enemies += 1
-                elif room.room_type.value == "elite":
-                    for _ in range(2):
-                        Enemy(
-                            self,
-                            room_x + random.randint(-1, 1),
-                            room_y + random.randint(-1, 1),
-                            is_elite=True,
-                        )
-                        room.enemy_count += 1
-                        total_enemies += 1
-                else:
-                    for _ in range(random.randint(1, 3)):
-                        Enemy(
-                            self,
-                            room_x + random.randint(-2, 2),
-                            room_y + random.randint(-2, 2),
-                        )
-                        room.enemy_count += 1
-                        total_enemies += 1
+                for _ in range(random.randint(2, 4)):
+                    Enemy(
+                        self,
+                        room_x + random.randint(-2, 2),
+                        room_y + random.randint(-2, 2),
+                    )
+                    room.enemy_count += 1
+                    total_enemies += 1
 
         # print(f"[DEBUG] Spawned {total_enemies} enemies")
 
