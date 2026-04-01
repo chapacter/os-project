@@ -4,14 +4,15 @@ import pygame
 
 from effects.effect import Effect
 from effects.particle import Particle
-from entity.base import Healthbar
+from entity.base import Healthbar, VectorEntity
 from projectiles.bullet import Enemy_Bullet
 from utils import weighted_choice
 from utils.audio import audio_manager
+from utils.physics import COLLISION_ENTITY
 from utils.settings import *
 
 
-class Enemy(pygame.sprite.Sprite):
+class Enemy(VectorEntity, pygame.sprite.Sprite):
     def __init__(self, game, x, y, enemy_type=None):
         self.game = game
         self._layer = PLAYER_LAYER
@@ -22,7 +23,9 @@ class Enemy(pygame.sprite.Sprite):
         self.y = y * TILESIZE
 
         type_weights = {k: v["weight"] for k, v in ENEMY_TYPES.items()}
-        self.enemy_type = enemy_type if enemy_type is not None else weighted_choice(type_weights)
+        self.enemy_type = (
+            enemy_type if enemy_type is not None else weighted_choice(type_weights)
+        )
 
         cfg = ENEMY_TYPES[self.enemy_type]
         self.width = cfg["sprite_size"][0]
@@ -45,14 +48,8 @@ class Enemy(pygame.sprite.Sprite):
 
         self.healthbar = Enemy_Healthbar(game, self, x, y)
 
-        self.velocity = pygame.math.Vector2(0, 0)
-        self.knockback_velocity = pygame.math.Vector2(0, 0)
-
         self.hit_flash_timer = 0
         self.hit_flash_duration = 2
-
-        self.body = None
-        self.shape = None
 
         self.frame_move = 3
         self.animations = {}
@@ -95,6 +92,19 @@ class Enemy(pygame.sprite.Sprite):
 
         self.particle_counter = 0
 
+        # Float position accumulators — fix sub-pixel truncation
+        self._pos_x = float(self.hitbox.x)
+        self._pos_y = float(self.hitbox.y)
+
+        # Patrol improvements
+        self.patrol_timer = 0
+        self.patrol_target_x = 0
+        self.patrol_target_y = 0
+
+        # Retreat vector cache
+        self._retreat_vector = pygame.math.Vector2(0, 0)
+
+        # Spawn effect
         Effect(self.game, self.rect.centerx, self.rect.centery, "death")
 
         tile_x = int(self.rect.x / TILESIZE)
@@ -105,16 +115,23 @@ class Enemy(pygame.sprite.Sprite):
         room_unit_width = room_tile_width + wall_thickness * 2
         room_unit_height = room_tile_height + wall_thickness * 2
         self.home_room = (tile_x // room_unit_width, tile_y // room_unit_height)
+        self._set_patrol_target()
 
         self.physics_name = f"enemy_{id(self)}"
-        if game.physics_enabled and game.physics:
-            self.body, self.shape = game.physics.add_entity_body(
-                self.rect.x,
-                self.rect.y,
-                self.hitbox.width,
-                self.hitbox.height,
-                name=self.physics_name,
-            )
+        VectorEntity.__init__(
+            self, game, self.physics_name, collision_type=COLLISION_ENTITY
+        )
+
+        # Replace default pymunk body with one sized to hitbox
+        if self.body:
+            game.physics.remove_body(self.physics_name)
+        self.body, self.shape = game.physics.add_entity_body(
+            self.rect.x,
+            self.rect.y,
+            self.hitbox.width,
+            self.hitbox.height,
+            name=self.physics_name,
+        )
 
     # ─── AI Helpers ───────────────────────────────────────────────
 
@@ -134,68 +151,65 @@ class Enemy(pygame.sprite.Sprite):
             return "right" if dx > 0 else "left"
         return "down" if dy > 0 else "up"
 
-    def _dir_to_vec(self, direction):
-        return {
-            "left": pygame.math.Vector2(-1, 0),
-            "right": pygame.math.Vector2(1, 0),
-            "up": pygame.math.Vector2(0, -1),
-            "down": pygame.math.Vector2(0, 1),
-        }.get(direction, pygame.math.Vector2(1, 0))
-
     def _is_player_in_melee_range(self):
         return self._get_distance_to_player() <= self.melee_range
 
-    def _get_free_directions(self):
-        free_dirs = []
-        test_dist = ENEMY_SPEED * 3
-        for direction in ["left", "right", "up", "down"]:
-            test_rect = pygame.Rect(self.hitbox)
-            if direction == "left":
-                test_rect.x -= test_dist
-            elif direction == "right":
-                test_rect.x += test_dist
-            elif direction == "up":
-                test_rect.y -= test_dist
-            elif direction == "down":
-                test_rect.y += test_dist
+    def _set_patrol_target(self):
+        hx, hy = self.home_room
+        room_tile_width = self.game.dungeon_generator.room_tile_width
+        room_tile_height = self.game.dungeon_generator.room_tile_height
+        wall_thickness = self.game.dungeon_generator.wall_thickness
+        room_unit_width = room_tile_width + wall_thickness * 2
+        room_unit_height = room_tile_height + wall_thickness * 2
 
-            blocked = False
-            for block in self.game.blocks:
-                if test_rect.colliderect(block.rect):
-                    blocked = True
-                    break
-            if not blocked:
-                free_dirs.append(direction)
-        return free_dirs
+        margin = 2
+        tx = random.randint(
+            hx * room_unit_width + wall_thickness + margin,
+            hx * room_unit_width + wall_thickness + room_tile_width - margin,
+        )
+        ty = random.randint(
+            hy * room_unit_height + wall_thickness + margin,
+            hy * room_unit_height + wall_thickness + room_tile_height - margin,
+        )
+        self.patrol_target_x = tx * TILESIZE
+        self.patrol_target_y = ty * TILESIZE
+        self.patrol_timer = random.randint(120, 360)
 
     # ─── AI States ────────────────────────────────────────────────
 
     def _patrol(self):
-        dir_map = {
-            "left": pygame.math.Vector2(-1, 0),
-            "right": pygame.math.Vector2(1, 0),
-            "up": pygame.math.Vector2(0, -1),
-            "down": pygame.math.Vector2(0, 1),
-        }
-        move_dir = dir_map.get(self.direction, pygame.math.Vector2(1, 0))
+        self.patrol_timer -= 1
+        if self.patrol_timer <= 0:
+            self._set_patrol_target()
+
+        dx = self.patrol_target_x - self.rect.centerx
+        dy = self.patrol_target_y - self.rect.centery
+        vec = pygame.math.Vector2(dx, dy)
+        if vec.length() > 0:
+            vec = vec.normalize()
         speed = ENEMY_SPEED * self.speed_mod
-        self.velocity = move_dir * speed
+        self.velocity = vec * speed
+        self.direction = self.get_direction_from_velocity()
 
     def _retreat(self):
         if self.retreat_progress == 0:
-            direction = self._get_direction_to_player()
-            opposite = {"left": "right", "right": "left", "up": "down", "down": "up"}
-            self.direction = opposite[direction]
+            dx = self.rect.centerx - self.game.player.rect.centerx
+            dy = self.rect.centery - self.game.player.rect.centery
+            vec = pygame.math.Vector2(dx, dy)
+            if vec.length() > 0:
+                vec = vec.normalize()
+            self._retreat_vector = vec
             self.retreat_progress = 1
 
         speed = ENEMY_SPEED * self.speed_mod
-        self.velocity = self._dir_to_vec(self.direction) * speed
+        self.velocity = self._retreat_vector * speed
+        self.direction = self.get_direction_from_velocity()
         self.retreat_progress += speed
 
         if self.retreat_progress >= self.retreat_distance:
             self.velocity = pygame.math.Vector2(0, 0)
             self.retreat_progress = 0
-            self.wait_after_retreat = 30
+            self.wait_after_retreat = 0
 
     def _wait(self):
         self.velocity = pygame.math.Vector2(0, 0)
@@ -204,10 +218,16 @@ class Enemy(pygame.sprite.Sprite):
             self.wait_after_retreat = 0
 
     def _chase(self):
-        direction = self._get_direction_to_player()
-        self.direction = direction
+        if not self.game.player:
+            return
+        dx = self.game.player.rect.centerx - self.rect.centerx
+        dy = self.game.player.rect.centery - self.rect.centery
+        vec = pygame.math.Vector2(dx, dy)
+        if vec.length() > 0:
+            vec = vec.normalize()
         speed = ENEMY_SPEED * self.speed_mod
-        self.velocity = self._dir_to_vec(direction) * speed
+        self.velocity = vec * speed
+        self.direction = self.get_direction_from_velocity()
 
     def _ranged_attack(self):
         self.direction = self._get_direction_to_player()
@@ -223,9 +243,16 @@ class Enemy(pygame.sprite.Sprite):
             self.shoot_state = "halt"
 
     def _melee_attack(self):
-        self.direction = self._get_direction_to_player()
+        if not self.game.player:
+            return
+        dx = self.game.player.rect.centerx - self.rect.centerx
+        dy = self.game.player.rect.centery - self.rect.centery
+        vec = pygame.math.Vector2(dx, dy)
+        if vec.length() > 0:
+            vec = vec.normalize()
         speed = ENEMY_SPEED * self.speed_mod * 0.5
-        self.velocity = self._dir_to_vec(self.direction) * speed
+        self.velocity = vec * speed
+        self.direction = self.get_direction_from_velocity()
 
         self.melee_timer += 1
         if self.melee_timer >= self.melee_cooldown:
@@ -261,7 +288,11 @@ class Enemy(pygame.sprite.Sprite):
 
         if not self.has_seen_player:
             state = "patrol"
-        elif self.retreat_range > 0 and distance <= self.retreat_range and self.retreat_progress == 0:
+        elif (
+                self.retreat_range > 0
+                and distance <= self.retreat_range
+                and self.retreat_progress == 0
+        ):
             state = "retreat"
         elif self.retreat_progress > 0:
             state = "retreat"
@@ -305,11 +336,17 @@ class Enemy(pygame.sprite.Sprite):
         if self.has_blink and not self.visible:
             return
 
+        anim_dir = (
+            self.get_direction_from_velocity()
+            if self.velocity.length() > 0
+            else self.direction
+        )
+
         if self.velocity.length() == 0:
-            self.image = self.animations[self.direction][0]
+            self.image = self.animations[anim_dir][0]
         else:
             frame_index = int(self.animation_counter) % self.frame_move
-            self.image = self.animations[self.direction][frame_index]
+            self.image = self.animations[anim_dir][frame_index]
             self.animation_counter += 0.2
             if self.animation_counter >= self.frame_move:
                 self.animation_counter = 0
@@ -317,11 +354,35 @@ class Enemy(pygame.sprite.Sprite):
         if self.has_blink:
             self.image.set_alpha(255 if self.visible else 0)
 
+    def apply_movement(self):
+        # Knockback — float-accumulated
+        if self.knockback_velocity.length() > 0:
+            self._pos_x += self.knockback_velocity.x
+            self.hitbox.x = int(self._pos_x)
+            self._resolve_collision_x("knockback_velocity")
+            self._pos_y += self.knockback_velocity.y
+            self.hitbox.y = int(self._pos_y)
+            self._resolve_collision_y("knockback_velocity")
+            self.knockback_velocity *= ENEMY_KNOCKBACK_DECAY
+            if self.knockback_velocity.length() < 0.1:
+                self.knockback_velocity = pygame.math.Vector2(0, 0)
+
+        # Velocity — float-accumulated (fixes sub-pixel truncation)
+        self._pos_x += self.velocity.x
+        self.hitbox.x = int(self._pos_x)
+        self._resolve_collision_x("velocity")
+        self._pos_y += self.velocity.y
+        self.hitbox.y = int(self._pos_y)
+        self._resolve_collision_y("velocity")
+
+        self.rect.center = self.hitbox.center
+        self.sync_physics()
+
     def update(self):
         self.move()
         self.animation()
 
-        # Hit flash (mask-based white silhouette)
+        # Hit flash
         if self.hit_flash_timer > 0:
             mask = pygame.mask.from_surface(self.image)
             white_silhouette = mask.to_surface(
@@ -330,24 +391,7 @@ class Enemy(pygame.sprite.Sprite):
             self.image.blit(white_silhouette, (0, 0))
             self.hit_flash_timer -= 1
 
-        # Knockback decay + axis-separated collision
-        if self.knockback_velocity.length() > 0:
-            self.hitbox.x += self.knockback_velocity.x
-            self._resolve_collision_x("knockback_velocity")
-            self.hitbox.y += self.knockback_velocity.y
-            self._resolve_collision_y("knockback_velocity")
-            self.knockback_velocity *= ENEMY_KNOCKBACK_DECAY
-            if self.knockback_velocity.length() < 0.1:
-                self.knockback_velocity = pygame.math.Vector2(0, 0)
-
-        # Velocity axis-separated collision
-        self.hitbox.x += self.velocity.x
-        self._resolve_collision_x("velocity")
-        self.hitbox.y += self.velocity.y
-        self._resolve_collision_y("velocity")
-
-        self.rect.center = self.hitbox.center
-        self.sync_physics()
+        self.apply_movement()
 
         # Home room management
         if not self._is_inside_home_room():
@@ -355,41 +399,6 @@ class Enemy(pygame.sprite.Sprite):
 
         self.collide_player()
         self.shoot()
-
-    # ─── Physics ──────────────────────────────────────────────────
-
-    def _resolve_collision_x(self, velocity_attr="velocity"):
-        vel = getattr(self, velocity_attr)
-        if vel.x == 0:
-            return False
-        for block in self.game.blocks:
-            if self.hitbox.colliderect(block.rect):
-                if vel.x > 0:
-                    self.hitbox.right = block.rect.left
-                else:
-                    self.hitbox.left = block.rect.right
-                vel.x = 0
-                return True
-        return False
-
-    def _resolve_collision_y(self, velocity_attr="velocity"):
-        vel = getattr(self, velocity_attr)
-        if vel.y == 0:
-            return False
-        for block in self.game.blocks:
-            if self.hitbox.colliderect(block.rect):
-                if vel.y > 0:
-                    self.hitbox.bottom = block.rect.top
-                else:
-                    self.hitbox.top = block.rect.bottom
-                vel.y = 0
-                return True
-        return False
-
-    def sync_physics(self):
-        if self.body:
-            self.game.physics.set_body_velocity(self.physics_name, self.velocity)
-            self.game.physics.sync_entity_to_body(self.physics_name, self.rect)
 
     # ─── Combat ───────────────────────────────────────────────────
 
@@ -412,8 +421,8 @@ class Enemy(pygame.sprite.Sprite):
 
     def _on_death(self):
         Effect(self.game, self.rect.centerx, self.rect.centery, "death")
-        self.kill()
         self.healthbar.kill_bar()
+        self.kill()
         if self.game.physics and hasattr(self, "physics_name"):
             self.game.physics.remove_body(self.physics_name)
 
@@ -455,6 +464,7 @@ class Enemy(pygame.sprite.Sprite):
         self.has_seen_player = False
         self.retreat_progress = 0
         self.wait_after_retreat = 0
+        self._set_patrol_target()
 
 
 class Enemy_Healthbar(Healthbar):
