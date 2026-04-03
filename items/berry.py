@@ -12,10 +12,9 @@ class Berry(Item):
     def __init__(self, game, x, y):
         super().__init__(game, x, y, GROUND_LAYER, game.all_sprites, game.items)
 
-        sprite_path = os.path.join('simple', 'assets', 'berry.png')
+        sprite_path = os.path.join("simple", "assets", "berry.png")
         if os.path.exists(sprite_path):
-            self.image = pygame.image.load(sprite_path).convert()
-            self.image.set_colorkey((0, 0, 0))
+            self.image = pygame.image.load(sprite_path).convert_alpha()
         else:
             self.image = pygame.Surface((self.width, self.height))
             self.image.fill(RED)
@@ -32,9 +31,9 @@ class Berry(Item):
             self.animation_counter = 0
 
     def on_pickup(self, player):
-        if hasattr(player, 'health'):
+        if hasattr(player, "health"):
             player.health = min(player.health + self.HEAL_AMOUNT, PLAYER_HEALTH)
-            if hasattr(player, 'healthbar'):
+            if hasattr(player, "healthbar"):
                 player.healthbar.damage(PLAYER_HEALTH, player.health)
         self.kill()
 
