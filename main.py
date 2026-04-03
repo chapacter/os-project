@@ -72,7 +72,7 @@ class Game:
         self._door_frame_counter = 0
         self._pending_room_for_enemies = None
 
-        self.fade_surface = pygame.Surface((WIN_WIDTH, WIN_HEIGHT))
+        self.fade_surface = pygame.Surface((1, 1))
         self.fade_alpha = 0
         self.is_fading = False
         self.fade_direction = 0
@@ -106,8 +106,6 @@ class Game:
         screen_w, screen_h = config.get_screen_size()
 
         flags = 0
-        width = WIN_WIDTH
-        height = WIN_HEIGHT
 
         if mode == "fullscreen":
             flags = pygame.FULLSCREEN
@@ -119,6 +117,8 @@ class Game:
             height = screen_h
         elif mode == "windowed":
             width, height = config.get_window_size()
+        else:
+            width, height = screen_w, screen_h
 
         self.sc = pygame.display.set_mode((width, height), flags)
         self.render_surface = pygame.Surface(
@@ -151,7 +151,7 @@ class Game:
         from ui.pause import PauseMenu
         from ui.hud import HUD
 
-        self.ui_manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT))
+        self.ui_manager = pygame_gui.UIManager(self.sc.get_size())
         self.main_menu = MainMenu(self)
         self.pause_menu = PauseMenu(self)
         self.hud = HUD(self)
@@ -499,7 +499,7 @@ class Game:
         map_h = WORLD_ZONE_HEIGHT * TILESIZE if self.mode == GameMode.WORLD else 2000
         camera_w = self.render_surface.get_width()
         camera_h = self.render_surface.get_height()
-        self.camera = Camera(camera_w, camera_h, map_w, map_h)
+        self.camera = Camera(self, camera_w, camera_h, map_w, map_h)
 
     def init_physics_world(self):
         if self.physics:
@@ -622,8 +622,6 @@ class Game:
         ):
             self.camera.follow_sprite(self.player)
             self.camera.update(1.0 / 60.0)
-
-
 
     def events(self):
         time_delta = self.clock.tick(60) / 1000.0

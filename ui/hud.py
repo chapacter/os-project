@@ -2,13 +2,11 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UILabel
 
-from utils.settings import WIN_WIDTH, WIN_HEIGHT
-
 
 class HUD:
     def __init__(self, game):
         self.game = game
-        self.manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT), "ui/theme.json")
+        self.manager = pygame_gui.UIManager(game.sc.get_size(), "ui/theme.json")
         self.is_active = True
         self.font = pygame.font.Font(None, 24)
 

@@ -3,20 +3,19 @@ import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
 
 from utils.audio import audio_manager
-from utils.settings import WIN_WIDTH, WIN_HEIGHT
 
 
 class MainMenu:
     def __init__(self, game):
         self.game = game
-        self.manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT), "ui/theme.json")
+        self.manager = pygame_gui.UIManager(game.sc.get_size(), "ui/theme.json")
         self.is_active = True
 
         self.create_widgets()
 
     def create_widgets(self):
-        center_x = WIN_WIDTH // 2
-        center_y = WIN_HEIGHT // 2
+        center_x = self.game.sc.get_width() // 2
+        center_y = self.game.sc.get_height() // 2
 
         title_rect = pygame.Rect(center_x - 150, center_y - 150, 300, 60)
         self.title_label = UILabel(

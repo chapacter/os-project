@@ -83,6 +83,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
 
         self.action_state = "move"
         self.action_frame = 0
+        self.attack_direction = "right"
         self.is_dodging = False
         self.dodge_frames = self.frame_dodge
         self.dodge_state = "ready"
@@ -174,9 +175,9 @@ class Player(VectorEntity, pygame.sprite.Sprite):
     def animation(self):
         if self.action_state == "attack":
             frame_index = int(self.action_frame)
-            if frame_index >= len(self.animations["attack"][self.direction]):
-                frame_index = len(self.animations["attack"][self.direction]) - 1
-            self.image = self.animations["attack"][self.direction][frame_index]
+            if frame_index >= len(self.animations["attack"][self.attack_direction]):
+                frame_index = len(self.animations["attack"][self.attack_direction]) - 1
+            self.image = self.animations["attack"][self.attack_direction][frame_index]
             self.action_frame += 0.375
             if self.action_frame >= self.frame_attack:
                 self.action_state = "move"
@@ -287,6 +288,11 @@ class Player(VectorEntity, pygame.sprite.Sprite):
             }
             attack_dir = pygame.math.Vector2(*dir_map.get(self.direction, (100, 0)))
 
+        if abs(attack_dir.x) > abs(attack_dir.y):
+            self.attack_direction = "right" if attack_dir.x > 0 else "left"
+        else:
+            self.attack_direction = "down" if attack_dir.y > 0 else "up"
+
         force = SWORD_KNOCKBACK_FORCE if self.sword_equipped else BULLET_KNOCKBACK_FORCE
         Bullet(
             self.game,
@@ -300,6 +306,13 @@ class Player(VectorEntity, pygame.sprite.Sprite):
 
     def _attack_cursor(self):
         mouse_world = self.game.camera.to_world(pygame.mouse.get_pos())
+
+        dx = mouse_world[0] - self.hitbox.centerx
+        dy = mouse_world[1] - self.hitbox.centery
+        if abs(dx) > abs(dy):
+            self.attack_direction = "right" if dx > 0 else "left"
+        else:
+            self.attack_direction = "down" if dy > 0 else "up"
 
         force = SWORD_KNOCKBACK_FORCE if self.sword_equipped else BULLET_KNOCKBACK_FORCE
         Bullet(

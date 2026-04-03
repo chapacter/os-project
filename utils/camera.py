@@ -1,15 +1,19 @@
 import pygame
 
-from utils.settings import *
+from utils import config
 
 
 class Camera:
-    def __init__(self, screen_width, screen_height, map_width=None, map_height=None):
+    def __init__(
+            self, game, screen_width, screen_height, map_width=None, map_height=None
+    ):
+        self.game = game
         self.screen_width = screen_width
         self.screen_height = screen_height
 
-        self.map_width = map_width or (WIN_WIDTH * 2)
-        self.map_height = map_height or (WIN_HEIGHT * 2)
+        default_w, default_h = config.get_window_size()
+        self.map_width = map_width or (default_w * 2)
+        self.map_height = map_height or (default_h * 2)
 
         self.scroll_x = 0
         self.scroll_y = 0
@@ -137,10 +141,16 @@ class Camera:
         )
 
     def to_world(self, screen_pos):
-        return screen_pos[0] + self.scroll_x, screen_pos[1] + self.scroll_y
+        scale = self.game.current_scale
+        x = screen_pos[0] / scale + self.scroll_x
+        y = screen_pos[1] / scale + self.scroll_y
+        return x, y
 
     def to_screen(self, world_pos):
-        return world_pos[0] - self.scroll_x, world_pos[1] - self.scroll_y
+        scale = self.game.current_scale
+        x = (world_pos[0] - self.scroll_x) * scale
+        y = (world_pos[1] - self.scroll_y) * scale
+        return x, y
 
 
 class CameraGroup(pygame.sprite.LayeredUpdates):

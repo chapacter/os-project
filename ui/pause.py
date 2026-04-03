@@ -3,23 +3,26 @@ import pygame_gui
 from pygame_gui.elements import UIButton, UILabel
 
 from utils.audio import audio_manager
-from utils.settings import WIN_WIDTH, WIN_HEIGHT
 
 
 class PauseMenu:
     def __init__(self, game):
         self.game = game
-        self.manager = pygame_gui.UIManager((WIN_WIDTH, WIN_HEIGHT), "ui/theme.json")
+        self.manager = pygame_gui.UIManager(game.sc.get_size(), "ui/theme.json")
         self.is_active = False
 
         self.create_widgets()
 
     def create_widgets(self):
-        center_x = WIN_WIDTH // 2
-        center_y = WIN_HEIGHT // 2
+        center_x = self.game.sc.get_width() // 2
+        center_y = self.game.sc.get_height() // 2
 
-        overlay_rect = pygame.Rect(0, 0, WIN_WIDTH, WIN_HEIGHT)
-        self.overlay = pygame.Surface((WIN_WIDTH, WIN_HEIGHT))
+        overlay_rect = pygame.Rect(
+            0, 0, self.game.sc.get_width(), self.game.sc.get_height()
+        )
+        self.overlay = pygame.Surface(
+            (self.game.sc.get_width(), self.game.sc.get_height())
+        )
         self.overlay.set_alpha(128)
 
         seed_rect = pygame.Rect(20, 20, 400, 30)
