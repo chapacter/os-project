@@ -46,6 +46,41 @@ ROOMS_PER_FLOOR = 12
 
 FADE_DURATION = 500
 
+FLOOR_THEMES = {
+    1: {
+        "floor": (0, 5),
+        "wall": (0, 0),
+        "portal": (1, 1),
+        "chest_closed": (9, 0),
+        "chest_open": (9, 1),
+        "decoration": (1, 0),
+    },
+    2: {
+        "floor": (7, 8),
+        "wall": (6, 0),
+        "portal": (1, 5),
+        "chest_closed": (9, 0),
+        "chest_open": (9, 1),
+        "decoration": (8, 4),
+    },
+    3: {
+        "floor": (5, 1),
+        "wall": (5, 6),
+        "portal": (1, 6),
+        "chest_closed": (10, 0),
+        "chest_open": (10, 1),
+        "decoration": (6, 5),
+    },
+    4: {
+        "floor": (7, 9),
+        "wall": (2, 3),
+        "portal": (1, 3),
+        "chest_closed": (10, 0),
+        "chest_open": (10, 1),
+        "decoration": (4, 4),
+    },
+}
+
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)

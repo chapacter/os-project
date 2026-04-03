@@ -1,3 +1,5 @@
+import math
+
 import pygame
 
 from effects.effect import Effect
@@ -372,3 +374,17 @@ class Player(VectorEntity, pygame.sprite.Sprite):
 
         if self.health <= 0:
             self.kill()
+
+    def interact(self):
+        closest = None
+        closest_dist = TILESIZE * 1.5
+        for obj in self.game.interactables:
+            dist = math.hypot(
+                obj.rect.centerx - self.rect.centerx,
+                obj.rect.centery - self.rect.centery,
+            )
+            if dist < closest_dist:
+                closest_dist = dist
+                closest = obj
+        if closest:
+            closest.interact()

@@ -426,6 +426,15 @@ class DungeonGenerator:
                         if random.random() < 0.1:
                             tile_map[y][x] = "T"
 
+        for (gx, gy), room in self.rooms.items():
+            if room.room_type == RoomType.LOOT:
+                room_start_x = gx * room_unit_width + wall_thickness
+                room_start_y = gy * room_unit_height + wall_thickness
+                cx = room_start_x + room_tile_width // 2
+                cy = room_start_y + room_tile_height // 2
+                if 0 <= cy < total_height and 0 <= cx < total_width:
+                    tile_map[cy][cx] = "C"
+
         self.map_width = total_width
         self.map_height = total_height
 

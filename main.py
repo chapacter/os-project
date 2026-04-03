@@ -240,9 +240,9 @@ class Game:
 
     def create_portal(self, x, y):
         Ground(self, x, y, "B")
-        from map.tilemap import Portal
+        from map.tilemap import DungeonEntrance
 
-        Portal(self, x, y)
+        DungeonEntrance(self, x, y)
 
     def create_npc(self, x, y):
         Ground(self, x, y, "N")
@@ -358,6 +358,33 @@ class Game:
             self.mode = GameMode.WORLD
             self.load_zone(self.current_zone[0], self.current_zone[1])
 
+    def go_deeper(self):
+        if self.current_dungeon_floor < DUNGEON_FLOORS:
+            self.current_dungeon_floor += 1
+            self.fade_out(lambda: self._reload_dungeon_floor())
+        else:
+            self.exit_dungeon()
+
+    def _reload_dungeon_floor(self):
+        self.clear_sprites()
+        self._dungeon_built_rooms = set()
+        self._tile_map_cache = None
+        self._tile_map_cache = self.dungeon_generator.generate_floor(
+            self.current_dungeon_floor
+        )
+        self.dungeon_generator.set_start_room_visible()
+        self._rebuild_visible_rooms()
+        self.create_dungeon_doors()
+        self.spawn_dungeon_enemies()
+        start_x, start_y = self.dungeon_generator.get_start_position()
+        self.player = Player(self, start_x, start_y)
+        self.camera.set_map_size(
+            self.dungeon_generator.map_width * TILESIZE,
+            self.dungeon_generator.map_height * TILESIZE,
+        )
+        self.camera.center_on(self.player.rect.x, self.player.rect.y)
+        self.fade_in()
+
     def clear_sprites(self):
         for group in [
             self.all_sprites,
@@ -369,6 +396,13 @@ class Game:
             self.bullets,
             self.healthbar,
             self.characters,
+            self.decorations,
+            self.dungeon_entrances,
+            self.doors,
+            self.npcs,
+            self.chests,
+            self.items,
+            self.interactables,
         ]:
             group.empty()
         if self.physics:
@@ -485,6 +519,9 @@ class Game:
         self.dungeon_entrances = pygame.sprite.LayeredUpdates()
         self.doors = pygame.sprite.LayeredUpdates()
         self.npcs = pygame.sprite.LayeredUpdates()
+        self.chests = pygame.sprite.LayeredUpdates()
+        self.items = pygame.sprite.LayeredUpdates()
+        self.interactables = pygame.sprite.LayeredUpdates()
 
         if self.physics_enabled:
             self.init_physics_world()
@@ -645,6 +682,9 @@ class Game:
                     audio_manager.adjust_sfx_volume(-0.05)
                 elif event.key == pygame.K_EQUALS or event.key == pygame.K_KP_PLUS:
                     audio_manager.adjust_sfx_volume(0.05)
+                elif event.key == pygame.K_e:
+                    if self.game_state == "playing" and hasattr(self, "player"):
+                        self.player.interact()
 
             if event.type == pygame.VIDEORESIZE:
                 if config.get_window_mode() == "windowed":
@@ -698,6 +738,7 @@ class Game:
                 if self.is_sprite_in_active_zone(sprite):
                     self.render_surface.blit(sprite.image, self.camera.apply(sprite))
                     drawn += 1
+            self._draw_interact_hints()
             scaled = pygame.transform.scale(
                 self.render_surface, (self.sc.get_width(), self.sc.get_height())
             )
@@ -713,6 +754,45 @@ class Game:
 
         self.clock.tick(FPS)
         pygame.display.update()
+
+    def _draw_interact_hints(self):
+        if not hasattr(self, "player") or not self.player:
+            return
+        if not self.interactables:
+            return
+
+        player = self.player
+        closest = None
+        closest_dist = TILESIZE * 1.5
+        for obj in self.interactables:
+            dist = (
+                           (obj.rect.centerx - player.rect.centerx) ** 2
+                           + (obj.rect.centery - player.rect.centery) ** 2
+                   ) ** 0.5
+            if dist < closest_dist:
+                closest_dist = dist
+                closest = obj
+        if not closest:
+            return
+
+        outline = closest.rect.copy()
+        outline.inflate_ip(4, 4)
+        screen_outline = self.camera.apply_rect(outline)
+        pygame.draw.rect(self.render_surface, WHITE, screen_outline, 2)
+
+        e_size = 20
+        e_box = pygame.Rect(0, 0, e_size, e_size)
+        e_box.centerx = closest.rect.centerx
+        e_box.bottom = closest.rect.top - 8
+        screen_e = self.camera.apply_rect(e_box)
+
+        pygame.draw.rect(self.render_surface, BLACK, screen_e)
+        pygame.draw.rect(self.render_surface, WHITE, screen_e, 1)
+
+        font = pygame.font.Font(None, 16)
+        text = font.render("E", True, WHITE)
+        text_rect = text.get_rect(center=screen_e.center)
+        self.render_surface.blit(text, text_rect)
 
     def is_sprite_in_active_zone(self, sprite):
         if not hasattr(sprite, "rect"):
@@ -987,6 +1067,17 @@ class Game:
                         from map.tilemap import Decoration
 
                         Decoration(self, j, i, "tree")
+                    elif column == "C":
+                        from items.chest import Chest
+
+                        Chest(self, j, i)
+
+            if room.room_type.value == "boss":
+                from map.tilemap import DungeonEntrance
+
+                boss_pos = self.dungeon_generator.get_boss_position()
+                if boss_pos:
+                    DungeonEntrance(self, boss_pos[0], boss_pos[1])
 
         # print(f"[DEBUG] _rebuild_visible_rooms: added {visible_count} new rooms, total built: {len(self._dungeon_built_rooms)}")
 

@@ -21,7 +21,19 @@ class Block(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        self.image = game.terrain_spritesheet.get_image(0, 0, self.width, self.height)
+        if game.mode == GameMode.DUNGEON:
+            floor = getattr(game, "current_dungeon_floor", 1)
+            theme = FLOOR_THEMES.get(floor, FLOOR_THEMES[1])
+            row, col = theme["wall"]
+            src_x = col * TILESIZE
+            src_y = row * TILESIZE
+        else:
+            src_x = 0
+            src_y = 0
+
+        self.image = game.terrain_spritesheet.get_image(
+            src_x, src_y, self.width, self.height
+        )
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
@@ -61,9 +73,23 @@ class Ground(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        tile_pos = self.TILE_MAP.get(terrain_type, (2, 0))
-        src_x = tile_pos[1] * 32
-        src_y = tile_pos[0] * 32
+        if game.mode == GameMode.DUNGEON:
+            floor = getattr(game, "current_dungeon_floor", 1)
+            theme = FLOOR_THEMES.get(floor, FLOOR_THEMES[1])
+            if terrain_type == ".":
+                row, col = theme["floor"]
+            elif terrain_type == "B":
+                row, col = theme["wall"]
+            elif terrain_type == "T":
+                row, col = theme["decoration"]
+            else:
+                row, col = theme["floor"]
+        else:
+            tile_pos = self.TILE_MAP.get(terrain_type, (2, 0))
+            row, col = tile_pos
+
+        src_x = col * 32
+        src_y = row * 32
         self.image = game.terrain_spritesheet.get_image(src_x, src_y, 32, 32)
         if self.width != 32 or self.height != 32:
             self.image = pygame.transform.scale(self.image, (self.width, self.height))
@@ -76,7 +102,7 @@ class DungeonEntrance(pygame.sprite.Sprite):
     def __init__(self, game, x, y):
         self.game = game
         self._layer = BLOCKS_LAYER
-        self.groups = game.all_sprites, game.dungeon_entrances
+        self.groups = game.all_sprites, game.dungeon_entrances, game.interactables
         pygame.sprite.Sprite.__init__(self, self.groups)
 
         self.x = x * TILESIZE
@@ -84,44 +110,30 @@ class DungeonEntrance(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        self.image = game.terrain_spritesheet.get_image(1, 5, self.width, self.height)
+        if game.mode == GameMode.DUNGEON:
+            floor = getattr(game, "current_dungeon_floor", 1)
+            theme = FLOOR_THEMES.get(floor, FLOOR_THEMES[1])
+            row, col = theme["portal"]
+        else:
+            row, col = 1, 5
+
+        src_x = col * TILESIZE
+        src_y = row * TILESIZE
+        self.image = game.terrain_spritesheet.get_image(
+            src_x, src_y, self.width, self.height
+        )
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
 
     def update(self):
-        collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, False)
-        if collide:
+        pass
+
+    def interact(self):
+        if self.game.mode == GameMode.WORLD:
             self.game.enter_dungeon()
-
-
-class Portal(pygame.sprite.Sprite):
-    def __init__(self, game, x, y):
-        self.game = game
-        self._layer = BLOCKS_LAYER
-        self.groups = game.all_sprites, game.dungeon_entrances
-        pygame.sprite.Sprite.__init__(self, self.groups)
-
-        self.x = x * TILESIZE
-        self.y = y * TILESIZE
-        self.width = TILESIZE
-        self.height = TILESIZE
-
-        self.image = game.terrain_spritesheet.get_image(1, 2, 32, 32)
-        self.image = pygame.transform.scale(self.image, (self.width, self.height))
-
-        self.rect = self.image.get_rect()
-        self.rect.x = self.x
-        self.rect.y = self.y
-
-    def update(self):
-        collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, False)
-        if collide:
-            if hasattr(self.game, "mode"):
-                if self.game.mode == "world":
-                    self.game.enter_dungeon()
-                elif self.game.mode == "dungeon":
-                    self.game.exit_dungeon()
+        elif self.game.mode == GameMode.DUNGEON:
+            self.game.go_deeper()
 
 
 class Decoration(pygame.sprite.Sprite):
@@ -136,7 +148,18 @@ class Decoration(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        self.image = game.terrain_spritesheet.get_image(1, 0, self.width, self.height)
+        if game.mode == GameMode.DUNGEON:
+            floor = getattr(game, "current_dungeon_floor", 1)
+            theme = FLOOR_THEMES.get(floor, FLOOR_THEMES[1])
+            row, col = theme["decoration"]
+        else:
+            row, col = 1, 0
+
+        src_x = col * TILESIZE
+        src_y = row * TILESIZE
+        self.image = game.terrain_spritesheet.get_image(
+            src_x, src_y, self.width, self.height
+        )
 
         self.rect = self.image.get_rect()
         self.rect.x = self.x
