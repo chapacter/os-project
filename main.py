@@ -328,9 +328,7 @@ class Game:
                 # print(f"[DEBUG] Room {gx},{gy} already spawned enemies, skipping")
                 continue
             room.enemy_count = 0
-            print(
-                f"[DEBUG] Room {gx},{gy} spawning enemies, type: {room.room_type.value}"
-            )
+            # print( f"[DEBUG] Room {gx},{gy} spawning enemies, type: {room.room_type.value}" )
             # Skip START rooms - no enemies here
             if room.room_type.value == "start":
                 room.enemies_spawned = True
