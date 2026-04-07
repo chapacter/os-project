@@ -3,7 +3,6 @@ import math
 import pygame
 
 from effects.effect import Effect
-from effects.particle import Particle
 from entity.base import VectorEntity
 from projectiles.bullet import Bullet
 from utils.audio import audio_manager
@@ -81,7 +80,6 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         self.shoot_state = "shoot"
 
         self.grass_counter = 0
-        self.particle_counter = 0
 
         self.action_state = "move"
         self.action_frame = 0
@@ -92,12 +90,17 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         self.dodge_cooldown = 4
         self.dodge_cooldown_counter = 0
 
-        self.health = PLAYER_HEALTH
-
         self.is_input_active = False
 
-        self.knockback_duration_remaining = 0
         self.contact_knockback_cooldown = 0
+
+        VectorEntity.__init__(
+            self,
+            game,
+            physics_name="player",
+            create_body=False,
+            max_health=PLAYER_HEALTH,
+        )
 
     def move(self):
         pressed = pygame.key.get_pressed()
@@ -147,12 +150,6 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                 self.grass_counter = 0
                 Effect(self.game, self.rect.centerx, self.rect.bottom, "grass")
 
-            if self.health < PLAYER_HEALTH * 0.3:
-                self.particle_counter += 1
-                if self.particle_counter >= 3:
-                    self.particle_counter = 0
-                    Particle(self.game, self.rect.centerx, self.rect.centery)
-
     def update(self):
         self.move()
         self.animation()
@@ -165,6 +162,8 @@ class Player(VectorEntity, pygame.sprite.Sprite):
 
         if self.contact_knockback_cooldown > 0:
             self.contact_knockback_cooldown -= 1
+
+        self.apply_hit_effect()
 
         self.apply_movement()
 
@@ -369,11 +368,12 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                 self.shoot_state = "shoot"
 
     def damage(self, amount):
-        self.health = self.health - amount
-        audio_manager.play_sound("hit")
+        super().damage(amount)
 
-        if self.health <= 0:
-            self.kill()
+    def _on_death(self):
+        self.kill()
+        if hasattr(self.game, "game_over"):
+            self.game.game_over()
 
     def interact(self):
         closest = None

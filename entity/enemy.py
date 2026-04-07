@@ -3,11 +3,9 @@ import random
 import pygame
 
 from effects.effect import Effect
-from effects.particle import Particle
 from entity.base import Healthbar, VectorEntity
 from projectiles.bullet import Enemy_Bullet
 from utils import weighted_choice
-from utils.audio import audio_manager
 from utils.physics import COLLISION_ENTITY
 from utils.settings import *
 
@@ -31,8 +29,6 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.width = cfg["sprite_size"][0]
         self.height = cfg["sprite_size"][1]
 
-        self.max_health = cfg["hp"]
-        self.health = self.max_health
         self.speed_mod = cfg["speed_mod"]
         self.detection_range = cfg["detection_range"]
         self.attack_range = cfg["attack_range"]
@@ -47,9 +43,6 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.blink_interval = cfg.get("blink_interval", 8)
 
         self.healthbar = Enemy_Healthbar(game, self, x, y)
-
-        self.hit_flash_timer = 0
-        self.hit_flash_duration = 2
 
         self.frame_move = 3
         self.animations = {}
@@ -90,8 +83,6 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.blink_timer = 0
         self.visible = True
 
-        self.particle_counter = 0
-
         # Float position accumulators — fix sub-pixel truncation
         self._pos_x = float(self.hitbox.x)
         self._pos_y = float(self.hitbox.y)
@@ -118,9 +109,7 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self._set_patrol_target()
 
         self.physics_name = f"enemy_{id(self)}"
-        VectorEntity.__init__(
-            self, game, self.physics_name, collision_type=COLLISION_ENTITY
-        )
+        VectorEntity.__init__(self, game, self.physics_name, collision_type=COLLISION_ENTITY, max_health=cfg["hp"], )
 
         # Replace default pymunk body with one sized to hitbox
         if self.body:
@@ -326,12 +315,6 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
                     self.visible = True
                     self.image.set_alpha(255)
 
-        if self.health < self.max_health * 0.3:
-            self.particle_counter += 1
-            if self.particle_counter >= 3:
-                self.particle_counter = 0
-                Particle(self.game, self.rect.centerx, self.rect.centery)
-
     def animation(self):
         if self.has_blink and not self.visible:
             return
@@ -382,14 +365,7 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.move()
         self.animation()
 
-        # Hit flash
-        if self.hit_flash_timer > 0:
-            mask = pygame.mask.from_surface(self.image)
-            white_silhouette = mask.to_surface(
-                setcolor=(255, 255, 255, 180), unsetcolor=(0, 0, 0, 0)
-            )
-            self.image.blit(white_silhouette, (0, 0))
-            self.hit_flash_timer -= 1
+        self.apply_hit_effect()
 
         self.apply_movement()
 
@@ -402,22 +378,14 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
 
     # ─── Combat ───────────────────────────────────────────────────
 
-    def take_knockback(self, direction, force):
-        self.knockback_velocity = direction * force
-        self.hit_flash_timer = self.hit_flash_duration
-
     def collide_player(self):
         collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, False)
         if collide:
             pass
 
     def damage(self, amount):
-        self.health -= amount
+        super().damage(amount)
         self.healthbar.damage(self.max_health, self.health)
-        audio_manager.play_sound("hit")
-
-        if self.health <= 0:
-            self._on_death()
 
     def _on_death(self):
         Effect(self.game, self.rect.centerx, self.rect.centery, "death")
