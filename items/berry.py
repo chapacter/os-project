@@ -2,17 +2,18 @@ import os
 
 import pygame
 
-from items.base import Item
+from items.loot import LootItem
+from utils.audio import audio_manager
 from utils.settings import *
 
 
-class Berry(Item):
-    HEAL_AMOUNT = 3
+class Berry(LootItem):
+    HEAL_AMOUNT = 6
 
     def __init__(self, game, x, y):
-        super().__init__(game, x, y, GROUND_LAYER, game.all_sprites, game.items)
+        super().__init__(game, x, y)
 
-        sprite_path = os.path.join("simple", "assets", "berry.png")
+        sprite_path = os.path.join("assets", "berry.png")
         if os.path.exists(sprite_path):
             self.image = pygame.image.load(sprite_path).convert_alpha()
         else:
@@ -23,22 +24,10 @@ class Berry(Item):
         self.rect.x = self.x
         self.rect.y = self.y
 
-        self.animation_counter = 0
-
-    def animate(self):
-        self.animation_counter += 0.05
-        if self.animation_counter >= 1:
-            self.animation_counter = 0
-
     def on_pickup(self, player):
         if hasattr(player, "health"):
             player.health = min(player.health + self.HEAL_AMOUNT, PLAYER_HEALTH)
             if hasattr(player, "healthbar"):
                 player.healthbar.damage(PLAYER_HEALTH, player.health)
+        audio_manager.play_sound("menu_select")
         self.kill()
-
-    def update(self):
-        collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, False)
-        if collide:
-            self.on_pickup(collide[0])
-        self.animate()

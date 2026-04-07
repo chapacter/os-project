@@ -1,7 +1,11 @@
+import random
+
 import pygame
 
 from items.base import Item
-from items.loot import LootItem
+from items.berry import Berry
+from items.food import Food
+from items.weapon_loot import WeaponLoot
 from utils.settings import *
 
 
@@ -46,4 +50,11 @@ class Chest(Item):
     def open(self):
         self.opened = True
         self._update_sprite()
-        LootItem(self.game, self.x, self.y)
+
+        WeaponLoot(self.game, self.x, self.y)
+
+        for _ in range(2):
+            if random.choice([True, False]):
+                Food(self.game, self.x, self.y)
+            else:
+                Berry(self.game, self.x, self.y)

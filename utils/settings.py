@@ -72,9 +72,9 @@ FLOOR_THEMES = {
         "decoration": (6, 5),
     },
     4: {
-        "floor": (7, 9),
+        "floor": (6, 9),
         "wall": (2, 3),
-        "portal": (1, 3),
+        "portal": (1, 2),
         "chest_closed": (10, 0),
         "chest_open": (10, 1),
         "decoration": (4, 4),

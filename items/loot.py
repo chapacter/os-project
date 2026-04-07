@@ -1,4 +1,5 @@
 import os
+import random
 
 import pygame
 
@@ -9,6 +10,7 @@ from utils.settings import *
 
 class LootItem(Item):
     HEAL_AMOUNT = 3
+    FLY_DURATION = 30
 
     def __init__(self, game, x, y):
         self.game = game
@@ -44,6 +46,29 @@ class LootItem(Item):
 
         self.animation_counter = 0
 
+        self.state = "flying"
+        self.fly_timer = 0
+
+        self.start_pos = pygame.math.Vector2(self.rect.x, self.rect.y)
+        distance = random.randint(20, 50)
+        direction = random.choice([(-1, 1), (1, 1), (1, -1), (-1, -1)])
+        offset_x = direction[0] * distance
+        offset_y = direction[1] * distance
+        self.end_pos = pygame.math.Vector2(
+            self.start_pos.x + offset_x, self.start_pos.y + offset_y
+        )
+        mid_x = (self.start_pos.x + self.end_pos.x) / 2
+        mid_y = (self.start_pos.y + self.end_pos.y) / 2
+        self.apex_pos = pygame.math.Vector2(mid_x, mid_y - 10)
+
+    def _get_parabola_pos(self, t):
+        one_minus_t = 1 - t
+        return (
+                one_minus_t * one_minus_t * self.start_pos
+                + 2 * one_minus_t * t * self.apex_pos
+                + t * t * self.end_pos
+        )
+
     def animate(self):
         self.animation_counter += 0.05
         if self.animation_counter >= 1:
@@ -58,7 +83,20 @@ class LootItem(Item):
         self.kill()
 
     def update(self):
-        collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, False)
-        if collide:
-            self.on_pickup(collide[0])
+        if self.state == "flying":
+            self.fly_timer += 1
+            t = self.fly_timer / self.FLY_DURATION
+            pos = self._get_parabola_pos(t)
+            self.rect.x = pos.x
+            self.rect.y = pos.y
+
+            if self.fly_timer >= self.FLY_DURATION:
+                self.state = "landed"
+                self.rect.x = self.end_pos.x
+                self.rect.y = self.end_pos.y
+        else:
+            collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, False)
+            if collide:
+                self.on_pickup(collide[0])
+
         self.animate()
