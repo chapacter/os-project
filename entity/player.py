@@ -64,6 +64,23 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                 frames.append(sprite)
             self.animations["dodge"][direction] = frames
 
+        # Knockback animations
+        self.animations["knockback_weak"] = {}
+        self.animations["knockback_strong"] = {}
+        for direction, row in direction_map.items():
+            sprite, _ = game.player_spritesheet.get_image_centered(
+                13, row, self.sprite_cfg
+            )
+            self.animations["knockback_weak"][direction] = [sprite]
+
+            frames = []
+            for col in range(13, 9, -1):
+                sprite, _ = game.player_spritesheet.get_image_centered(
+                    col, row, self.sprite_cfg
+                )
+                frames.append(sprite)
+            self.animations["knockback_strong"][direction] = frames
+
         self.image = self.animations["move"]["right"][0]
         self.rect = self.image.get_rect()
         self.rect.center = (self.x + self.offset_x, self.y + self.offset_y)
@@ -85,6 +102,9 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         self.action_frame = 0
         self.attack_direction = "right"
         self.is_dodging = False
+
+        self.knockback_type = None
+        self.knockback_frame = 0
         self.dodge_frames = self.frame_dodge
         self.dodge_state = "ready"
         self.dodge_cooldown = 4
@@ -174,7 +194,25 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         self.wait_after_shoot()
 
     def animation(self):
-        if self.action_state == "attack":
+        if self.action_state == "knockback":
+            if self.knockback_type == "weak":
+                self.image = self.animations["knockback_weak"][self.direction][0]
+                if self.knockback_duration_remaining <= 0:
+                    self.action_state = "move"
+                    self.knockback_type = None
+            else:
+                frames = self.animations["knockback_strong"][self.direction]
+                frame_index = min(int(self.knockback_frame), len(frames) - 1)
+                self.image = frames[frame_index]
+                self.knockback_frame += 5.0 / 16.0
+                if self.knockback_frame >= len(frames):
+                    self.knockback_frame = len(frames) - 1
+                if self.knockback_duration_remaining <= 0:
+                    self.action_state = "move"
+                    self.knockback_type = None
+                    self.knockback_frame = 0
+
+        elif self.action_state == "attack":
             frame_index = int(self.action_frame)
             if frame_index >= len(self.animations["attack"][self.attack_direction]):
                 frame_index = len(self.animations["attack"][self.attack_direction]) - 1
@@ -194,13 +232,6 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                 self.is_dodging = False
                 self.action_state = "move"
                 self.action_frame = 0
-
-        elif self.knockback_duration_remaining > 0:
-            total = len(self.animations["dodge"][self.direction])
-            frame = max(0, total - 1 - int(self.action_frame))
-            frame = min(frame, total - 1)
-            self.image = self.animations["dodge"][self.direction][frame]
-            self.action_frame += 0.5
 
         else:
             if self.is_input_active and self.velocity.length() > 0:
@@ -225,11 +256,22 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                     )
                     if contact_dir.length() > 0:
                         contact_dir = contact_dir.normalize()
-                    self.knockback_velocity = (
-                            contact_dir * CONTACT_KNOCKBACK_FORCE * 0.7
-                            + self.velocity * 0.3
-                    )
-                    self.knockback_duration_remaining = KNOCKBACK_DURATION
+
+                    # Determine knockback type by situation
+                    # strong for reaper types (enemy_type 2 or 3), weak for others
+                    if hasattr(enemy, "enemy_type") and enemy.enemy_type in [2, 3]:
+                        self.knockback_type = "strong"
+                        force = CONTACT_KNOCKBACK_FORCE
+                        duration = KNOCKBACK_DURATION
+                    else:
+                        self.knockback_type = "weak"
+                        force = 4
+                        duration = 8
+
+                    self.knockback_frame = 0
+                    self.knockback_velocity = contact_dir * force + self.velocity * 0.3
+                    self.knockback_duration_remaining = duration
+                    self.action_state = "knockback"
                     self.contact_knockback_cooldown = CONTACT_KNOCKBACK_INTERVAL
 
                 overlap_x = min(
