@@ -1,9 +1,6 @@
 from .base import Item
-from .berry import Berry
 from .chest import Chest
 from .food import Food
-from .loot import LootItem
-from .weapon import Weapon
-from .weapon_loot import WeaponLoot
+from .weapon import Weapon, WeaponLoot
 
-__all__ = ["Item", "Weapon", "Berry", "Food", "Chest", "LootItem", "WeaponLoot"]
+__all__ = ["Item", "Weapon", "WeaponLoot", "Food", "Chest"]

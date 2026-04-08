@@ -26,6 +26,36 @@ SWORD_KNOCKBACK_FORCE = 6
 BULLET_KNOCKBACK_FORCE = 4
 
 WEAPON_LAYER = 7
+
+LOOT_ANIMATION_STEP = 5
+LOOT_ANIMATION_MAX_ANGLE = 90
+LOOT_FLY_DURATION = 30
+
+FOOD_TYPES = {
+    0: {
+        "name": "food",
+        "sheet": "hallowicons_1.png",
+        "grid": (8, 3),
+        "row": 0,
+        "heal": 3,
+        "color": (100, 200, 100),
+    },
+    1: {
+        "name": "berry",
+        "sheet": "hallowicons_1.png",
+        "grid": (8, 3),
+        "row": 2,
+        "heal": 6,
+        "color": (200, 100, 100),
+    },
+}
+
+WEAPON_TYPES = {
+    0: {"name": "sword", "sheet": "sword.png", "grid": (3, 1), "col": 0, "damage": 1},
+    1: {"name": "axe", "sheet": "sword.png", "grid": (3, 1), "col": 1, "damage": 1},
+    2: {"name": "mace", "sheet": "sword.png", "grid": (3, 1), "col": 2, "damage": 1},
+}
+
 BULLET_SPEED = 8
 BULLET_MAX_DISTANCE = 500
 
