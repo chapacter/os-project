@@ -15,6 +15,7 @@ from map.tilemap import Block, Ground
 from map.tmx_loader import TiledLoader
 from map.world_generator import WorldGenerator
 from sprites import Spritesheet
+from ui.font_manager import font_manager
 from utils import config
 from utils.audio import audio_manager
 from utils.camera import Camera
@@ -31,6 +32,9 @@ class GameMode:
 class Game:
     def __init__(self):
         config.load_config()
+        from utils.config import get_language, get_font
+
+        font_manager.init(get_language(), get_font())
         audio_manager.sync_from_config()
         self.scale = config.get_scale()
         self.sc = self.create_window()
@@ -103,7 +107,15 @@ class Game:
 
     def create_window(self):
         mode = config.get_window_mode()
-        screen_w, screen_h = config.get_screen_size()
+        display_index = config.get_display()
+
+        try:
+            screen_w, screen_h = config.get_display_resolution(display_index)
+        except Exception:
+            screen_w, screen_h = config.get_screen_size()
+            print(
+                f"[WARNING] Display {display_index} unavailable, falling back to primary"
+            )
 
         flags = 0
 
@@ -120,7 +132,7 @@ class Game:
         else:
             width, height = screen_w, screen_h
 
-        self.sc = pygame.display.set_mode((width, height), flags)
+        self.sc = pygame.display.set_mode((width, height), flags, display=display_index)
         self.render_surface = pygame.Surface(
             (int(width / self.scale), int(height / self.scale))
         )
@@ -683,6 +695,39 @@ class Game:
                 elif event.key == pygame.K_e:
                     if self.game_state == "playing" and hasattr(self, "player"):
                         self.player.interact()
+                elif event.key == pygame.K_o:
+                    current = font_manager.get_locale()
+                    supported = font_manager.get_supported_locales()
+                    if current in supported:
+                        idx = supported.index(current)
+                        new_locale = supported[(idx + 1) % len(supported)]
+                    else:
+                        new_locale = supported[0] if supported else "en"
+                    font_manager.set_locale(new_locale)
+                    audio_manager.play_sound("menu_select")
+                    if self.game_state == "menu" and self.main_menu:
+                        self.main_menu.update_texts()
+                    elif self.game_state == "paused" and self.pause_menu:
+                        self.pause_menu.update_texts()
+                    elif self.game_state == "playing" and self.hud:
+                        self.hud.update_texts()
+                elif event.key == pygame.K_p:
+                    from ui.font_manager import FONTS
+
+                    current_font_key = font_manager.get_font_key()
+                    if current_font_key.isdigit():
+                        current_idx = int(current_font_key)
+                        new_idx = (current_idx + 1) % len(FONTS)
+                    else:
+                        new_idx = 0
+                    font_manager.set_font(str(new_idx))
+                    audio_manager.play_sound("menu_select")
+                    if self.game_state == "menu" and self.main_menu:
+                        self.main_menu.update_texts()
+                    elif self.game_state == "paused" and self.pause_menu:
+                        self.pause_menu.update_texts()
+                    elif self.game_state == "playing" and self.hud:
+                        self.hud.update_texts()
 
             if event.type == pygame.VIDEORESIZE:
                 if config.get_window_mode() == "windowed":
@@ -787,8 +832,7 @@ class Game:
         pygame.draw.rect(self.render_surface, BLACK, screen_e)
         pygame.draw.rect(self.render_surface, WHITE, screen_e, 1)
 
-        font = pygame.font.Font(None, 16)
-        text = font.render("E", True, WHITE)
+        text = font_manager.get_font(16).render("E", True, WHITE)
         text_rect = text.get_rect(center=screen_e.center)
         self.render_surface.blit(text, text_rect)
 

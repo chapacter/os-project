@@ -1,6 +1,11 @@
 {
   "theme": {
-    "font_path": "assets/arial.ttf",
+    "font_paths": [
+      {
+        "name": "retro_gaming",
+        "path": "assets/Retro-Gaming.ttf"
+      }
+    ],
     "font_size": "18",
     "colours": {
       "dark_bg": "#2D2D2D",

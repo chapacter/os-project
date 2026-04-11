@@ -1,0 +1,15 @@
+{
+  "menu.new_game": "New Game",
+  "menu.continue": "Continue",
+  "menu.settings": "Settings",
+  "menu.quit": "Quit",
+  "pause.title": "PAUSED",
+  "pause.resume": "Resume",
+  "pause.save": "Save Game",
+  "pause.return_to_menu": "Main menu",
+  "pause.quit_to_desktop": "Quit",
+  "hud.health": "Health",
+  "hud.enemies": "Enemies",
+  "hud.floor": "Floor",
+  "hud.zone": "Zone"
+}
