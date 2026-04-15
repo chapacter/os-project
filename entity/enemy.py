@@ -44,9 +44,9 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
 
         self.healthbar = Enemy_Healthbar(game, self, x, y)
 
-        self.frame_move = 3
+        self.frame_move = cfg.get("frame_move", 3)
         self.animations = {}
-        direction_map = {"down": 0, "left": 1, "right": 2, "up": 3}
+        direction_map = cfg.get("direction_map", {"down": 0, "left": 1, "right": 2, "up": 3})
 
         spritesheet = game.enemy_spritesheets[self.enemy_type]
         sprite_w, sprite_h = cfg["sprite_size"]
@@ -269,7 +269,32 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
             self.shoot_state = "shoot"
             self.shoot_counter = 0
 
+    def _avoid_other_enemies(self):
+        SEPARATION_RADIUS = 80
+        SEPARATION_FORCE = 5.0
+
+        if not hasattr(self.game, 'enemies'):
+            return
+
+        avoidance = pygame.math.Vector2(0, 0)
+        for other in self.game.enemies:
+            if other is self:
+                continue
+            dx = self.rect.centerx - other.rect.centerx
+            dy = self.rect.centery - other.rect.centery
+            dist = (dx ** 2 + dy ** 2) ** 0.5
+
+            if 0 < dist < SEPARATION_RADIUS:
+                force = (SEPARATION_RADIUS - dist) / SEPARATION_RADIUS * SEPARATION_FORCE
+                if dist > 0:
+                    avoidance += pygame.math.Vector2(dx, dy).normalize() * force
+
+        self.velocity += avoidance
+
     def move(self):
+        if self.enemy_type in [5, 6, 7]:
+            self._avoid_other_enemies()
+
         distance = self._get_distance_to_player()
 
         if distance <= self.detection_range:

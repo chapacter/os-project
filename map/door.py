@@ -12,7 +12,7 @@ class Door(pygame.sprite.Sprite):
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
-        self.width = TILESIZE * 2  # Door width is 2 tiles
+        self.width = TILESIZE * 2
         self.height = TILESIZE * 2
 
         self.direction = direction
@@ -24,3 +24,6 @@ class Door(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+
+    def update(self):
+        pass

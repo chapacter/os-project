@@ -6,7 +6,6 @@ import sys
 import pygame
 import pygame_gui
 import pytmx
-
 from entity.enemy import Enemy
 from entity.player import Player
 from items.weapon import Weapon
@@ -16,7 +15,7 @@ from map.tmx_loader import TiledLoader
 from map.world_generator import WorldGenerator
 from sprites import Spritesheet
 from ui.font_manager import font_manager
-from utils import config
+from utils import config, weighted_choice
 from utils.audio import audio_manager
 from utils.camera import Camera
 from utils.physics import PhysicsEngine
@@ -345,15 +344,31 @@ class Game:
             if room.room_type.value == "start":
                 room.enemies_spawned = True
                 continue
-            if room.room_type.value in ["enemy", "elite", "boss"]:
+            if room.room_type.value == "boss":
+                room.enemies_spawned = True
+                boss_pos = self.dungeon_generator.get_boss_position()
+                if boss_pos:
+                    from entity.boss import Boss
+                    Boss(self, boss_pos[0], boss_pos[1])
+                    room.enemy_count = 1
+                    total_enemies += 1
+            elif room.room_type.value in ["enemy", "elite"]:
                 room.enemies_spawned = True
                 room_x = gx * room_unit_width + wall_thickness + 3
                 room_y = gy * room_unit_height + wall_thickness + 2
                 for _ in range(random.randint(2, 4)):
+                    if self.current_dungeon_floor == 2:
+                        enemy_type = random.choice([5, 6, 7])
+                    elif self.current_dungeon_floor == 3:
+                        enemy_type = random.choice([8, 9])
+                    else:
+                        type_weights = {k: v["weight"] for k, v in ENEMY_TYPES.items() if k < 5}
+                        enemy_type = weighted_choice(type_weights)
                     Enemy(
                         self,
                         room_x + random.randint(-2, 2),
                         room_y + random.randint(-2, 2),
+                        enemy_type=enemy_type,
                     )
                     room.enemy_count += 1
                     total_enemies += 1
@@ -528,6 +543,7 @@ class Game:
         self.decorations = pygame.sprite.LayeredUpdates()
         self.dungeon_entrances = pygame.sprite.LayeredUpdates()
         self.doors = pygame.sprite.LayeredUpdates()
+        self.area_particles = pygame.sprite.LayeredUpdates()
         self.npcs = pygame.sprite.LayeredUpdates()
         self.chests = pygame.sprite.LayeredUpdates()
         self.items = pygame.sprite.LayeredUpdates()
