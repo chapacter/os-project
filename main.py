@@ -360,7 +360,7 @@ class Game:
                     if self.current_dungeon_floor == 2:
                         enemy_type = random.choice([5, 6, 7])
                     elif self.current_dungeon_floor == 3:
-                        enemy_type = random.choice([8, 9])
+                        enemy_type = random.choice([8, 9, 10])
                     else:
                         type_weights = {k: v["weight"] for k, v in ENEMY_TYPES.items() if k < 5}
                         enemy_type = weighted_choice(type_weights)

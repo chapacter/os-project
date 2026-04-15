@@ -325,6 +325,26 @@ ENEMY_TYPES = {
         "always_chase": True,
         "has_blink": False,
     },
+    10: {
+        "sheet": "assets/toad.png",
+        "grid": (4, 4),
+        "sprite_size": (32, 32),
+        "frame_move": 4,
+        "direction_map": {"down": 0, "right": 1, "up": 2, "left": 3},
+        "weight": 1,
+        "hp": 7,
+        "speed_mod": 2.0,
+        "detection_range": 400,
+        "attack_range": 0,
+        "retreat_range": 0,
+        "retreat_distance": 0,
+        "melee_range": 80,
+        "damage": 1,
+        "shoot_cooldown": 0,
+        "melee_cooldown": 10,
+        "always_chase": True,
+        "has_blink": False,
+    },
 }
 
 SPRITE_EFFECTS = {
