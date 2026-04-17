@@ -42,7 +42,7 @@ FOOD_TYPES = {
     },
     1: {
         "name": "berry",
-        "sheet": "hallowicons_1.png",
+        "sheet": "hallowicons.png",
         "grid": (8, 3),
         "row": 2,
         "heal": 6,
@@ -128,7 +128,7 @@ SPRITE_PLAYER = {
 }
 
 SPRITE_ENEMY = {
-    "sheet": "assets/enemy.png",
+    "sheet": "assets/enemy/enemy.png",
     "sheet_size": (96, 128),
     "sprite_size": (32, 32),
     "target_size": (32, 32),
@@ -138,7 +138,7 @@ SPRITE_ENEMY = {
 
 ENEMY_TYPES = {
     0: {
-        "sheet": "assets/enemy.png",
+        "sheet": "assets/enemy/enemy.png",
         "grid": (3, 4),
         "sprite_size": (32, 32),
         "weight": 3,
@@ -156,7 +156,7 @@ ENEMY_TYPES = {
         "has_blink": False,
     },
     1: {
-        "sheet": "assets/ghost.png",
+        "sheet": "assets/enemy/ghost.png",
         "grid": (3, 4),
         "sprite_size": (26, 36),
         "weight": 1,
@@ -175,7 +175,7 @@ ENEMY_TYPES = {
         "blink_interval": 8,
     },
     2: {
-        "sheet": "assets/reaper.png",
+        "sheet": "assets/enemy/reaper.png",
         "grid": (3, 4),
         "sprite_size": (26, 36),
         "weight": 1,
@@ -193,7 +193,7 @@ ENEMY_TYPES = {
         "has_blink": False,
     },
     3: {
-        "sheet": "assets/reaper_blade.png",
+        "sheet": "assets/enemy/reaper_blade.png",
         "grid": (3, 4),
         "sprite_size": (32, 36),
         "weight": 1,
@@ -211,7 +211,7 @@ ENEMY_TYPES = {
         "has_blink": False,
     },
     4: {
-        "sheet": "assets/sunny-mushroom-breath-no-gas.png",
+        "sheet": "assets/enemy/sunny-mushroom-breath-no-gas.png",
         "grid": (3, 4),
         "sprite_size": (26, 26),
         "weight": 1,
@@ -229,7 +229,7 @@ ENEMY_TYPES = {
         "has_blink": False,
     },
     5: {
-        "sheet": "assets/death_knight.png",
+        "sheet": "assets/enemy/death_knight.png",
         "grid": (3, 4),
         "sprite_size": (48, 64),
         "direction_map": {"up": 0, "right": 1, "down": 2, "left": 3},
@@ -248,7 +248,7 @@ ENEMY_TYPES = {
         "has_blink": False,
     },
     6: {
-        "sheet": "assets/dead_lich.png",
+        "sheet": "assets/enemy/dead_lich.png",
         "grid": (3, 4),
         "sprite_size": (48, 64),
         "direction_map": {"up": 0, "right": 1, "down": 2, "left": 3},
@@ -267,7 +267,7 @@ ENEMY_TYPES = {
         "has_blink": False,
     },
     7: {
-        "sheet": "assets/fallen_warrior.png",
+        "sheet": "assets/enemy/fallen_warrior.png",
         "grid": (3, 4),
         "sprite_size": (48, 64),
         "direction_map": {"up": 0, "right": 1, "down": 2, "left": 3},
@@ -286,7 +286,7 @@ ENEMY_TYPES = {
         "has_blink": False,
     },
     8: {
-        "sheet": "assets/BlackWidow.png",
+        "sheet": "assets/enemy/BlackWidow.png",
         "grid": (4, 4),
         "sprite_size": (32, 32),
         "frame_move": 4,
@@ -306,7 +306,7 @@ ENEMY_TYPES = {
         "has_blink": False,
     },
     9: {
-        "sheet": "assets/EyeTentacles.png",
+        "sheet": "assets/enemy/EyeTentacles.png",
         "grid": (4, 4),
         "sprite_size": (32, 32),
         "frame_move": 4,
@@ -326,7 +326,7 @@ ENEMY_TYPES = {
         "has_blink": False,
     },
     10: {
-        "sheet": "assets/toad.png",
+        "sheet": "assets/enemy/toad.png",
         "grid": (4, 4),
         "sprite_size": (32, 32),
         "frame_move": 4,
