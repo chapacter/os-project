@@ -34,7 +34,7 @@ LOOT_FLY_DURATION = 30
 FOOD_TYPES = {
     0: {
         "name": "food",
-        "sheet": "hallowicons_1.png",
+        "sheet": "hallowicons.png",
         "grid": (8, 3),
         "row": 0,
         "heal": 3,

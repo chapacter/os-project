@@ -64,7 +64,7 @@ class AudioManager:
 
         if name in self.sounds:
             try:
-                print(f"[DEBUG] Playing sound: {name}")
+                # print(f"[DEBUG] Playing sound: {name}")
                 self.sounds[name].play(loops=loops, fade_ms=fade_ms)
             except pygame.error as e:
                 print(f"[DEBUG] Failed to play sound {name}: {e}")
