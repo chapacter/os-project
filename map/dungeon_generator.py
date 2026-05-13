@@ -447,6 +447,13 @@ class DungeonGenerator:
                 if 0 <= cy < total_height and 0 <= cx < total_width:
                     tile_map[cy][cx] = "H"
 
+                wx = cx + 2
+                wy = cy - 1
+                wardrobe_tile_size = 3
+                if (0 <= wy < total_height and wy + wardrobe_tile_size - 1 < total_height and
+                    0 <= wx < total_width and wx + wardrobe_tile_size - 1 < total_width):
+                    tile_map[wy][wx] = "W"
+
         self.map_width = total_width
         self.map_height = total_height
 

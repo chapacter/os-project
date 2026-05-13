@@ -14,7 +14,7 @@ from items.chest import Chest
 from items.weapon import Weapon
 from map.door import Door
 from map.dungeon_generator import DungeonGenerator
-from map.tilemap import Block, Ground, DungeonEntrance, Decoration, Water, NPC, Bed
+from map.tilemap import Block, Ground, DungeonEntrance, Decoration, Water, NPC, Bed, Wardrobe
 from map.tmx_loader import TiledLoader
 from map.world_generator import WorldGenerator
 from sprites import Spritesheet
@@ -1187,6 +1187,8 @@ class Game:
                         Chest(self, j, i)
                     elif column == "H":
                         Bed(self, j, i)
+                    elif column == "W":
+                        Wardrobe(self, j, i)
 
             if room.room_type.value == "boss":
                 boss_pos = self.dungeon_generator.get_boss_position()

@@ -239,3 +239,28 @@ class Bed(pygame.sprite.Sprite):
 
     def interact(self):
         self.game.pause()
+
+
+class Wardrobe(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = GROUND_LAYER + 1
+        self.groups = game.all_sprites, game.decorations, game.blocks
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TILESIZE
+        self.y = y * TILESIZE
+        self.width = 64
+        self.height = 64
+
+        self.image = pygame.image.load("assets/wardrobe.png").convert_alpha()
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+        if game.physics_enabled and game.physics:
+            game.physics.add_static_block(
+                self.rect.x, self.rect.y,
+                self.rect.width, self.rect.height,
+                f"block_{self.rect.x}_{self.rect.y}",
+            )
