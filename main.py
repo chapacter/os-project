@@ -56,7 +56,7 @@ class Game:
         audio_manager.load_sound("unpause", "assets/sounds/Unpause.wav")
         audio_manager.load_sound("menu_select", "assets/sounds/Menu Select.wav")
         audio_manager.load_sound("menu_move", "assets/sounds/Menu Move.wav")
-        audio_manager.load_music("assets/sounds/Music.mp3")
+        audio_manager.load_music("assets/sounds/New_Menu_Music.mp3")
         audio_manager.play_music()
         print(f"[DEBUG] Audio initialized: {audio_manager.initialized}")
         print(f"[DEBUG] Loaded sounds: {list(audio_manager.sounds.keys())}")
@@ -274,6 +274,9 @@ class Game:
 
         level = self.dungeon_generator.generate_floor(self.current_dungeon_floor)
         self._tile_map_cache = level
+
+        audio_manager.load_music("assets/sounds/Music.mp3")
+        audio_manager.play_music()
 
         self.dungeon_generator.set_start_room_visible()
 
@@ -597,6 +600,8 @@ class Game:
             try:
                 with open("savegame.json", "r") as f:
                     save_data = json.load(f)
+                if not save_data.get("save_valid", False):
+                    return False
                 self.game_state = "playing"
                 self.current_zone = tuple(save_data.get("zone", (0, 0)))
                 self.current_dungeon_floor = save_data.get("floor", 1)
@@ -609,14 +614,15 @@ class Game:
                 self.main_menu.hide()
                 self.create()
                 self.hud.show()
+                return True
             except Exception as e:
                 # print(f"Error loading save: {e}")
-                self.start_new_game()
-        else:
-            self.start_new_game()
+                return False
+        return False
 
     def save_game(self):
         save_data = {
+            "save_valid": True,
             "zone": self.current_zone,
             "floor": self.current_dungeon_floor,
             "mode": self.mode,
@@ -630,6 +636,20 @@ class Game:
         except Exception as e:
             print(f"Error saving game: {e}")
 
+    def game_over(self):
+        if os.path.exists("savegame.json"):
+            try:
+                with open("savegame.json", "r") as f:
+                    save_data = json.load(f)
+                save_data["save_valid"] = False
+                with open("savegame.json", "w") as f:
+                    json.dump(save_data, f)
+            except Exception as e:
+                print(f"Error invalidating save: {e}")
+
+        self.game_state = "game_over"
+        self.game_over_timer = 300
+
     def open_settings(self):
         print("Settings menu - coming soon!")
 
@@ -640,6 +660,8 @@ class Game:
 
     def return_to_menu(self):
         self.game_state = "menu"
+        audio_manager.load_music("assets/sounds/New_Menu_Music.mp3")
+        audio_manager.play_music()
         self.main_menu.show()
         self.hud.hide()
 
@@ -781,6 +803,11 @@ class Game:
         if self.game_state == "menu":
             self.sc.fill(BLACK)
             self.main_menu.draw(self.sc)
+        elif self.game_state == "game_over":
+            self.sc.fill(BLACK)
+            text = font_manager.render("GAME OVER", 48, (255, 0, 0), shadow=BLACK)
+            rect = text.get_rect(center=(self.sc.get_width() // 2, self.sc.get_height() // 2))
+            self.sc.blit(text, rect)
         elif self.game_state == "paused":
             self.render_surface.fill(BLACK)
             for sprite in self.all_sprites.sprites():
@@ -1064,6 +1091,10 @@ class Game:
 
         room = self.dungeon_generator.rooms[room_coord]
 
+        if room.room_type.value == "boss":
+            audio_manager.load_music("assets/sounds/Boss.mp3")
+            audio_manager.play_music()
+
         self._show_room(room_coord)
         self._rebuild_visible_rooms()
 
@@ -1151,6 +1182,14 @@ class Game:
 
             if self.game_state == "menu":
                 self.main_menu.update(time_delta)
+            elif self.game_state == "game_over":
+                self.game_over_timer -= 1
+                if self.game_over_timer <= 0:
+                    self.game_state = "menu"
+                    self.main_menu.show()
+                    self.hud.hide()
+                    audio_manager.load_music("assets/sounds/New_Menu_Music.mp3")
+                    audio_manager.play_music()
             elif self.game_state == "paused":
                 self.pause_menu.update(time_delta)
             elif self.game_state == "playing":

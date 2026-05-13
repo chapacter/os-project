@@ -479,6 +479,10 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         self.kill()
         if self.game.physics and hasattr(self, "physics_name"):
             self.game.physics.remove_body(self.physics_name)
+        
+        from utils.audio import audio_manager
+        audio_manager.load_music("assets/sounds/Music.mp3")
+        audio_manager.play_music()
 
     def _get_current_room_coord(self):
         tile_x = int(self.rect.x / TILESIZE)

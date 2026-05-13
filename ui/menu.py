@@ -17,9 +17,19 @@ class MainMenu:
         )
         self.is_active = True
 
+        self.background = pygame.image.load("assets/menu1.jpg").convert()
+        self.background = pygame.transform.scale(self.background, game.sc.get_size())
+
+        overlay = pygame.Surface(game.sc.get_size(), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 140))
+        self.background.blit(overlay, (0, 0))
+
         self.button_width = 200
         self.button_height = 50
         self.button_spacing = 70
+
+        self.notification = None
+        self.notification_timer = 0
 
         self.buttons = {}
         self.create_widgets()
@@ -97,23 +107,40 @@ class MainMenu:
                 self.is_active = False
                 self.game.start_new_game()
             elif event.ui_object_id == "continue_button":
-                self.is_active = False
-                self.game.load_game()
+                if not self.game.load_game():
+                    self.show_notification("Нет доступного сохранения")
+                else:
+                    self.is_active = False
             elif event.ui_object_id == "settings_button":
                 self.game.open_settings()
             elif event.ui_object_id == "quit_button":
                 self.game.quit_game()
 
+    def show_notification(self, text, duration=180):
+        self.notification = text
+        self.notification_timer = duration
+
     def update(self, time_delta):
         self.manager.update(time_delta)
+        if self.notification_timer > 0:
+            self.notification_timer -= 1
+            if self.notification_timer <= 0:
+                self.notification = None
 
     def draw(self, surface):
+        surface.blit(self.background, (0, 0))
+
         center_x = self.game.sc.get_width() // 2
         center_y = self.game.sc.get_height() // 2
 
         title_surf = font_manager.render("SONE TAIKO", 48, GOLD, shadow=BLACK)
         title_rect = title_surf.get_rect(center=(center_x, center_y - 150))
         surface.blit(title_surf, title_rect)
+
+        if self.notification and self.notification_timer > 0:
+            notif_surf = font_manager.render(self.notification, 24, YELLOW, shadow=BLACK)
+            notif_rect = notif_surf.get_rect(center=(center_x, center_y + 220))
+            surface.blit(notif_surf, notif_rect)
 
         for btn_id, btn in self.buttons.items():
             text = font_manager.t(btn["text_key"])
