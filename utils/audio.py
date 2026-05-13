@@ -1,3 +1,4 @@
+import math
 import os
 
 import pygame
@@ -188,8 +189,6 @@ class SpatialAudio:
         return left_volume, right_volume
 
     def calculate_distance_volume(self, source_x, source_y):
-        import math
-
         listener_x, listener_y = self.listener_position
         distance = math.sqrt(
             (source_x - listener_x) ** 2 + (source_y - listener_y) ** 2

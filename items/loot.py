@@ -7,13 +7,7 @@ import pygame
 
 from items.base import Item
 from utils.audio import audio_manager
-from utils.settings import (
-    WEAPON_LAYER,
-    LOOT_ANIMATION_STEP,
-    LOOT_ANIMATION_MAX_ANGLE,
-    LOOT_FLY_DURATION,
-    PLAYER_HEALTH,
-)
+from utils.settings import WEAPON_LAYER, LOOT_ANIMATION_STEP, LOOT_ANIMATION_MAX_ANGLE, LOOT_FLY_DURATION, PLAYER_HEALTH
 
 
 class AnimatedLoot(Item):

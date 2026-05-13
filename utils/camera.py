@@ -1,3 +1,5 @@
+import random
+
 import pygame
 
 from utils import config
@@ -105,8 +107,6 @@ class Camera:
                 self.scroll_y = (self.map_height - self.screen_height) // 2
 
         if hasattr(self, "_shake_timer") and self._shake_timer < self._shake_duration:
-            import random
-
             self._shake_timer += dt
             dx = random.randint(-self._shake_intensity, self._shake_intensity)
             dy = random.randint(-self._shake_intensity, self._shake_intensity)

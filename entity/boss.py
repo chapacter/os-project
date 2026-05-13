@@ -4,10 +4,12 @@ import random
 import pygame
 
 from effects.effect import Effect
+from effects.particle import AreaDamageParticle
 from effects.particle import Particle
 from entity.base import Healthbar, VectorEntity
 from entity.enemy import Enemy
 from projectiles.bullet import Enemy_Bullet
+from utils.audio import audio_manager
 from utils.physics import COLLISION_ENTITY
 from utils.settings import *
 
@@ -253,7 +255,6 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         Effect(self.game, self.rect.centerx, self.rect.centery, "death")
 
     def _area_damage(self):
-        from effects.particle import AreaDamageParticle
         config = self._get_phase_config()
         radius = config["area_radius"]
         particle_count = config.get("area_particle_count", 16)
@@ -479,8 +480,7 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         self.kill()
         if self.game.physics and hasattr(self, "physics_name"):
             self.game.physics.remove_body(self.physics_name)
-        
-        from utils.audio import audio_manager
+
         audio_manager.load_music("assets/sounds/Music.mp3")
         audio_manager.play_music()
 

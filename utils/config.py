@@ -1,6 +1,10 @@
 import configparser
 import os
 
+import pygame
+
+from utils.settings import TILESIZE
+
 CONFIG_FILE = "config.ini"
 
 config = configparser.ConfigParser()
@@ -9,8 +13,6 @@ WINDOW_MODES = ["fullscreen", "borderless", "windowed"]
 
 
 def get_screen_resolution():
-    import pygame
-
     info = pygame.display.Info()
     return info.current_w, info.current_h
 
@@ -138,7 +140,6 @@ def set_sfx_volume(volume):
 
 def calculate_initial_scale(screen_w, screen_h):
     max_room_height_tiles = 16
-    from utils.settings import TILESIZE
 
     max_room_height_px = max_room_height_tiles * TILESIZE
     scale = screen_h / max_room_height_px
@@ -161,14 +162,10 @@ def set_display(display_index):
 
 
 def get_num_displays():
-    import pygame
-
     return pygame.display.get_num_displays()
 
 
 def get_display_resolution(display_index=None):
-    import pygame
-
     if display_index is None:
         display_index = get_display()
     desktop_sizes = pygame.display.get_desktop_sizes()

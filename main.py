@@ -7,18 +7,25 @@ import pygame
 import pygame_gui
 import pytmx
 
+from entity.boss import Boss
 from entity.enemy import Enemy
 from entity.player import Player
+from items.chest import Chest
 from items.weapon import Weapon
+from map.door import Door
 from map.dungeon_generator import DungeonGenerator
-from map.tilemap import Block, Ground
+from map.tilemap import Block, Ground, DungeonEntrance, Decoration, Water, NPC
 from map.tmx_loader import TiledLoader
 from map.world_generator import WorldGenerator
 from sprites import Spritesheet
-from ui.font_manager import font_manager
+from ui.font_manager import font_manager, FONTS
+from ui.hud import HUD
+from ui.menu import MainMenu
+from ui.pause import PauseMenu
 from utils import config, weighted_choice
 from utils.audio import audio_manager
 from utils.camera import Camera
+from utils.config import get_language, get_font
 from utils.physics import PhysicsEngine
 from utils.settings import *
 
@@ -32,8 +39,6 @@ class GameMode:
 class Game:
     def __init__(self):
         config.load_config()
-        from utils.config import get_language, get_font
-
         font_manager.init(get_language(), get_font())
         audio_manager.sync_from_config()
         self.scale = config.get_scale()
@@ -159,10 +164,6 @@ class Game:
             )
 
     def init_ui(self):
-        from ui.menu import MainMenu
-        from ui.pause import PauseMenu
-        from ui.hud import HUD
-
         self.ui_manager = pygame_gui.UIManager(self.sc.get_size())
         self.main_menu = MainMenu(self)
         self.pause_menu = PauseMenu(self)
@@ -246,19 +247,14 @@ class Game:
 
     def create_dungeon_entrance(self, x, y):
         Ground(self, x, y, "B")
-        from map.tilemap import DungeonEntrance
-
         DungeonEntrance(self, x, y)
 
     def create_portal(self, x, y):
         Ground(self, x, y, "B")
-        from map.tilemap import DungeonEntrance
-
         DungeonEntrance(self, x, y)
 
     def create_npc(self, x, y):
         Ground(self, x, y, "N")
-        from map.tilemap import NPC
 
         NPC(self, x, y)
 
@@ -301,8 +297,6 @@ class Game:
             # print(f"[DEBUG] Camera centered: scroll={self.camera.scroll_x},{self.camera.scroll_y}")
 
     def create_dungeon_doors(self):
-        from map.door import Door
-
         for door_info in self.dungeon_generator.get_doors():
             Door(
                 self,
@@ -352,7 +346,6 @@ class Game:
                 room.enemies_spawned = True
                 boss_pos = self.dungeon_generator.get_boss_position()
                 if boss_pos:
-                    from entity.boss import Boss
                     Boss(self, boss_pos[0], boss_pos[1])
                     room.enemy_count = 1
                     total_enemies += 1
@@ -501,8 +494,6 @@ class Game:
                 elif tile["type"] == "block":
                     Block(self, x, y)
                 elif tile["type"] == "water":
-                    from map.tilemap import Water
-
                     Water(self, x, y)
                 elif tile["type"] == "enemy":
                     if random.random() < 0.3:
@@ -751,8 +742,6 @@ class Game:
                     elif self.game_state == "playing" and self.hud:
                         self.hud.update_texts()
                 elif event.key == pygame.K_p:
-                    from ui.font_manager import FONTS
-
                     current_font_key = font_manager.get_font_key()
                     if current_font_key.isdigit():
                         current_idx = int(current_font_key)
@@ -1154,17 +1143,11 @@ class Game:
                     if column == "B":
                         Block(self, j, i)
                     elif column == "T":
-                        from map.tilemap import Decoration
-
                         Decoration(self, j, i, "tree")
                     elif column == "C":
-                        from items.chest import Chest
-
                         Chest(self, j, i)
 
             if room.room_type.value == "boss":
-                from map.tilemap import DungeonEntrance
-
                 boss_pos = self.dungeon_generator.get_boss_position()
                 if boss_pos:
                     DungeonEntrance(self, boss_pos[0], boss_pos[1])

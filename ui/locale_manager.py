@@ -1,6 +1,8 @@
 import json
 import os
 
+from utils.config import set_language
+
 TRANSLATIONS_DIR = os.path.join(os.path.dirname(__file__), "translations")
 DEFAULT_LOCALE = "ru"
 
@@ -43,7 +45,6 @@ class LocaleManager:
     def set_locale(cls, locale):
         if locale in cls._supported_locales:
             cls._current_locale = locale
-            from utils.config import set_language
 
             set_language(locale)
             return True
