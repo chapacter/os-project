@@ -22,6 +22,7 @@ from ui.font_manager import font_manager, FONTS
 from ui.hud import HUD
 from ui.menu import MainMenu
 from ui.pause import PauseMenu
+from ui.dungeon_map import DungeonMap
 from utils import config, weighted_choice
 from utils.audio import audio_manager
 from utils.camera import Camera
@@ -95,6 +96,7 @@ class Game:
         self.ui_manager = None
         self.main_menu = None
         self.pause_menu = None
+        self.dungeon_map = None
         self.hud = None
 
         self.physics = None
@@ -168,6 +170,7 @@ class Game:
         self.ui_manager = pygame_gui.UIManager(self.sc.get_size())
         self.main_menu = MainMenu(self)
         self.pause_menu = PauseMenu(self)
+        self.dungeon_map = DungeonMap(self)
         self.hud = HUD(self)
         self.main_menu.show()
 
@@ -265,6 +268,8 @@ class Game:
         self.load_dungeon_floor()
 
     def load_dungeon_floor(self):
+        if self.dungeon_map:
+            self.dungeon_map.visible = False
         self.clear_sprites()
         self._dungeon_built_rooms = set()
 
@@ -338,8 +343,8 @@ class Game:
                 continue
             room.enemy_count = 0
             print(f"[DEBUG] Room {gx},{gy} spawning enemies, type: {room.room_type.value}")
-            # Skip START rooms - no enemies here
-            if room.room_type.value == "start":
+            # Skip LOBBY rooms - no enemies here
+            if room.room_type.value == "lobby":
                 room.enemies_spawned = True
                 continue
             if room.room_type.value == "boss":
@@ -373,6 +378,8 @@ class Game:
         # print(f"[DEBUG] Spawned {total_enemies} enemies")
 
     def exit_dungeon(self, go_deeper=False):
+        if self.dungeon_map:
+            self.dungeon_map.visible = False
         if go_deeper and self.current_dungeon_floor < DUNGEON_FLOORS:
             self.current_dungeon_floor += 1
             self.load_dungeon_floor()
@@ -638,6 +645,8 @@ class Game:
             except Exception as e:
                 print(f"Error invalidating save: {e}")
 
+        if self.dungeon_map:
+            self.dungeon_map.visible = False
         self.game_state = "game_over"
         self.game_over_timer = 300
 
@@ -658,6 +667,8 @@ class Game:
 
     def pause(self):
         if self.game_state == "playing":
+            if self.dungeon_map:
+                self.dungeon_map.visible = False
             self.game_state = "paused"
             self.pause_menu.show()
             audio_manager.play_sound("pause")
@@ -758,6 +769,9 @@ class Game:
                         self.pause_menu.update_texts()
                     elif self.game_state == "playing" and self.hud:
                         self.hud.update_texts()
+                elif event.key == pygame.K_m:
+                    if self.game_state == "playing" and self.dungeon_map:
+                        self.dungeon_map.toggle()
 
             if event.type == pygame.VIDEORESIZE:
                 if config.get_window_mode() == "windowed":
@@ -825,6 +839,9 @@ class Game:
                 # print(f"[DEBUG] Drawn sprites: {drawn}")
                 self._debug_drawn = True
             self.hud.draw(self.sc)
+
+        if self.dungeon_map:
+            self.dungeon_map.draw(self.sc)
 
         if self.is_fading:
             self.fade_surface.set_alpha(int(self.fade_alpha))

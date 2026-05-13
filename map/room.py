@@ -3,13 +3,13 @@ from enum import Enum
 
 
 class RoomType(Enum):
-    START = "start"
+    LOBBY = "lobby"
     EMPTY = "empty"
     ENEMY = "enemy"
     ELITE = "elite"
     LOOT = "loot"
     BOSS = "boss"
-    EXIT = "exit"
+    EVENT = "event"
 
 
 class Room:

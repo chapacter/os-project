@@ -287,35 +287,38 @@ class DungeonGenerator:
         return "north"
 
     def _assign_room_types(self):
-        """Assign room types: SPAWN (random), BOSS (farthest), EXIT (30%), others (ENEMY/ELITE/LOOT)."""
+        """Assign room types: LOBBY (random), BOSS (farthest), LOOT (1), EVENT (1), others (ENEMY/ELITE)."""
         all_coords = list(self.rooms.keys())
 
-        # START = random room (player spawns here, no enemies)
+        # LOBBY = random room (player spawns here, no enemies)
         start_coord = random.choice(all_coords)
-        self.rooms[start_coord].room_type = RoomType.START
+        self.rooms[start_coord].room_type = RoomType.LOBBY
 
-        # BOSS = farthest from START
+        # BOSS = farthest from LOBBY
         farthest = self._find_farthest_room(start_coord)
         self.rooms[farthest].room_type = RoomType.BOSS
 
         # Remaining rooms
         remaining = [c for c in all_coords if c not in [start_coord, farthest]]
-        random.shuffle(remaining)
 
-        exit_placed = False
+        # Exactly 1 LOOT room
+        loot_coord = random.choice(remaining)
+        self.rooms[loot_coord].room_type = RoomType.LOOT
+        remaining.remove(loot_coord)
+
+        # Exactly 1 EVENT room
+        event_coord = random.choice(remaining)
+        self.rooms[event_coord].room_type = RoomType.EVENT
+        remaining.remove(event_coord)
+
+        # Rest: ENEMY (50%) or ELITE (rest)
+        random.shuffle(remaining)
         for coord in remaining:
             room = self.rooms[coord]
-            # EXIT: 30% chance
-            if not exit_placed and random.random() < 0.3:
-                room.room_type = RoomType.EXIT
-                exit_placed = True
-            # Others: ENEMY (50%), ELITE (30%), LOOT (20%)
-            elif random.random() < 0.5:
+            if random.random() < 0.5:
                 room.room_type = RoomType.ENEMY
-            elif random.random() < 0.3 / 0.5:  # 30% of remaining 50%
-                room.room_type = RoomType.ELITE
             else:
-                room.room_type = RoomType.LOOT
+                room.room_type = RoomType.ELITE
 
     def _find_farthest_room(self, start):
         max_dist = 0
@@ -448,7 +451,7 @@ class DungeonGenerator:
         room_unit_height = room_tile_height + wall_thickness * 2
 
         for coord, room in self.rooms.items():
-            if room.room_type == RoomType.START:
+            if room.room_type == RoomType.LOBBY:
                 room_start_x = coord[0] * room_unit_width + wall_thickness
                 room_start_y = coord[1] * room_unit_height + wall_thickness
                 # Spawn in center of room
@@ -472,15 +475,10 @@ class DungeonGenerator:
                 return room_start_x + 3, room_start_y + 2
         return None
 
-    def get_exit_position(self):
-        room_tile_width = self.room_tile_width
-        room_tile_height = self.room_tile_height
-        wall_thickness = self.wall_thickness
-        room_unit_width = room_tile_width + wall_thickness * 2
-        room_unit_height = room_tile_height + wall_thickness * 2
-
+    def get_event_position(self):
+        """Get position in EVENT room."""
         for coord, room in self.rooms.items():
-            if room.room_type == RoomType.EXIT:
+            if room.room_type == RoomType.EVENT:
                 room_start_x = coord[0] * room_unit_width + wall_thickness
                 room_start_y = coord[1] * room_unit_height + wall_thickness
                 return room_start_x + 3, room_start_y + 2
@@ -536,7 +534,7 @@ class DungeonGenerator:
 
     def set_start_room_visible(self):
         for coord, room in self.rooms.items():
-            if room.room_type == RoomType.START:
+            if room.room_type == RoomType.LOBBY:
                 room.set_visible(True)
                 room.set_visited(True)
                 break
