@@ -38,6 +38,7 @@ class GameMode:
 
 class Game:
     def __init__(self):
+        self.clock = pygame.time.Clock()
         config.load_config()
         font_manager.init(get_language(), get_font())
         audio_manager.sync_from_config()
@@ -686,6 +687,8 @@ class Game:
     def update(self):
         self.update_scale()
         self.all_sprites.update()
+        self.clock.tick(FPS)
+        pygame.display.set_caption(f'{self.clock.get_fps() : .1f}')
 
         if self.physics_enabled and self.physics:
             self.physics.step()
