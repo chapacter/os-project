@@ -116,7 +116,7 @@ class MainMenu:
             elif event.ui_object_id == "quit_button":
                 self.game.quit_game()
 
-    def show_notification(self, text, duration=180):
+    def show_notification(self, text, duration=30):
         self.notification = text
         self.notification_timer = duration
 

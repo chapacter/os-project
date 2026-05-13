@@ -261,8 +261,7 @@ class Game:
 
     def enter_dungeon(self):
         self.mode = GameMode.DUNGEON
-        self.dungeon_generator = DungeonGenerator()
-        self.current_dungeon_floor = 1
+        self.dungeon_generator = DungeonGenerator(seed=self.dungeon_seed)
         self.load_dungeon_floor()
 
     def load_dungeon_floor(self):

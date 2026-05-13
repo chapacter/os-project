@@ -24,6 +24,9 @@ class PauseMenu:
         self.button_height = 50
         self.button_spacing = 60
 
+        self.notification = None
+        self.notification_timer = 0
+
         self.buttons = {}
         self.create_widgets()
 
@@ -92,6 +95,7 @@ class PauseMenu:
                 self.game.resume()
             elif event.ui_object_id == "save_button":
                 self.game.save_game()
+                self.show_notification("Игра сохранена")
             elif event.ui_object_id == "settings_button":
                 self.game.open_settings()
             elif event.ui_object_id == "main_menu_button":
@@ -100,8 +104,16 @@ class PauseMenu:
             elif event.ui_object_id == "quit_button":
                 self.game.quit_game()
 
+    def show_notification(self, text, duration=30):
+        self.notification = text
+        self.notification_timer = duration
+
     def update(self, time_delta):
         self.manager.update(time_delta)
+        if self.notification_timer > 0:
+            self.notification_timer -= 1
+            if self.notification_timer <= 0:
+                self.notification = None
 
     def draw(self, surface):
         surface.blit(self.overlay, (0, 0))
@@ -169,6 +181,13 @@ class PauseMenu:
             surface.blit(text_surf, text_rect)
 
             pygame.draw.rect(surface, frame_color, btn["rect"], 2)
+
+        if self.notification and self.notification_timer > 0:
+            notif_surf = font_manager.render(self.notification, 24, YELLOW, shadow=BLACK)
+            last_btn = self.buttons[list(self.buttons.keys())[-1]]
+            notif_y = last_btn["rect"].y + last_btn["rect"].height + 30
+            notif_rect = notif_surf.get_rect(center=(center_x, notif_y))
+            surface.blit(notif_surf, notif_rect)
 
     def show(self):
         self.is_active = True
