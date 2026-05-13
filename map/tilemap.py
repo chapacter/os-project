@@ -206,3 +206,36 @@ class NPC(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+
+
+class Bed(pygame.sprite.Sprite):
+    def __init__(self, game, x, y):
+        self.game = game
+        self._layer = BLOCKS_LAYER - 1
+        self.groups = game.all_sprites, game.decorations, game.interactables
+        pygame.sprite.Sprite.__init__(self, self.groups)
+
+        self.x = x * TILESIZE
+        self.y = y * TILESIZE
+        self.width = TILESIZE
+        self.height = TILESIZE
+
+        image = pygame.image.load("assets/Bed.png").convert_alpha()
+        self.image = pygame.Surface((TILESIZE, TILESIZE), pygame.SRCALPHA)
+        bx = (TILESIZE - 23) // 2
+        by = TILESIZE - 17
+        self.image.blit(image, (bx, by))
+
+        self.rect = self.image.get_rect()
+        self.rect.x = self.x
+        self.rect.y = self.y
+
+        # Real visual bounds for interaction hint (bed sprite: 23x17, bottom-aligned)
+        self.visual_rect = pygame.Rect(
+            self.x + (TILESIZE - 23) // 2,
+            self.y + TILESIZE - 17,
+            23, 17
+        )
+
+    def interact(self):
+        self.game.pause()

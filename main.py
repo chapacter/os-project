@@ -14,7 +14,7 @@ from items.chest import Chest
 from items.weapon import Weapon
 from map.door import Door
 from map.dungeon_generator import DungeonGenerator
-from map.tilemap import Block, Ground, DungeonEntrance, Decoration, Water, NPC
+from map.tilemap import Block, Ground, DungeonEntrance, Decoration, Water, NPC, Bed
 from map.tmx_loader import TiledLoader
 from map.world_generator import WorldGenerator
 from sprites import Spritesheet
@@ -889,15 +889,16 @@ class Game:
         if not closest:
             return
 
-        outline = closest.rect.copy()
+        hint_rect = closest.visual_rect if hasattr(closest, "visual_rect") else closest.rect
+        outline = hint_rect.copy()
         outline.inflate_ip(4, 4)
         screen_outline = self.camera.apply_rect(outline)
         pygame.draw.rect(self.render_surface, WHITE, screen_outline, 2)
 
         e_size = 20
         e_box = pygame.Rect(0, 0, e_size, e_size)
-        e_box.centerx = closest.rect.centerx
-        e_box.bottom = closest.rect.top - 8
+        e_box.centerx = hint_rect.centerx
+        e_box.bottom = hint_rect.top - 8
         screen_e = self.camera.apply_rect(e_box)
 
         pygame.draw.rect(self.render_surface, BLACK, screen_e)
@@ -1184,6 +1185,8 @@ class Game:
                         Decoration(self, j, i, "tree")
                     elif column == "C":
                         Chest(self, j, i)
+                    elif column == "H":
+                        Bed(self, j, i)
 
             if room.room_type.value == "boss":
                 boss_pos = self.dungeon_generator.get_boss_position()
