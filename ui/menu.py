@@ -1,3 +1,6 @@
+import json
+import os
+
 import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton
@@ -44,6 +47,7 @@ class MainMenu:
                 "id": "continue",
                 "text_key": "menu.continue",
                 "y_offset": -50 + self.button_spacing,
+                "can_be_disabled": True,
             },
             {
                 "id": "settings",
@@ -77,6 +81,20 @@ class MainMenu:
                 "hovered": False,
             }
 
+    def _has_save_file(self):
+        if not os.path.exists("savegame.json"):
+            return False
+        try:
+            with open("savegame.json", "r") as f:
+                save_data = json.load(f)
+            return save_data.get("save_valid", False)
+        except Exception:
+            return False
+
+    def _update_continue_button_state(self):
+        has_save = self._has_save_file()
+        self.buttons["continue"]["has_save"] = has_save
+
     # def _render_button_text(self, button_id):
     #     btn = self.buttons[button_id]
     #     text = font_manager.t(btn["text_key"])
@@ -107,6 +125,9 @@ class MainMenu:
                 self.is_active = False
                 self.game.start_new_game()
             elif event.ui_object_id == "continue_button":
+                if not self.buttons["continue"]["has_save"]:
+                    self.show_notification("Нет доступного сохранения")
+                    return
                 if not self.game.load_game():
                     self.show_notification("Нет доступного сохранения")
                 else:
@@ -145,8 +166,14 @@ class MainMenu:
         for btn_id, btn in self.buttons.items():
             text = font_manager.t(btn["text_key"])
 
-            text_color = YELLOW if btn.get("hovered") else WHITE
-            frame_color = YELLOW if btn.get("hovered") else WHITE
+            is_disabled = btn_id == "continue" and not btn.get("has_save", False)
+
+            if is_disabled:
+                text_color = (100, 100, 100)
+                frame_color = (100, 100, 100)
+            else:
+                text_color = YELLOW if btn.get("hovered") else WHITE
+                frame_color = YELLOW if btn.get("hovered") else WHITE
 
             text_surf = font_manager.render(text, 24, text_color, shadow=BLACK)
 
@@ -157,6 +184,7 @@ class MainMenu:
             pygame.draw.rect(surface, frame_color, btn["rect"], 2)
 
     def show(self):
+        self._update_continue_button_state()
         self.is_active = True
 
     def hide(self):

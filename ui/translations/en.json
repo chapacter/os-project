@@ -11,5 +11,8 @@
   "hud.health": "Health",
   "hud.enemies": "Enemies",
   "hud.floor": "Floor",
-  "hud.zone": "Zone"
+  "hud.zone": "Zone",
+  "game_over.title": "GAME OVER",
+  "game_over.menu": "Return",
+  "game_over.quit": "Quit"
 }

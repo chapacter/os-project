@@ -11,5 +11,8 @@
   "hud.health": "Здоровье",
   "hud.enemies": "Враги",
   "hud.floor": "Этаж",
-  "hud.zone": "Зона"
+  "hud.zone": "Зона",
+  "game_over.title": "ИГРА ОКОНЧЕНА",
+  "game_over.menu": "Вернуться",
+  "game_over.quit": "Выход"
 }

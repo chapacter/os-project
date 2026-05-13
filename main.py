@@ -18,11 +18,12 @@ from map.tilemap import Block, Ground, DungeonEntrance, Decoration, Water, NPC
 from map.tmx_loader import TiledLoader
 from map.world_generator import WorldGenerator
 from sprites import Spritesheet
+from ui.dungeon_map import DungeonMap
 from ui.font_manager import font_manager, FONTS
+from ui.game_over import GameOverMenu
 from ui.hud import HUD
 from ui.menu import MainMenu
 from ui.pause import PauseMenu
-from ui.dungeon_map import DungeonMap
 from utils import config, weighted_choice
 from utils.audio import audio_manager
 from utils.camera import Camera
@@ -170,6 +171,7 @@ class Game:
         self.ui_manager = pygame_gui.UIManager(self.sc.get_size())
         self.main_menu = MainMenu(self)
         self.pause_menu = PauseMenu(self)
+        self.game_over_menu = GameOverMenu(self)
         self.dungeon_map = DungeonMap(self)
         self.hud = HUD(self)
         self.main_menu.show()
@@ -618,6 +620,16 @@ class Game:
                 return False
         return False
 
+    def _has_save_file(self):
+        if not os.path.exists("savegame.json"):
+            return False
+        try:
+            with open("savegame.json", "r") as f:
+                save_data = json.load(f)
+            return save_data.get("save_valid", False)
+        except Exception:
+            return False
+
     def save_game(self):
         save_data = {
             "save_valid": True,
@@ -648,7 +660,7 @@ class Game:
         if self.dungeon_map:
             self.dungeon_map.visible = False
         self.game_state = "game_over"
-        self.game_over_timer = 300
+        self.game_over_menu.show()
 
     def open_settings(self):
         print("Settings menu - coming soon!")
@@ -803,16 +815,23 @@ class Game:
                 self.main_menu.handle_event(event)
             elif self.game_state == "paused":
                 self.pause_menu.handle_event(event)
+            elif self.game_state == "game_over":
+                self.game_over_menu.handle_event(event)
 
     def draw(self):
         if self.game_state == "menu":
             self.sc.fill(BLACK)
             self.main_menu.draw(self.sc)
         elif self.game_state == "game_over":
-            self.sc.fill(BLACK)
-            text = font_manager.render("GAME OVER", 48, (255, 0, 0), shadow=BLACK)
-            rect = text.get_rect(center=(self.sc.get_width() // 2, self.sc.get_height() // 2))
-            self.sc.blit(text, rect)
+            self.render_surface.fill(BLACK)
+            for sprite in self.all_sprites.sprites():
+                if self.is_sprite_in_active_zone(sprite):
+                    self.render_surface.blit(sprite.image, self.camera.apply(sprite))
+            scaled = pygame.transform.scale(
+                self.render_surface, (self.sc.get_width(), self.sc.get_height())
+            )
+            self.sc.blit(scaled, (0, 0))
+            self.game_over_menu.draw(self.sc)
         elif self.game_state == "paused":
             self.render_surface.fill(BLACK)
             for sprite in self.all_sprites.sprites():
@@ -1185,13 +1204,7 @@ class Game:
             if self.game_state == "menu":
                 self.main_menu.update(time_delta)
             elif self.game_state == "game_over":
-                self.game_over_timer -= 1
-                if self.game_over_timer <= 0:
-                    self.game_state = "menu"
-                    self.main_menu.show()
-                    self.hud.hide()
-                    audio_manager.load_music("assets/sounds/New_Menu_Music.mp3")
-                    audio_manager.play_music()
+                self.game_over_menu.update(time_delta)
             elif self.game_state == "paused":
                 self.pause_menu.update(time_delta)
             elif self.game_state == "playing":
