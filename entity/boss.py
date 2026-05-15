@@ -488,6 +488,12 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         if self.game.physics and hasattr(self, "physics_name"):
             self.game.physics.remove_body(self.physics_name)
 
+        if hasattr(self.game, "dungeon_generator"):
+            room_coord = self._get_current_room_coord()
+            room = self.game.dungeon_generator.rooms.get(room_coord)
+            if room and room.enemy_count > 0:
+                room.enemy_count -= 1
+
         audio_manager.load_music("assets/sounds/Music.mp3")
         audio_manager.play_music()
 

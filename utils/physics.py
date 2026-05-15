@@ -90,10 +90,12 @@ class PhysicsEngine:
 
     def remove_shape(self, name):
         if name in self.shapes:
-            shape = self.shapes[name]
-            self.space.remove(shape)
+            shape = self.shapes.pop(name)
             self.shape_to_entity.pop(shape, None)
-            del self.shapes[name]
+            try:
+                self.space.remove(shape)
+            except AssertionError:
+                pass
 
     def create_collision_handler(
             self,

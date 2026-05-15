@@ -85,6 +85,7 @@ class Game:
         self._dungeon_built_rooms = set()
         self._door_frame_counter = 0
         self._pending_room_for_enemies = None
+        self._sealed_rooms = {}
 
         self.fade_surface = pygame.Surface((1, 1))
         self.fade_alpha = 0
@@ -285,6 +286,7 @@ class Game:
             self.dungeon_map.visible = False
         self.clear_sprites()
         self._dungeon_built_rooms = set()
+        self._sealed_rooms = {}
 
         level = self.dungeon_generator.generate_floor(self.current_dungeon_floor)
         self._tile_map_cache = level
@@ -344,6 +346,7 @@ class Game:
             ]
 
         total_enemies = 0
+        spawned_rooms = []
         for gx, gy in rooms_to_spawn:
             room = self.dungeon_generator.rooms.get((gx, gy))
             if not room:
@@ -367,6 +370,7 @@ class Game:
                     Boss(self, boss_pos[0], boss_pos[1], floor=self.current_dungeon_floor)
                     room.enemy_count = 1
                     total_enemies += 1
+                spawned_rooms.append((gx, gy))
             elif room.room_type.value == "enemy":
                 room.enemies_spawned = True
                 room_x = gx * room_unit_width + wall_thickness + 3
@@ -389,6 +393,7 @@ class Game:
                     )
                     room.enemy_count += 1
                     total_enemies += 1
+                spawned_rooms.append((gx, gy))
             elif room.room_type.value == "elite":
                 room.enemies_spawned = True
                 room_x = gx * room_unit_width + wall_thickness + 3
@@ -412,8 +417,112 @@ class Game:
                     )
                     room.enemy_count += 1
                     total_enemies += 1
+                spawned_rooms.append((gx, gy))
+
+        for sr in spawned_rooms:
+            self.seal_room_for_battle(sr)
 
         # print(f"[DEBUG] Spawned {total_enemies} enemies")
+
+    def _get_room_tile_bounds(self, room_coord):
+        gx, gy = room_coord
+        ruw = self.dungeon_generator.room_tile_width + self.dungeon_generator.wall_thickness * 2
+        ruh = self.dungeon_generator.room_tile_height + self.dungeon_generator.wall_thickness * 2
+        return gx * ruw, gy * ruh, gx * ruw + ruw, gy * ruh + ruh
+
+    def _is_sprite_in_room_bounds(self, sprite, x1, y1, x2, y2):
+        tx = int(sprite.rect.x / TILESIZE)
+        ty = int(sprite.rect.y / TILESIZE)
+        return x1 <= tx < x2 and y1 <= ty < y2
+
+    def seal_room_for_battle(self, room_coord):
+        room = self.dungeon_generator.rooms.get(room_coord)
+        if not room or room.room_type.value in ("lobby", "loot", "event"):
+            return
+
+        floor = self.current_dungeon_floor
+        theme = FLOOR_THEMES.get(floor, FLOOR_THEMES[1])
+
+        if room.room_type.value == "boss":
+            wall_key = "boss_wall"
+            floor_key = "boss_floor"
+            decor_key = "boss_decor"
+        else:
+            wall_key = "battle_wall"
+            floor_key = "battle_floor"
+            decor_key = "battle_decor"
+
+        x1, y1, x2, y2 = self._get_room_tile_bounds(room_coord)
+
+        existing_blocks = set()
+        for b in self.blocks:
+            tx = int(b.rect.x / TILESIZE)
+            ty = int(b.rect.y / TILESIZE)
+            if x1 <= tx < x2 and y1 <= ty < y2:
+                existing_blocks.add((tx, ty))
+
+        door_blocks = []
+        for tx in range(x1, x2):
+            for ty in (y1, y2 - 1):
+                if (tx, ty) not in existing_blocks:
+                    b = Block(self, tx, ty)
+                    door_blocks.append(b)
+                    existing_blocks.add((tx, ty))
+        for ty in range(y1 + 1, y2 - 1):
+            for tx in (x1, x2 - 1):
+                if (tx, ty) not in existing_blocks:
+                    b = Block(self, tx, ty)
+                    door_blocks.append(b)
+                    existing_blocks.add((tx, ty))
+
+        for sprite in list(self.all_sprites):
+            if not self._is_sprite_in_room_bounds(sprite, x1, y1, x2, y2):
+                continue
+            if isinstance(sprite, Block):
+                sprite._orig_image = sprite.image
+                row, col = theme[wall_key]
+                sprite.image = self.terrain_spritesheet.get_image(
+                    col * TILESIZE, row * TILESIZE, TILESIZE, TILESIZE
+                )
+            elif isinstance(sprite, Ground):
+                sprite._orig_image = sprite.image
+                row, col = theme[floor_key]
+                sprite.image = self.terrain_spritesheet.get_image(
+                    col * TILESIZE, row * TILESIZE, TILESIZE, TILESIZE
+                )
+            elif isinstance(sprite, Decoration):
+                sprite._orig_image = sprite.image
+                row, col = theme[decor_key]
+                sprite.image = self.terrain_spritesheet.get_image(
+                    col * TILESIZE, row * TILESIZE, TILESIZE, TILESIZE
+                )
+                self.blocks.add(sprite)
+                sprite._battle_block = True
+
+        self._sealed_rooms[room_coord] = {
+            "door_blocks": door_blocks,
+            "bounds": (x1, y1, x2, y2),
+        }
+
+    def unseal_room(self, room_coord):
+        sealed = self._sealed_rooms.pop(room_coord, None)
+        if not sealed:
+            return
+
+        x1, y1, x2, y2 = sealed["bounds"]
+        for sprite in list(self.all_sprites):
+            if not self._is_sprite_in_room_bounds(sprite, x1, y1, x2, y2):
+                continue
+            if hasattr(sprite, "_orig_image"):
+                sprite.image = sprite._orig_image
+            if hasattr(sprite, "_battle_block"):
+                self.blocks.remove(sprite)
+
+        for block in sealed["door_blocks"]:
+            phys_name = f"block_{block.rect.x}_{block.rect.y}"
+            if self.physics:
+                self.physics.remove_shape(phys_name)
+            block.kill()
 
     def exit_dungeon(self, go_deeper=False):
         if self.dungeon_map:
@@ -436,8 +545,11 @@ class Game:
             self.exit_dungeon()
 
     def _reload_dungeon_floor(self):
+        if self.dungeon_map:
+            self.dungeon_map.visible = False
         self.clear_sprites()
         self._dungeon_built_rooms = set()
+        self._sealed_rooms = {}
         self._tile_map_cache = None
         self._tile_map_cache = self.dungeon_generator.generate_floor(
             self.current_dungeon_floor
@@ -1161,6 +1273,11 @@ class Game:
         if not hasattr(self, "player") or not hasattr(self, "doors"):
             return
 
+        for sealed_coord in list(self._sealed_rooms.keys()):
+            room = self.dungeon_generator.rooms.get(sealed_coord)
+            if room and room.enemy_count == 0:
+                self.unseal_room(sealed_coord)
+
         self._door_frame_counter += 1
 
         player_tile_x = int(self.player.rect.x / TILESIZE)
@@ -1315,7 +1432,8 @@ class Game:
             if room.room_type.value == "boss":
                 boss_pos = self.dungeon_generator.get_boss_position()
                 if boss_pos:
-                    DungeonEntrance(self, boss_pos[0], boss_pos[1])
+                    portal = DungeonEntrance(self, boss_pos[0], boss_pos[1])
+                    portal.room_coord = (gx, gy)
 
         # print(f"[DEBUG] _rebuild_visible_rooms: added {visible_count} new rooms, total built: {len(self._dungeon_built_rooms)}")
 
