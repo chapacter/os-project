@@ -50,16 +50,16 @@ class Block(pygame.sprite.Sprite):
 
 class Ground(pygame.sprite.Sprite):
     TILE_MAP = {
-        ".": (0, 5),  # GRASS → Floor
-        ":": (2, 0),  # SAND → Cobblestone
-        "T": (3, 0),  # FOREST → Planks
-        "B": (2, 0),  # MOUNTAIN → Cobblestone
-        "S": (2, 0),  # SWAMP → Cobblestone
-        "~": (5, 2),  # WATER → Water
-        "L": (2, 0),  # LAVA → Cobblestone
-        "V": (3, 0),  # VILLAGE → Planks
-        "H": (3, 0),  # HOUSE → Planks
-        "N": (3, 0),  # NPC → Planks
+        ".": (4, 0),  # GRASS
+        ":": (5, 0),  # SAND
+        "T": (6, 0),  # FOREST
+        "B": (7, 0),  # MOUNTAIN
+        "S": (7, 1),  # SWAMP
+        "~": (8, 0),  # WATER
+        "L": (8, 1),  # LAVA
+        "V": (9, 0),  # VILLAGE
+        "H": (9, 1),  # HOUSE
+        "N": (9, 2),  # NPC
     }
 
     def __init__(self, game, x, y, terrain_type="."):
@@ -109,6 +109,7 @@ class DungeonEntrance(pygame.sprite.Sprite):
         self.y = y * TILESIZE
         self.width = TILESIZE
         self.height = TILESIZE
+        self.room_coord = None
 
         if game.mode == GameMode.DUNGEON:
             floor = getattr(game, "current_dungeon_floor", 1)
@@ -130,10 +131,14 @@ class DungeonEntrance(pygame.sprite.Sprite):
         pass
 
     def interact(self):
-        if self.game.mode == GameMode.WORLD:
-            self.game.enter_dungeon()
-        elif self.game.mode == GameMode.DUNGEON:
+        if self.game.mode == GameMode.DUNGEON:
+            if self.room_coord is not None:
+                room = self.game.dungeon_generator.rooms.get(self.room_coord)
+                if room and room.enemy_count > 0:
+                    return
             self.game.go_deeper()
+        elif self.game.mode == GameMode.WORLD:
+            self.game.enter_dungeon()
 
 
 class Decoration(pygame.sprite.Sprite):
@@ -178,7 +183,10 @@ class Water(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
-        self.image = game.terrain_spritesheet.get_image(5, 2, self.width, self.height)
+        row, col = Ground.TILE_MAP["~"]
+        self.image = game.terrain_spritesheet.get_image(
+            col * TILESIZE, row * TILESIZE, self.width, self.height
+        )
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
