@@ -15,10 +15,25 @@ class GameOverMenu:
         )
         self.is_active = False
 
+        self.overlay_alpha = 220
+        self.bg_alpha = 240
+
         self.overlay = pygame.Surface(
             (self.game.sc.get_width(), self.game.sc.get_height())
         )
-        self.overlay.set_alpha(240)
+        self.overlay.set_alpha(self.overlay_alpha)
+
+        bg_raw = pygame.image.load("assets/Death_screen.png").convert_alpha()
+        img_w, img_h = bg_raw.get_size()
+        screen_w = self.game.sc.get_width()
+        screen_h = self.game.sc.get_height()
+        scale = screen_h / img_h
+        new_w = int(img_w * scale)
+        bg_scaled = pygame.transform.scale(bg_raw, (new_w, screen_h))
+        self.bg_x = (screen_w - new_w) // 2
+
+        self.bg_image = pygame.Surface((new_w, screen_h), pygame.SRCALPHA)
+        self.bg_image.blit(bg_scaled, (0, 0))
 
         self.button_width = 200
         self.button_height = 50
@@ -90,6 +105,10 @@ class GameOverMenu:
                 self.notification = None
 
     def draw(self, surface):
+        self.overlay.set_alpha(self.overlay_alpha)
+        bg = self.bg_image.copy()
+        bg.fill((255, 255, 255, self.bg_alpha), special_flags=pygame.BLEND_RGBA_MULT)
+        surface.blit(bg, (self.bg_x, 0))
         surface.blit(self.overlay, (0, 0))
 
         center_x = self.game.sc.get_width() // 2
