@@ -97,8 +97,8 @@ FLOOR_THEMES = {
         "floor": (5, 1),
         "wall": (5, 3),
         "portal": (1, 6),
-        "chest_closed": (10, 0),
-        "chest_open": (10, 1),
+        "chest_closed": (8, 0),
+        "chest_open": (8, 1),
         "decoration": (6, 5),
     },
     4: {
