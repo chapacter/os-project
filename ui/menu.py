@@ -168,7 +168,7 @@ class MainMenu:
 
         if self.notification and self.notification_timer > 0:
             notif_surf = font_manager.render(self.notification, 24, YELLOW, shadow=BLACK)
-            notif_rect = notif_surf.get_rect(center=(center_x, center_y + 220))
+            notif_rect = notif_surf.get_rect(center=(center_x, center_y + 270))
             surface.blit(notif_surf, notif_rect)
 
         for btn_id, btn in self.buttons.items():
