@@ -15,8 +15,8 @@ class GameOverMenu:
         )
         self.is_active = False
 
-        self.overlay_alpha = 220
-        self.bg_alpha = 240
+        self.overlay_alpha = 230
+        self.bg_alpha = 100
 
         self.overlay = pygame.Surface(
             (self.game.sc.get_width(), self.game.sc.get_height())
@@ -108,8 +108,8 @@ class GameOverMenu:
         self.overlay.set_alpha(self.overlay_alpha)
         bg = self.bg_image.copy()
         bg.fill((255, 255, 255, self.bg_alpha), special_flags=pygame.BLEND_RGBA_MULT)
-        surface.blit(bg, (self.bg_x, 0))
         surface.blit(self.overlay, (0, 0))
+        surface.blit(bg, (self.bg_x, 0))
 
         center_x = self.game.sc.get_width() // 2
         center_y = self.game.sc.get_height() // 2
