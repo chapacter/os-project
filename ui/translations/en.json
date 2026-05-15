@@ -1,6 +1,7 @@
 {
-  "menu.new_game": "New Game",
+  "menu.standard": "Standard",
   "menu.continue": "Continue",
+  "menu.arena": "Arena",
   "menu.settings": "Settings",
   "menu.quit": "Quit",
   "pause.title": "PAUSED",
@@ -14,5 +15,10 @@
   "hud.zone": "Zone",
   "game_over.title": "GAME OVER",
   "game_over.menu": "Return",
-  "game_over.quit": "Quit"
+  "game_over.quit": "Quit",
+  "final_menu.title": "THIS RUN IS COMPLETE!",
+  "final_menu.message": "there is no god beyond",
+  "final_menu.continue": "Arena",
+  "final_menu.menu": "Menu",
+  "final_menu.quit": "Quit"
 }

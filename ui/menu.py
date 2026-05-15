@@ -42,22 +42,27 @@ class MainMenu:
         center_y = self.game.sc.get_height() // 2
 
         button_configs = [
-            {"id": "new_game", "text_key": "menu.new_game", "y_offset": -50},
+            {"id": "standard", "text_key": "menu.standard", "y_offset": -80},
             {
                 "id": "continue",
                 "text_key": "menu.continue",
-                "y_offset": -50 + self.button_spacing,
+                "y_offset": -80 + self.button_spacing,
                 "can_be_disabled": True,
+            },
+            {
+                "id": "arena",
+                "text_key": "menu.arena",
+                "y_offset": -80 + self.button_spacing * 2,
             },
             {
                 "id": "settings",
                 "text_key": "menu.settings",
-                "y_offset": -50 + self.button_spacing * 2,
+                "y_offset": -80 + self.button_spacing * 3,
             },
             {
                 "id": "quit",
                 "text_key": "menu.quit",
-                "y_offset": -50 + self.button_spacing * 3,
+                "y_offset": -80 + self.button_spacing * 4,
             },
         ]
 
@@ -121,9 +126,12 @@ class MainMenu:
                 self.buttons[btn_id]["hovered"] = False
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             audio_manager.play_sound("menu_select")
-            if event.ui_object_id == "new_game_button":
+            if event.ui_object_id == "standard_button":
                 self.is_active = False
-                self.game.start_new_game()
+                self.game.start_standard()
+            elif event.ui_object_id == "arena_button":
+                self.is_active = False
+                self.game.start_arena()
             elif event.ui_object_id == "continue_button":
                 if not self.buttons["continue"]["has_save"]:
                     self.show_notification("Нет доступного сохранения")

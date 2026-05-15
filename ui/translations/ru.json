@@ -1,6 +1,7 @@
 {
-  "menu.new_game": "Новая Игра",
+  "menu.standard": "Новая игра",
   "menu.continue": "Продолжить",
+  "menu.arena": "Арена",
   "menu.settings": "Настройки",
   "menu.quit": "Выход",
   "pause.title": "ПАУЗА",
@@ -13,6 +14,11 @@
   "hud.floor": "Этаж",
   "hud.zone": "Зона",
   "game_over.title": "ИГРА ОКОНЧЕНА",
-  "game_over.menu": "Вернуться",
-  "game_over.quit": "Выход"
+  "game_over.menu": "Меню",
+  "game_over.quit": "Выход",
+  "final_menu.title": "ЗАБЕГ ЗАВЕРШЕН!",
+  "final_menu.message": "Дальше бога нет...",
+  "final_menu.continue": "Арена",
+  "final_menu.menu": "Меню",
+  "final_menu.quit": "Выход"
 }

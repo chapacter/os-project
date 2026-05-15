@@ -12,6 +12,7 @@ from entity.enemy import Enemy
 from entity.player import Player
 from items.chest import Chest
 from items.weapon import Weapon
+from map.arena_generator import ArenaGenerator
 from map.door import Door
 from map.dungeon_generator import DungeonGenerator
 from map.tilemap import Block, Ground, DungeonEntrance, Decoration, Water, NPC, Bed, Wardrobe
@@ -19,6 +20,7 @@ from map.tmx_loader import TiledLoader
 from map.world_generator import WorldGenerator
 from sprites import Spritesheet
 from ui.dungeon_map import DungeonMap
+from ui.final_menu import FinalMenu
 from ui.font_manager import font_manager, FONTS
 from ui.game_over import GameOverMenu
 from ui.hud import HUD
@@ -99,6 +101,14 @@ class Game:
         self.pause_menu = None
         self.dungeon_map = None
         self.hud = None
+        self.final_menu = None
+
+        self.game_mode = "standard"
+        self.arena_generator = None
+        self.arena_map = None
+        self.arena_rooms = None
+        self.arena_spawn_timer = 0
+        self.arena_max_enemies = 30
 
         self.physics = None
         self.physics_enabled = True
@@ -172,6 +182,7 @@ class Game:
         self.main_menu = MainMenu(self)
         self.pause_menu = PauseMenu(self)
         self.game_over_menu = GameOverMenu(self)
+        self.final_menu = FinalMenu(self)
         self.dungeon_map = DungeonMap(self)
         self.hud = HUD(self)
         self.main_menu.show()
@@ -393,6 +404,9 @@ class Game:
         if self.current_dungeon_floor < DUNGEON_FLOORS:
             self.current_dungeon_floor += 1
             self.fade_out(lambda: self._reload_dungeon_floor())
+        elif self.game_mode == "standard":
+            self.game_state = "final_menu"
+            self.final_menu.show()
         else:
             self.exit_dungeon()
 
@@ -442,6 +456,12 @@ class Game:
             self.physics.clear_collision_flags()
 
     def create_tile_map(self):
+        if self.game_mode == "arena":
+            self.arena_generator = ArenaGenerator()
+            self.arena_map, self.arena_rooms = self.arena_generator.generate()
+            self._load_arena_level()
+            return
+
         map_width_tiles = 0
         map_height_tiles = 0
 
@@ -585,8 +605,9 @@ class Game:
                 f"block_{block.rect.x}_{block.rect.y}",
             )
 
-    def start_new_game(self):
+    def start_standard(self):
         self.game_state = "playing"
+        self.game_mode = "standard"
         self.current_zone = (0, 0)
         self.current_dungeon_floor = 1
         self.world_seed = random.randint(0, 1000000)
@@ -594,6 +615,66 @@ class Game:
         self.main_menu.hide()
         self.create()
         self.hud.show()
+
+    def start_arena(self):
+        self.game_state = "playing"
+        self.game_mode = "arena"
+        self.current_dungeon_floor = 0
+        self.arena_spawn_timer = 0
+        self.main_menu.hide()
+        self.create()
+        self.hud.show()
+
+    def _load_arena_level(self):
+        self.clear_sprites()
+        level = self.arena_map
+
+        for i, row in enumerate(level):
+            for j, column in enumerate(row):
+                if column == " ":
+                    Ground(self, j, i)
+                elif column == "B":
+                    Ground(self, j, i)
+                    Block(self, j, i)
+                elif column == "P":
+                    Ground(self, j, i)
+                    self.player = Player(self, j, i)
+                elif column == "E":
+                    Ground(self, j, i)
+
+        if hasattr(self, "camera"):
+            self.camera.set_map_size(
+                self.arena_generator.width * TILESIZE,
+                self.arena_generator.height * TILESIZE,
+            )
+            self.camera.center_on(self.player.rect.x, self.player.rect.y)
+
+    def _update_arena(self):
+        if self.game_mode != "arena":
+            return
+        if not hasattr(self, "player") or not self.player:
+            return
+        if not self.arena_generator:
+            return
+
+        self.arena_spawn_timer += 1
+        if self.arena_spawn_timer >= 120:
+            self.arena_spawn_timer = 0
+            current_enemy_count = len(self.enemies)
+            if current_enemy_count < self.arena_max_enemies:
+                to_spawn = min(3, self.arena_max_enemies - current_enemy_count)
+                player_tile_x = int(self.player.rect.x // TILESIZE)
+                player_tile_y = int(self.player.rect.y // TILESIZE)
+                positions = self.arena_generator.get_enemy_spawn_positions(
+                    self.arena_map, player_tile_x, player_tile_y,
+                    min_distance=200, count=to_spawn,
+                )
+                for pos in positions:
+                    Enemy(self, pos[0], pos[1])
+
+    def _on_final_continue(self):
+        self.final_menu.hide()
+        self.start_arena()
 
     def load_game(self):
         if os.path.exists("savegame.json"):
@@ -725,6 +806,9 @@ class Game:
             self.camera.follow_sprite(self.player)
             self.camera.update(1.0 / 60.0)
 
+        if self.game_mode == "arena":
+            self._update_arena()
+
     def events(self):
         time_delta = self.clock.tick(60) / 1000.0
 
@@ -817,6 +901,8 @@ class Game:
                 self.pause_menu.handle_event(event)
             elif self.game_state == "game_over":
                 self.game_over_menu.handle_event(event)
+            elif self.game_state == "final_menu":
+                self.final_menu.handle_event(event)
 
     def draw(self):
         if self.game_state == "menu":
@@ -842,6 +928,16 @@ class Game:
             )
             self.sc.blit(scaled, (0, 0))
             self.pause_menu.draw(self.sc)
+        elif self.game_state == "final_menu":
+            self.render_surface.fill(BLACK)
+            for sprite in self.all_sprites.sprites():
+                if self.is_sprite_in_active_zone(sprite):
+                    self.render_surface.blit(sprite.image, self.camera.apply(sprite))
+            scaled = pygame.transform.scale(
+                self.render_surface, (self.sc.get_width(), self.sc.get_height())
+            )
+            self.sc.blit(scaled, (0, 0))
+            self.final_menu.draw(self.sc)
         elif self.game_state == "playing":
             self.render_surface.fill(BLACK)
             drawn = 0
@@ -1212,11 +1308,14 @@ class Game:
                 self.game_over_menu.update(time_delta)
             elif self.game_state == "paused":
                 self.pause_menu.update(time_delta)
+            elif self.game_state == "final_menu":
+                self.final_menu.update(time_delta)
             elif self.game_state == "playing":
                 self.update_fade()
                 if not self.is_fading or self.fade_direction == -1:
-                    self.check_zone_transition()
-                    self.check_dungeon_transition()
+                    if self.game_mode != "arena":
+                        self.check_zone_transition()
+                        self.check_dungeon_transition()
                     self.handle_camera_movement()
                     self.update()
                 if self.camera:
