@@ -364,10 +364,10 @@ class Game:
                 room.enemies_spawned = True
                 boss_pos = self.dungeon_generator.get_boss_position()
                 if boss_pos:
-                    Boss(self, boss_pos[0], boss_pos[1])
+                    Boss(self, boss_pos[0], boss_pos[1], floor=self.current_dungeon_floor)
                     room.enemy_count = 1
                     total_enemies += 1
-            elif room.room_type.value in ["enemy", "elite"]:
+            elif room.room_type.value == "enemy":
                 room.enemies_spawned = True
                 room_x = gx * room_unit_width + wall_thickness + 3
                 room_y = gy * room_unit_height + wall_thickness + 2
@@ -376,14 +376,39 @@ class Game:
                         enemy_type = random.choice([5, 6, 7])
                     elif self.current_dungeon_floor == 3:
                         enemy_type = random.choice([8, 9, 10])
+                    elif self.current_dungeon_floor == 4:
+                        enemy_type = random.choice([11, 12, 13, 14])
                     else:
-                        type_weights = {k: v["weight"] for k, v in ENEMY_TYPES.items() if k < 5}
+                        type_weights = {k: v["weight"] for k, v in ENEMY_TYPES.items() if k < 4}
                         enemy_type = weighted_choice(type_weights)
                     Enemy(
                         self,
                         room_x + random.randint(-2, 2),
                         room_y + random.randint(-2, 2),
                         enemy_type=enemy_type,
+                    )
+                    room.enemy_count += 1
+                    total_enemies += 1
+            elif room.room_type.value == "elite":
+                room.enemies_spawned = True
+                room_x = gx * room_unit_width + wall_thickness + 3
+                room_y = gy * room_unit_height + wall_thickness + 2
+                for _ in range(random.randint(6, 12)):
+                    if self.current_dungeon_floor == 2:
+                        enemy_type = random.choice([5, 6, 7])
+                    elif self.current_dungeon_floor == 3:
+                        enemy_type = random.choice([8, 9, 10])
+                    elif self.current_dungeon_floor == 4:
+                        enemy_type = random.choice([11, 12, 13, 14])
+                    else:
+                        type_weights = {k: v["weight"] for k, v in ENEMY_TYPES.items() if k < 4}
+                        enemy_type = weighted_choice(type_weights)
+                    Enemy(
+                        self,
+                        room_x + random.randint(-2, 2),
+                        room_y + random.randint(-2, 2),
+                        enemy_type=enemy_type,
+                        hp_multiplier=1.5,
                     )
                     room.enemy_count += 1
                     total_enemies += 1
@@ -572,6 +597,7 @@ class Game:
         self.chests = pygame.sprite.LayeredUpdates()
         self.items = pygame.sprite.LayeredUpdates()
         self.interactables = pygame.sprite.LayeredUpdates()
+        self.boss_spritesheets = {}
 
         if self.physics_enabled:
             self.init_physics_world()

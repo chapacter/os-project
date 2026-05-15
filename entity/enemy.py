@@ -11,7 +11,7 @@ from utils.settings import *
 
 
 class Enemy(VectorEntity, pygame.sprite.Sprite):
-    def __init__(self, game, x, y, enemy_type=None):
+    def __init__(self, game, x, y, enemy_type=None, hp_multiplier=1.0):
         self.game = game
         self._layer = PLAYER_LAYER
         self.groups = game.all_sprites, game.enemies
@@ -109,7 +109,7 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self._set_patrol_target()
 
         self.physics_name = f"enemy_{id(self)}"
-        VectorEntity.__init__(self, game, self.physics_name, collision_type=COLLISION_ENTITY, max_health=cfg["hp"], )
+        VectorEntity.__init__(self, game, self.physics_name, collision_type=COLLISION_ENTITY, max_health=int(cfg["hp"] * hp_multiplier))
 
         # Replace default pymunk body with one sized to hitbox
         if self.body:
@@ -226,9 +226,21 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
             player = self.game.player
             start_x = self.hitbox.centerx
             start_y = self.hitbox.centery
-            target_x = player.hitbox.centerx + random.randint(-15, 15)
-            target_y = player.hitbox.centery + random.randint(-15, 15)
-            Enemy_Bullet(self.game, start_x, start_y, target_x, target_y)
+            if ENEMY_TYPES[self.enemy_type].get("cone_attack"):
+                import math
+                cone_spread = 0.2
+                target_x = player.hitbox.centerx
+                target_y = player.hitbox.centery
+                angle = math.atan2(target_y - start_y, target_x - start_x)
+                for i in range(-1, 2):
+                    a = angle + i * cone_spread
+                    ex = start_x + math.cos(a) * 100
+                    ey = start_y + math.sin(a) * 100
+                    Enemy_Bullet(self.game, start_x, start_y, ex, ey)
+            else:
+                target_x = player.hitbox.centerx + random.randint(-15, 15)
+                target_y = player.hitbox.centery + random.randint(-15, 15)
+                Enemy_Bullet(self.game, start_x, start_y, target_x, target_y)
             self.shoot_state = "halt"
 
     def _melee_attack(self):

@@ -9,6 +9,7 @@ from effects.particle import Particle
 from entity.base import Healthbar, VectorEntity
 from entity.enemy import Enemy
 from projectiles.bullet import Enemy_Bullet
+from sprites import Spritesheet
 from utils.audio import audio_manager
 from utils.physics import COLLISION_ENTITY
 from utils.settings import *
@@ -67,26 +68,33 @@ class BossHealthbar(Healthbar):
 
 
 class Boss(VectorEntity, pygame.sprite.Sprite):
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, floor=1):
         self.game = game
         self._layer = PLAYER_LAYER - 1
         self.groups = game.all_sprites, game.enemies
         pygame.sprite.Sprite.__init__(self, self.groups)
 
+        self.floor = floor
         self.cfg = BOSS_CONFIG
+        self.boss_cfg = FLOOR_BOSS_CONFIG[floor]
+        self.attack_speed_mult = self.boss_cfg["attack_speed_mult"]
+        self.summon_types = self.boss_cfg["summon_enemy_types"]
+
         self.x = x * TILESIZE
         self.y = y * TILESIZE
 
         self.width = self.cfg["sprite_size"][0]
         self.height = self.cfg["sprite_size"][1]
 
-        spritesheet = game.enemy_spritesheets[0]
-        sprite_w, sprite_h = 32, 32
+        if floor not in game.boss_spritesheets:
+            game.boss_spritesheets[floor] = Spritesheet(self.boss_cfg["sheet"])
+        spritesheet = game.boss_spritesheets[floor]
+        sprite_w, sprite_h = self.boss_cfg["frame_size"]
 
-        self.frame_move = 3
+        self.frame_move = self.boss_cfg["frame_move"]
         self.animation_counter = 0
         self.animations = {}
-        direction_map = {"down": 0, "left": 1, "right": 2, "up": 3}
+        direction_map = self.boss_cfg["direction_map"]
 
         for direction, row in direction_map.items():
             frames = []
@@ -96,7 +104,6 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
                 frames.append(scaled)
             self.animations[direction] = frames
 
-        self.original_sprite = spritesheet.get_image(0, 0, sprite_w, sprite_h)
         self.image = self.animations["down"][0]
         self.rect = self.image.get_rect()
         self.rect.x = self.x
@@ -223,7 +230,7 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         dist = self._get_distance_to_player()
         if dist < self.cfg["hitbox_size"] + 20:
             self.game.player.damage(self.cfg["damage"])
-            self.melee_timer = 60
+            self.melee_timer = int(60 / self.attack_speed_mult)
 
     def _teleport(self):
         if not self.game.player:
@@ -299,12 +306,12 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         for _ in range(count):
             spawn_x = random.randint(min_x, max_x)
             spawn_y = random.randint(min_y, max_y)
-            minion = Enemy(self.game, spawn_x, spawn_y)
+            minion = Enemy(self.game, spawn_x, spawn_y, enemy_type=random.choice(self.summon_types))
             self.minions.add(minion)
 
     def _summon_on_phase_change(self):
         min_x, min_y, max_x, max_y = self._get_room_bounds()
-        available_types = [0, 1, 2, 3]
+        available_types = self.summon_types
         num_to_spawn = random.randint(3, 5)
         selected_types = random.sample(available_types, min(num_to_spawn, len(available_types)))
 
@@ -362,10 +369,10 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         self.ranged_timer += 1
         self.summon_timer += 1
 
-        teleport_interval = config.get("teleport_interval", 300)
-        area_cooldown = config.get("area_cooldown", 180)
-        ranged_cooldown = config.get("ranged_cooldown", 240)
-        summon_cooldown = config.get("summon_cooldown", 420)
+        teleport_interval = int(config.get("teleport_interval", 300) / self.attack_speed_mult)
+        area_cooldown = int(config.get("area_cooldown", 180) / self.attack_speed_mult)
+        ranged_cooldown = int(config.get("ranged_cooldown", 240) / self.attack_speed_mult)
+        summon_cooldown = int(config.get("summon_cooldown", 420) / self.attack_speed_mult)
         max_minions = config.get("summon_count", 5)
 
         attack_performed = False
