@@ -513,8 +513,8 @@ class Game:
         for sprite in list(self.all_sprites):
             if not self._is_sprite_in_room_bounds(sprite, x1, y1, x2, y2):
                 continue
-            if hasattr(sprite, "_orig_image"):
-                sprite.image = sprite._orig_image
+            # if hasattr(sprite, "_orig_image"): # Если так подумать, то прикольнее когда ассеты не меняются на изначальные
+            #     sprite.image = sprite._orig_image
             if hasattr(sprite, "_battle_block"):
                 self.blocks.remove(sprite)
 
