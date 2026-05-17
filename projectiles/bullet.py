@@ -3,7 +3,7 @@ import random
 
 import pygame
 
-from effects.effect import Effect
+from entity.factories.effect_factory import EffectFactory
 from utils.settings import *
 
 
@@ -75,7 +75,8 @@ class Bullet(pygame.sprite.Sprite):
                 else:
                     knockback_dir = self.hit_dir.copy()
 
-                Effect(self.game, self.rect.centerx, self.rect.centery, "hit")
+                EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "hit",
+                                                groups=[self.game.all_sprites], )
                 enemy.take_knockback(knockback_dir, self.knockback_force)
                 enemy.damage(self.damage)
                 self.kill()
@@ -132,7 +133,8 @@ class Enemy_Bullet(pygame.sprite.Sprite):
     def collide_player(self):
         for player in self.game.mainPlayer:
             if self.rect.colliderect(player.hitbox):
-                Effect(self.game, self.rect.centerx, self.rect.centery, "hit")
+                EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "hit",
+                                                groups=[self.game.all_sprites], )
                 player.damage(self.damage)
                 self.kill()
                 break

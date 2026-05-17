@@ -2,8 +2,8 @@ import random
 
 import pygame
 
-from effects.effect import Effect
 from entity.base import Healthbar, VectorEntity
+from entity.factories.effect_factory import EffectFactory
 from projectiles.bullet import Enemy_Bullet
 from utils import weighted_choice
 from utils.physics import COLLISION_ENTITY
@@ -96,7 +96,8 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self._retreat_vector = pygame.math.Vector2(0, 0)
 
         # Spawn effect
-        Effect(self.game, self.rect.centerx, self.rect.centery, "death")
+        EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "death",
+                                        groups=[self.game.all_sprites], )
 
         tile_x = int(self.rect.x / TILESIZE)
         tile_y = int(self.rect.y / TILESIZE)
@@ -425,7 +426,8 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.healthbar.damage(self.max_health, self.health)
 
     def _on_death(self):
-        Effect(self.game, self.rect.centerx, self.rect.centery, "death")
+        EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "death",
+                                        groups=[self.game.all_sprites], )
         self.healthbar.kill_bar()
         self.kill()
         if self.game.physics and hasattr(self, "physics_name"):

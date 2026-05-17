@@ -3,11 +3,11 @@ import random
 
 import pygame
 
-from effects.effect import Effect
 from effects.particle import AreaDamageParticle
 from effects.particle import Particle
 from entity.base import Healthbar, VectorEntity
 from entity.enemy import Enemy
+from entity.factories.effect_factory import EffectFactory
 from projectiles.bullet import Enemy_Bullet
 from sprites import Spritesheet
 from utils.audio import audio_manager
@@ -147,7 +147,8 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
             3: pygame.Color(255, 0, 0),
         }
 
-        Effect(self.game, self.rect.centerx, self.rect.centery, "death")
+        EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "death",
+                                        groups=[self.game.all_sprites], )
 
         self.physics_name = f"boss_{id(self)}"
         VectorEntity.__init__(
@@ -253,13 +254,15 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         new_x = max(min_pixel_x, min(max_pixel_x, new_x))
         new_y = max(min_pixel_y, min(max_pixel_y, new_y))
 
-        Effect(self.game, self.rect.centerx, self.rect.centery, "death")
+        EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "death",
+                                        groups=[self.game.all_sprites], )
         self._pos_x = float(new_x)
         self._pos_y = float(new_y)
         self.rect.x = int(self._pos_x)
         self.rect.y = int(self._pos_y)
         self.hitbox.center = self.rect.center
-        Effect(self.game, self.rect.centerx, self.rect.centery, "death")
+        EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "death",
+                                        groups=[self.game.all_sprites], )
 
     def _area_damage(self):
         config = self._get_phase_config()
@@ -342,7 +345,8 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
                 self.image = scaled
                 self.rect = self.image.get_rect(center=self.rect.center)
 
-            Effect(self.game, self.rect.centerx, self.rect.centery, "death")
+            EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "death",
+                                            groups=[self.game.all_sprites], )
 
             for _ in range(10):
                 Particle(self.game, self.rect.centerx, self.rect.centery)
@@ -479,7 +483,8 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
             self.healthbar.damage(self.max_health, self.health)
 
     def _on_death(self):
-        Effect(self.game, self.rect.centerx, self.rect.centery, "death")
+        EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "death",
+                                        groups=[self.game.all_sprites], )
         for _ in range(20):
             Particle(self.game, self.rect.centerx, self.rect.centery)
         if self.healthbar:

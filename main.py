@@ -7,9 +7,12 @@ import pygame
 import pygame_gui
 import pytmx
 
+from core.ecs_world import World
 from entity.boss import Boss
 from entity.enemy import Enemy
+from entity.factories.effect_factory import EffectFactory
 from entity.player import Player
+from entity.systems.animation_system import AnimationSystem
 from items.chest import Chest
 from items.weapon import Weapon
 from map.arena_generator import ArenaGenerator
@@ -32,6 +35,9 @@ from utils.camera import Camera
 from utils.config import get_language, get_font
 from utils.physics import PhysicsEngine
 from utils.settings import *
+
+
+# ─── AI Helpers ───────────────────────────────────────────────
 
 
 class GameMode:
@@ -592,6 +598,9 @@ class Game:
                 self.physics.remove_body(name)
             self.physics.clear_collision_flags()
 
+        if self.ecs_world:
+            self.ecs_world.clear()
+
     def create_tile_map(self):
         if self.game_mode == "arena":
             self.arena_generator = ArenaGenerator()
@@ -716,6 +725,10 @@ class Game:
 
         if self.camera_enabled:
             self.init_camera()
+
+        self.ecs_world = World()
+        EffectFactory.preload(self.effects_spritesheet)
+        self.ecs_world.add_system(AnimationSystem(self.ecs_world))
 
         self.create_tile_map()
 
@@ -928,7 +941,11 @@ class Game:
     def update(self):
         self.update_scale()
         self.all_sprites.update()
-        # self.clock.tick(FPS)
+
+        if self.ecs_world:
+            self.ecs_world.update(1.0 / 60.0)
+            EffectFactory.update(self.ecs_world)
+
         pygame.display.set_caption(f'{self.clock.get_fps() : .1f}')
 
         if self.physics_enabled and self.physics:

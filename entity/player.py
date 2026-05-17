@@ -2,8 +2,8 @@ import math
 
 import pygame
 
-from effects.effect import Effect
 from entity.base import VectorEntity
+from entity.factories.effect_factory import EffectFactory
 from projectiles.bullet import Bullet
 from utils.audio import audio_manager
 from utils.settings import *
@@ -168,7 +168,8 @@ class Player(VectorEntity, pygame.sprite.Sprite):
             self.grass_counter += 1
             if self.grass_counter >= 5:
                 self.grass_counter = 0
-                Effect(self.game, self.rect.centerx, self.rect.bottom, "grass")
+                EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.bottom, "grass",
+                                                groups=[self.game.all_sprites], )
 
     def update(self):
         self.move()
