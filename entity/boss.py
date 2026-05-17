@@ -8,7 +8,6 @@ from entity.enemy import Enemy
 from entity.factories.effect_factory import EffectFactory
 from projectiles.bullet import Enemy_Bullet
 from sprites import Spritesheet
-from utils.audio import audio_manager
 from utils.physics import COLLISION_ENTITY
 from utils.settings import *
 
@@ -479,25 +478,9 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
             self.healthbar.damage(self.max_health, self.health)
 
     def _on_death(self):
-        EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "death",
-                                        groups=[self.game.all_sprites], )
-        for _ in range(20):
-            EffectFactory.create_spark_particle(self.game.ecs_world, self.rect.centerx, self.rect.centery,
-                                                groups=[self.game.all_sprites], )
         if self.healthbar:
             self.healthbar.kill_bar()
         self.kill()
-        if self.game.physics and hasattr(self, "physics_name"):
-            self.game.physics.remove_body(self.physics_name)
-
-        if hasattr(self.game, "dungeon_generator"):
-            room_coord = self._get_current_room_coord()
-            room = self.game.dungeon_generator.rooms.get(room_coord)
-            if room and room.enemy_count > 0:
-                room.enemy_count -= 1
-
-        audio_manager.load_music("assets/sounds/Music.mp3")
-        audio_manager.play_music()
 
     def _get_current_room_coord(self):
         tile_x = int(self.rect.x / TILESIZE)

@@ -8,6 +8,8 @@ import pygame_gui
 import pytmx
 
 from core.ecs_world import World
+from core.event_bus import EventBus
+from core.events import ENEMY_KILLED
 from entity.boss import Boss
 from entity.enemy import Enemy
 from entity.factories.effect_factory import EffectFactory
@@ -216,9 +218,7 @@ class Game:
 
         if (zone_x, zone_y) not in self.world:
             # print(f"[DEBUG] Generating new zone ({zone_x}, {zone_y})")
-            self.world[(zone_x, zone_y)] = self.world_generator.get_zone_at(
-                zone_x, zone_y
-            )
+            self.world[(zone_x, zone_y)] = self.world_generator.get_zone_at(zone_x, zone_y)
 
         level = self.world[(zone_x, zone_y)]
         # print(f"[DEBUG] Zone size: {len(level)} rows x {len(level[0]) if level else 0} cols")
@@ -272,8 +272,7 @@ class Game:
         # print(f"[DEBUG] Player rect after load: {self.player.rect}")
         if hasattr(self, "camera"):
             print(
-                f"[DEBUG] Camera: pos=({self.camera.scroll_x}, {self.camera.scroll_y}), map_size=({self.camera.map_width}, {self.camera.map_height})"
-            )
+                f"[DEBUG] Camera: pos=({self.camera.scroll_x}, {self.camera.scroll_y}), map_size=({self.camera.map_width}, {self.camera.map_height})")
 
     def create_dungeon_entrance(self, x, y):
         Ground(self, x, y, "B")
@@ -320,24 +319,37 @@ class Game:
         # print(f"[DEBUG] Player created at: {self.player.rect.x}, {self.player.rect.y}")
 
         if hasattr(self, "camera"):
-            self.camera.set_map_size(
-                self.dungeon_generator.map_width * TILESIZE,
-                self.dungeon_generator.map_height * TILESIZE,
-            )
+            self.camera.set_map_size(self.dungeon_generator.map_width * TILESIZE,
+                                     self.dungeon_generator.map_height * TILESIZE, )
             # print(f"[DEBUG] Camera map_size set to: {self.camera.map_width}x{self.camera.map_height}")
             self.camera.center_on(self.player.rect.x, self.player.rect.y)
             # print(f"[DEBUG] Camera centered: scroll={self.camera.scroll_x},{self.camera.scroll_y}")
 
     def create_dungeon_doors(self):
         for door_info in self.dungeon_generator.get_doors():
-            Door(
-                self,
-                door_info["x"],
-                door_info["y"],
-                door_info["direction"],
-                door_info["from_room"],
-                door_info["to_room"],
-            )
+            Door(self, door_info["x"], door_info["y"], door_info["direction"], door_info["from_room"],
+                 door_info["to_room"], )
+
+    def _on_enemy_killed(self, entity) -> None:
+        if hasattr(self, "dungeon_generator"):
+            room_coord = entity._get_current_room_coord()
+            room = self.dungeon_generator.rooms.get(room_coord)
+            if room and room.enemy_count > 0:
+                room.enemy_count -= 1
+
+    def _on_enemy_killed_effects(self, entity) -> None:
+        ecs_world = self.ecs_world
+        cx, cy = entity.rect.centerx, entity.rect.centery
+        EffectFactory.create_ecs_effect(ecs_world, cx, cy, "death", groups=[self.all_sprites])
+        if hasattr(entity, "cfg"):
+            for _ in range(20):
+                EffectFactory.create_spark_particle(ecs_world, cx, cy, groups=[self.all_sprites])
+            audio_manager.load_music("assets/sounds/Music.mp3")
+            audio_manager.play_music()
+
+    def _on_enemy_killed_physics(self, entity) -> None:
+        if self.physics and hasattr(entity, "physics_name"):
+            self.physics.remove_body(entity.physics_name)
 
     def spawn_dungeon_enemies(self, room_coord=None):
         room_tile_width = self.dungeon_generator.room_tile_width
@@ -733,6 +745,11 @@ class Game:
             self.init_camera()
 
         self.ecs_world = World()
+        self.event_bus = EventBus()
+        self.ecs_world.add_service(self.event_bus)
+        self.event_bus.on(ENEMY_KILLED, self._on_enemy_killed)
+        self.event_bus.on(ENEMY_KILLED, self._on_enemy_killed_effects)
+        self.event_bus.on(ENEMY_KILLED, self._on_enemy_killed_physics)
         EffectFactory.preload(self.effects_spritesheet)
         self.ecs_world.add_system(AnimationSystem(self.ecs_world))
         self.ecs_world.add_system(LifetimeSystem(self.ecs_world))
@@ -1412,9 +1429,7 @@ class Game:
 
     def _rebuild_visible_rooms(self):
         if not hasattr(self, "_tile_map_cache"):
-            self._tile_map_cache = self.dungeon_generator.generate_floor(
-                self.current_dungeon_floor
-            )
+            self._tile_map_cache = self.dungeon_generator.generate_floor(self.current_dungeon_floor)
             self._dungeon_built_rooms = set()
 
         level = self._tile_map_cache

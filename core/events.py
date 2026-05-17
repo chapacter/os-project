@@ -1,0 +1,8 @@
+ENEMY_KILLED = "enemy_killed"
+PLAYER_DAMAGED = "player_damaged"
+PLAYER_DIED = "player_died"
+ROOM_CLEARED = "room_cleared"
+FLOOR_CHANGED = "floor_changed"
+BOSS_PHASE_CHANGED = "boss_phase_changed"
+GAME_STATE_CHANGED = "game_state_changed"
+ITEM_PICKED = "item_picked"

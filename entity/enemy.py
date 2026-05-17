@@ -424,18 +424,8 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.healthbar.damage(self.max_health, self.health)
 
     def _on_death(self):
-        EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "death",
-                                        groups=[self.game.all_sprites], )
         self.healthbar.kill_bar()
         self.kill()
-        if self.game.physics and hasattr(self, "physics_name"):
-            self.game.physics.remove_body(self.physics_name)
-
-        if hasattr(self.game, "dungeon_generator"):
-            room_coord = self._get_current_room_coord()
-            room = self.game.dungeon_generator.rooms.get(room_coord)
-            if room and room.enemy_count > 0:
-                room.enemy_count -= 1
 
     # ─── Room ─────────────────────────────────────────────────────
 
