@@ -3,8 +3,6 @@ import random
 
 import pygame
 
-from effects.particle import AreaDamageParticle
-from effects.particle import Particle
 from entity.base import Healthbar, VectorEntity
 from entity.enemy import Enemy
 from entity.factories.effect_factory import EffectFactory
@@ -274,7 +272,8 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
             angle = (i / particle_count) * 360
             x = self.rect.centerx + math.cos(math.radians(angle)) * radius * 0.7
             y = self.rect.centery + math.sin(math.radians(angle)) * radius * 0.7
-            AreaDamageParticle(self.game, x, y, damage_per_hit)
+            EffectFactory.create_area_damage(self.game.ecs_world, x, y, damage_per_hit,
+                                             groups=[self.game.all_sprites], )
 
     def _ranged_attack(self):
         if not self.game.player:
@@ -349,7 +348,8 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
                                             groups=[self.game.all_sprites], )
 
             for _ in range(10):
-                Particle(self.game, self.rect.centerx, self.rect.centery)
+                EffectFactory.create_spark_particle(self.game.ecs_world, self.rect.centerx, self.rect.centery,
+                                                    groups=[self.game.all_sprites], )
 
             if new_phase == 3:
                 self._summon_on_phase_change()
@@ -486,7 +486,8 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "death",
                                         groups=[self.game.all_sprites], )
         for _ in range(20):
-            Particle(self.game, self.rect.centerx, self.rect.centery)
+            EffectFactory.create_spark_particle(self.game.ecs_world, self.rect.centerx, self.rect.centery,
+                                                groups=[self.game.all_sprites], )
         if self.healthbar:
             self.healthbar.kill_bar()
         self.kill()

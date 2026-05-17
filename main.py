@@ -13,6 +13,9 @@ from entity.enemy import Enemy
 from entity.factories.effect_factory import EffectFactory
 from entity.player import Player
 from entity.systems.animation_system import AnimationSystem
+from entity.systems.area_damage_system import AreaDamageSystem
+from entity.systems.lifetime_system import LifetimeSystem
+from entity.systems.movement_system import MovementSystem
 from items.chest import Chest
 from items.weapon import Weapon
 from map.arena_generator import ArenaGenerator
@@ -729,6 +732,9 @@ class Game:
         self.ecs_world = World()
         EffectFactory.preload(self.effects_spritesheet)
         self.ecs_world.add_system(AnimationSystem(self.ecs_world))
+        self.ecs_world.add_system(LifetimeSystem(self.ecs_world))
+        self.ecs_world.add_system(MovementSystem(self.ecs_world))
+        self.ecs_world.add_system(AreaDamageSystem(self.ecs_world, lambda: getattr(self, "player", None)))
 
         self.create_tile_map()
 

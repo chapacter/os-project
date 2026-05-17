@@ -1,6 +1,6 @@
 import pygame
 
-from effects.particle import Particle
+from entity.factories.effect_factory import EffectFactory
 from utils.audio import audio_manager
 from utils.settings import *
 
@@ -115,7 +115,8 @@ class VectorEntity:
             self.particle_counter += 1
             if self.particle_counter >= 3:
                 self.particle_counter = 0
-                Particle(self.game, self.rect.centerx, self.rect.centery)
+                EffectFactory.create_spark_particle(self.game.ecs_world, self.rect.centerx, self.rect.centery,
+                                                    groups=[self.game.all_sprites], )
 
     def take_knockback(self, direction, force):
         self.knockback_velocity = direction * force
