@@ -403,8 +403,6 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.move()
         self.animation()
 
-        self.apply_hit_effect()
-
         self.apply_movement()
 
         # Home room management

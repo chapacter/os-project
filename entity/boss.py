@@ -338,9 +338,7 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
 
             color = self.phase_color_overlays[self.current_phase]
             if color:
-                scaled = pygame.transform.scale(
-                    self.image, (self.width + 10, self.height + 10)
-                )
+                scaled = pygame.transform.scale(self.image, (self.width + 10, self.height + 10))
                 self.image = scaled
                 self.rect = self.image.get_rect(center=self.rect.center)
 
@@ -463,8 +461,6 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
     def update(self):
         self.move()
         self.animation()
-
-        self.apply_hit_effect()
 
         self.apply_movement()
 

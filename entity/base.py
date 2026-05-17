@@ -1,5 +1,8 @@
 import pygame
 
+from entity.components.combat.health import HealthComponent
+from entity.components.combat.hit_flash import HitFlashComponent
+from entity.components.combat.knockback import KnockbackComponent
 from entity.factories.effect_factory import EffectFactory
 from utils.audio import audio_manager
 from utils.settings import *
@@ -18,6 +21,18 @@ class VectorEntity:
         self.max_health = max_health if max_health is not None else 5
         self.health = self.max_health
 
+        self.health_comp = HealthComponent(health=self.health, max_health=self.max_health)
+        self.hit_flash_comp = HitFlashComponent()
+        self.knockback_comp = KnockbackComponent()
+
+        if hasattr(self, "game") and self.game and hasattr(self.game, "ecs_world") and self.game.ecs_world:
+            w = self.game.ecs_world
+            if not w.has_entity(self):
+                w.add_entity(self)
+            w.add_component(self, self.health_comp)
+            w.add_component(self, self.hit_flash_comp)
+            w.add_component(self, self.knockback_comp)
+
         self.hit_flash_timer = 0
         self.hit_flash_duration = 2
         self.hit_scale_timer = 0
@@ -28,14 +43,9 @@ class VectorEntity:
         self.particle_counter = 0
 
         if create_body and game.physics_enabled and game.physics:
-            self.body, self.shape = game.physics.add_entity_body(
-                0,
-                0,
-                HITBOX_WIDTH,
-                HITBOX_HEIGHT,
-                name=self.physics_name,
-                collision_type=collision_type,
-            )
+            self.body, self.shape = game.physics.add_entity_body(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT,
+                                                                 name=self.physics_name,
+                                                                 collision_type=collision_type, )
 
     def get_direction_from_velocity(self):
         vx, vy = self.velocity.x, self.velocity.y
@@ -120,26 +130,31 @@ class VectorEntity:
 
     def take_knockback(self, direction, force):
         self.knockback_velocity = direction * force
+        self.knockback_comp.velocity = self.knockback_velocity
         self.hit_flash_timer = self.hit_flash_duration
+        self.hit_flash_comp.timer = self.hit_flash_duration
         self.hit_scale_timer = self.hit_scale_duration
+        self.hit_flash_comp.scale_timer = self.hit_scale_duration
         self.knockback_duration_remaining = 10
+        self.knockback_comp.duration_remaining = 10
 
     def damage(self, amount):
         self.health -= amount
+        self.health_comp.health = self.health
         audio_manager.play_sound("hit")
         self.hit_flash_timer = self.hit_flash_duration
+        self.hit_flash_comp.timer = self.hit_flash_duration
         self.hit_scale_timer = self.hit_scale_duration
+        self.hit_flash_comp.scale_timer = self.hit_scale_duration
         if self.health <= 0:
-            self._on_death()
+            self.health_comp.died = True
 
     def _on_death(self):
         pass
 
 
 class Entity(VectorEntity, pygame.sprite.Sprite):
-    def __init__(
-            self, game, x, y, layer, groups, physics_name="entity", collision_type=None
-    ):
+    def __init__(self, game, x, y, layer, groups, physics_name="entity", collision_type=None):
         self._layer = layer
         self.groups = groups
         pygame.sprite.Sprite.__init__(self, self.groups)

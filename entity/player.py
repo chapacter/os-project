@@ -175,16 +175,8 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         self.move()
         self.animation()
 
-        if self.knockback_duration_remaining > 0:
-            self.knockback_velocity *= KNOCKBACK_DECAY
-            self.knockback_duration_remaining -= 1
-            if self.knockback_velocity.length() < 0.1:
-                self.knockback_velocity = pygame.math.Vector2(0, 0)
-
         if self.contact_knockback_cooldown > 0:
             self.contact_knockback_cooldown -= 1
-
-        self.apply_hit_effect()
 
         self.apply_movement()
 
