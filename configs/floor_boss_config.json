@@ -1,0 +1,100 @@
+{
+  "1": {
+    "sheet": "assets/enemy/enemy.png",
+    "frame_size": [
+      32,
+      32
+    ],
+    "grid": [
+      3,
+      4
+    ],
+    "frame_move": 3,
+    "direction_map": {
+      "down": 0,
+      "left": 1,
+      "right": 2,
+      "up": 3
+    },
+    "attack_speed_mult": 1.0,
+    "summon_enemy_types": [
+      0,
+      1,
+      2,
+      3
+    ]
+  },
+  "2": {
+    "sheet": "assets/enemy/death_knight.png",
+    "frame_size": [
+      48,
+      64
+    ],
+    "grid": [
+      3,
+      4
+    ],
+    "frame_move": 3,
+    "direction_map": {
+      "up": 0,
+      "right": 1,
+      "down": 2,
+      "left": 3
+    },
+    "attack_speed_mult": 1.5,
+    "summon_enemy_types": [
+      5,
+      6,
+      7
+    ]
+  },
+  "3": {
+    "sheet": "assets/enemy/EyeTentacles.png",
+    "frame_size": [
+      32,
+      32
+    ],
+    "grid": [
+      4,
+      4
+    ],
+    "frame_move": 4,
+    "direction_map": {
+      "down": 0,
+      "right": 1,
+      "up": 2,
+      "left": 3
+    },
+    "attack_speed_mult": 2.0,
+    "summon_enemy_types": [
+      8,
+      9,
+      10
+    ]
+  },
+  "4": {
+    "sheet": "assets/enemy/horseman_b.png",
+    "frame_size": [
+      52,
+      53
+    ],
+    "grid": [
+      3,
+      4
+    ],
+    "frame_move": 3,
+    "direction_map": {
+      "down": 0,
+      "left": 1,
+      "right": 2,
+      "up": 3
+    },
+    "attack_speed_mult": 2.5,
+    "summon_enemy_types": [
+      11,
+      12,
+      13,
+      14
+    ]
+  }
+}

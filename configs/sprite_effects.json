@@ -1,0 +1,38 @@
+{
+  "sheet": "assets/effects.png",
+  "sheet_size": [
+    320,
+    128
+  ],
+  "sprite_size": [
+    32,
+    32
+  ],
+  "target_size": [
+    32,
+    32
+  ],
+  "offset": [
+    16,
+    16
+  ],
+  "animation_speed": 0.6,
+  "effects": {
+    "death": {
+      "row": 0,
+      "frames": 10
+    },
+    "grass": {
+      "row": 1,
+      "frames": 5
+    },
+    "hit": {
+      "row": 2,
+      "frames": 2
+    },
+    "bullet": {
+      "row": 2,
+      "col": 2
+    }
+  }
+}

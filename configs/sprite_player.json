@@ -1,0 +1,20 @@
+{
+  "sheet": "assets/player.png",
+  "sheet_size": [
+    960,
+    172
+  ],
+  "sprite_size": [
+    64,
+    43
+  ],
+  "target_size": [
+    64,
+    43
+  ],
+  "offset": [
+    32,
+    21
+  ],
+  "hitbox_size": 20
+}

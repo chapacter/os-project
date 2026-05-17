@@ -1,0 +1,202 @@
+{
+  "1": {
+    "floor": [
+      0,
+      0
+    ],
+    "wall": [
+      0,
+      1
+    ],
+    "chest_closed": [
+      0,
+      2
+    ],
+    "chest_open": [
+      0,
+      3
+    ],
+    "portal": [
+      0,
+      4
+    ],
+    "decoration": [
+      0,
+      5
+    ],
+    "battle_floor": [
+      0,
+      6
+    ],
+    "battle_wall": [
+      0,
+      7
+    ],
+    "battle_decor": [
+      0,
+      8
+    ],
+    "boss_floor": [
+      0,
+      9
+    ],
+    "boss_wall": [
+      0,
+      10
+    ],
+    "boss_decor": [
+      0,
+      11
+    ]
+  },
+  "2": {
+    "floor": [
+      1,
+      0
+    ],
+    "wall": [
+      1,
+      1
+    ],
+    "chest_closed": [
+      1,
+      2
+    ],
+    "chest_open": [
+      1,
+      3
+    ],
+    "portal": [
+      1,
+      4
+    ],
+    "decoration": [
+      1,
+      5
+    ],
+    "battle_floor": [
+      1,
+      6
+    ],
+    "battle_wall": [
+      1,
+      7
+    ],
+    "battle_decor": [
+      1,
+      8
+    ],
+    "boss_floor": [
+      1,
+      9
+    ],
+    "boss_wall": [
+      1,
+      10
+    ],
+    "boss_decor": [
+      1,
+      11
+    ]
+  },
+  "3": {
+    "floor": [
+      2,
+      0
+    ],
+    "wall": [
+      2,
+      1
+    ],
+    "chest_closed": [
+      2,
+      2
+    ],
+    "chest_open": [
+      2,
+      3
+    ],
+    "portal": [
+      2,
+      4
+    ],
+    "decoration": [
+      2,
+      5
+    ],
+    "battle_floor": [
+      2,
+      6
+    ],
+    "battle_wall": [
+      2,
+      7
+    ],
+    "battle_decor": [
+      2,
+      8
+    ],
+    "boss_floor": [
+      2,
+      9
+    ],
+    "boss_wall": [
+      2,
+      10
+    ],
+    "boss_decor": [
+      2,
+      11
+    ]
+  },
+  "4": {
+    "floor": [
+      3,
+      0
+    ],
+    "wall": [
+      3,
+      1
+    ],
+    "chest_closed": [
+      3,
+      2
+    ],
+    "chest_open": [
+      3,
+      3
+    ],
+    "portal": [
+      3,
+      4
+    ],
+    "decoration": [
+      3,
+      5
+    ],
+    "battle_floor": [
+      3,
+      6
+    ],
+    "battle_wall": [
+      3,
+      7
+    ],
+    "battle_decor": [
+      3,
+      8
+    ],
+    "boss_floor": [
+      3,
+      9
+    ],
+    "boss_wall": [
+      3,
+      10
+    ],
+    "boss_decor": [
+      3,
+      11
+    ]
+  }
+}

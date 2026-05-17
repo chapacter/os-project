@@ -1,0 +1,20 @@
+{
+  "sheet": "assets/enemy/enemy.png",
+  "sheet_size": [
+    96,
+    128
+  ],
+  "sprite_size": [
+    32,
+    32
+  ],
+  "target_size": [
+    32,
+    32
+  ],
+  "offset": [
+    16,
+    16
+  ],
+  "hitbox_size": 26
+}

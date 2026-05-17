@@ -1,0 +1,61 @@
+{
+  "hp": 50,
+  "speed": 1.5,
+  "sprite_size": [
+    96,
+    96
+  ],
+  "hitbox_size": 60,
+  "damage": 2,
+  "phase_thresholds": [
+    0.66,
+    0.33
+  ],
+  "phase1": {
+    "speed": 1.5,
+    "attacks": [
+      "chase",
+      "melee",
+      "teleport",
+      "area_damage"
+    ],
+    "teleport_interval": 180,
+    "melee_cooldown": 60,
+    "area_cooldown": 180,
+    "area_radius": 200,
+    "area_particle_count": 16
+  },
+  "phase2": {
+    "speed": 2.0,
+    "attacks": [
+      "chase",
+      "melee",
+      "teleport",
+      "area_damage",
+      "ranged"
+    ],
+    "teleport_interval": 300,
+    "area_radius": 250,
+    "area_cooldown": 180,
+    "area_particle_count": 20,
+    "ranged_cooldown": 240
+  },
+  "phase3": {
+    "speed": 2.5,
+    "attacks": [
+      "chase",
+      "melee",
+      "teleport",
+      "area_damage",
+      "ranged",
+      "summon"
+    ],
+    "teleport_interval": 300,
+    "area_radius": 300,
+    "area_cooldown": 180,
+    "area_particle_count": 24,
+    "ranged_cooldown": 240,
+    "summon_count": 5,
+    "summon_cooldown": 420
+  }
+}
