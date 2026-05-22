@@ -114,6 +114,8 @@ class Player(VectorEntity, pygame.sprite.Sprite):
 
         self.contact_knockback_cooldown = 0
 
+        self.noclip = False
+
         VectorEntity.__init__(
             self,
             game,
@@ -124,6 +126,14 @@ class Player(VectorEntity, pygame.sprite.Sprite):
 
     def move(self):
         pressed = pygame.key.get_pressed()
+
+        if pressed[pygame.K_F1]:
+            if not hasattr(self, '_noclip_toggle') or not self._noclip_toggle:
+                self.noclip = not self.noclip
+                print(f"Noclip: {'ON' if self.noclip else 'OFF'}")
+                self._noclip_toggle = True
+        else:
+            self._noclip_toggle = False
 
         if (
                 pressed[pygame.K_SPACE]
@@ -170,6 +180,22 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                 self.grass_counter = 0
                 EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.bottom, "grass",
                                                 groups=[self.game.all_sprites], )
+
+    def apply_movement(self):
+        self.hitbox.x += self.knockback_velocity.x
+        if not self.noclip:
+            self._resolve_collision_x("knockback_velocity")
+        self.hitbox.y += self.knockback_velocity.y
+        if not self.noclip:
+            self._resolve_collision_y("knockback_velocity")
+        self.hitbox.x += self.velocity.x
+        if not self.noclip:
+            self._resolve_collision_x("velocity")
+        self.hitbox.y += self.velocity.y
+        if not self.noclip:
+            self._resolve_collision_y("velocity")
+        self.rect.center = self.hitbox.center
+        self.sync_physics()
 
     def update(self):
         self.move()
