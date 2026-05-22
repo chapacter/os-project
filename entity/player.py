@@ -135,7 +135,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         if self.is_dodging:
             if self.dodge_velocity and self.dodge_velocity.length() > 0:
                 self.dodge_velocity *= 0.92
-                self.velocity = self.dodge_velocity
+                self.velocity = self.dodge_velocity.copy()
             else:
                 self.velocity = pygame.math.Vector2(0, 0)
         else:
@@ -264,7 +264,8 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                     self.knockback_frame = 0
                     self.knockback_velocity = contact_dir * force + self.velocity * 0.3
                     self.knockback_duration_remaining = duration
-                    self.action_state = "knockback"
+                    if self.action_state != "dodge":
+                        self.action_state = "knockback"
                     self.contact_knockback_cooldown = CONTACT_KNOCKBACK_INTERVAL
 
                 overlap_x = min(
@@ -362,7 +363,8 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         self._finish_attack()
 
     def _finish_attack(self):
-        self.action_state = "attack"
+        if self.action_state != "dodge":
+            self.action_state = "attack"
         self.action_frame = 0
         self.shoot_state = "wait"
         audio_manager.play_sound("swipe")

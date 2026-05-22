@@ -455,6 +455,9 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         center_y = hy * room_unit_height + wall_thickness + room_tile_height // 2
         self.rect.x = center_x * TILESIZE - self.width // 2
         self.rect.y = center_y * TILESIZE - self.height // 2
+        self.hitbox.center = self.rect.center
+        self._pos_x = float(self.hitbox.x)
+        self._pos_y = float(self.hitbox.y)
         self.velocity = pygame.math.Vector2(0, 0)
         self.has_seen_player = False
         self.retreat_progress = 0

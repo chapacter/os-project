@@ -273,6 +273,14 @@ class DungeonGenerator:
                             self.rooms[room2_coord], direction
                         )
 
+        # Ensure connections to all existing adjacent rooms
+        for (gx, gy), room in list(self.rooms.items()):
+            for dx, dy, direction in [(-1, 0, "west"), (1, 0, "east"),
+                                      (0, -1, "north"), (0, 1, "south")]:
+                nx, ny = gx + dx, gy + dy
+                if (nx, ny) in self.rooms and not room.has_door(direction):
+                    room.connect_to(self.rooms[(nx, ny)], direction)
+
     def _get_direction(self, from_pos, to_pos):
         fx, fy = from_pos
         tx, ty = to_pos

@@ -397,8 +397,9 @@ class Game:
                 spawned_rooms.append((gx, gy))
             elif room.room_type.value == "enemy":
                 room.enemies_spawned = True
-                room_x = gx * room_unit_width + wall_thickness + 3
-                room_y = gy * room_unit_height + wall_thickness + 2
+                room_start_x = gx * room_unit_width + wall_thickness
+                room_start_y = gy * room_unit_height + wall_thickness
+                margin = 2
                 for _ in range(random.randint(2, 4)):
                     if self.current_dungeon_floor == 2:
                         enemy_type = random.choice([5, 6, 7])
@@ -409,10 +410,12 @@ class Game:
                     else:
                         type_weights = {k: v["weight"] for k, v in ENEMY_TYPES.items() if k < 4}
                         enemy_type = weighted_choice(type_weights)
+                    ex = random.randint(room_start_x + margin, room_start_x + room_tile_width - 1 - margin)
+                    ey = random.randint(room_start_y + margin, room_start_y + room_tile_height - 1 - margin)
                     Enemy(
                         self,
-                        room_x + random.randint(-2, 2),
-                        room_y + random.randint(-2, 2),
+                        ex,
+                        ey,
                         enemy_type=enemy_type,
                     )
                     room.enemy_count += 1
@@ -420,8 +423,9 @@ class Game:
                 spawned_rooms.append((gx, gy))
             elif room.room_type.value == "elite":
                 room.enemies_spawned = True
-                room_x = gx * room_unit_width + wall_thickness + 3
-                room_y = gy * room_unit_height + wall_thickness + 2
+                room_start_x = gx * room_unit_width + wall_thickness
+                room_start_y = gy * room_unit_height + wall_thickness
+                margin = 2
                 for _ in range(random.randint(6, 12)):
                     if self.current_dungeon_floor == 2:
                         enemy_type = random.choice([5, 6, 7])
@@ -432,10 +436,12 @@ class Game:
                     else:
                         type_weights = {k: v["weight"] for k, v in ENEMY_TYPES.items() if k < 4}
                         enemy_type = weighted_choice(type_weights)
+                    ex = random.randint(room_start_x + margin, room_start_x + room_tile_width - 1 - margin)
+                    ey = random.randint(room_start_y + margin, room_start_y + room_tile_height - 1 - margin)
                     Enemy(
                         self,
-                        room_x + random.randint(-2, 2),
-                        room_y + random.randint(-2, 2),
+                        ex,
+                        ey,
                         enemy_type=enemy_type,
                         hp_multiplier=1.5,
                     )
