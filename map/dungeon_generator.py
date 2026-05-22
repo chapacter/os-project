@@ -94,8 +94,8 @@ class DungeonGenerator:
                             candidates.add((nx, ny))
 
             if not candidates:
-                # Expand search - try any position
-                candidates = set(all_positions) - set(self.rooms.keys())
+                # No more adjacent positions available, stop adding rooms
+                break
 
             # Find candidates that are within max_distance from any existing room
             valid_candidates = []
@@ -267,7 +267,7 @@ class DungeonGenerator:
                     dist = abs(room1_coord[0] - room2_coord[0]) + abs(
                         room1_coord[1] - room2_coord[1]
                     )
-                    if dist <= 2 and random.random() < 0.3:
+                    if dist == 1 and random.random() < 0.3:
                         direction = self._get_direction(room1_coord, room2_coord)
                         self.rooms[room1_coord].connect_to(
                             self.rooms[room2_coord], direction
@@ -394,28 +394,28 @@ class DungeonGenerator:
             room_end_x = room_start_x + room_tile_width
             room_end_y = room_start_y + room_tile_height
 
-            if room.has_door("north"):
+            if room.has_door("north") and (gx, gy - 1) in self.rooms:
                 for rx in range(door_width):
                     tx = room_start_x + (room_tile_width // 2 - door_width // 2) + rx
                     ty = room_start_y - 1
                     if 0 <= ty < total_height:
                         tile_map[ty][tx] = "."
 
-            if room.has_door("south"):
+            if room.has_door("south") and (gx, gy + 1) in self.rooms:
                 for rx in range(door_width):
                     tx = room_start_x + (room_tile_width // 2 - door_width // 2) + rx
                     ty = room_end_y
                     if 0 <= ty < total_height:
                         tile_map[ty][tx] = "."
 
-            if room.has_door("west"):
+            if room.has_door("west") and (gx - 1, gy) in self.rooms:
                 for ry in range(door_width):
                     tx = room_start_x - 1
                     ty = room_start_y + (room_tile_height // 2 - door_width // 2) + ry
                     if 0 <= tx < total_width:
                         tile_map[ty][tx] = "."
 
-            if room.has_door("east"):
+            if room.has_door("east") and (gx + 1, gy) in self.rooms:
                 for ry in range(door_width):
                     tx = room_end_x
                     ty = room_start_y + (room_tile_height // 2 - door_width // 2) + ry
@@ -537,15 +537,16 @@ class DungeonGenerator:
                         y = room_start_y + door_offset_y
                         to_room = (gx - 1, gy)
 
-                    doors.append(
-                        {
-                            "x": x,
-                            "y": y,
-                            "direction": door_dir,
-                            "from_room": (gx, gy),
-                            "to_room": to_room,
-                        }
-                    )
+                    if to_room in self.rooms:
+                        doors.append(
+                            {
+                                "x": x,
+                                "y": y,
+                                "direction": door_dir,
+                                "from_room": (gx, gy),
+                                "to_room": to_room,
+                            }
+                        )
         return doors
 
     def set_start_room_visible(self):

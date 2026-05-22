@@ -1326,8 +1326,8 @@ class Game:
 
         self._door_frame_counter += 1
 
-        player_tile_x = int(self.player.rect.x / TILESIZE)
-        player_tile_y = int(self.player.rect.y / TILESIZE)
+        player_tile_x = int(self.player.hitbox.centerx / TILESIZE)
+        player_tile_y = int(self.player.hitbox.centery / TILESIZE)
         room_tile_width = self.dungeon_generator.room_tile_width
         room_tile_height = self.dungeon_generator.room_tile_height
         wall_thickness = self.dungeon_generator.wall_thickness
@@ -1349,7 +1349,7 @@ class Game:
         if player_room and player_room.enemy_count > 0:
             return
 
-        player_center = self.player.rect.center
+        player_center = self.player.hitbox.center
         for door in self.doors:
             door_center = door.rect.center
             distance = (
@@ -1364,8 +1364,8 @@ class Game:
         if not hasattr(self, "player") or not self.player:
             return False
 
-        player_tile_x = int(self.player.rect.x / TILESIZE)
-        player_tile_y = int(self.player.rect.y / TILESIZE)
+        player_tile_x = int(self.player.hitbox.centerx / TILESIZE)
+        player_tile_y = int(self.player.hitbox.centery / TILESIZE)
 
         room_tile_width = self.dungeon_generator.room_tile_width
         room_tile_height = self.dungeon_generator.room_tile_height
