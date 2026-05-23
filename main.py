@@ -54,6 +54,14 @@ class GameMode:
     TMX = "tmx"
 
 
+FLOOR_MUSIC_MAP: dict[int, tuple[str, str]] = {
+    1: ("assets/sounds/Floor1_background.mp3", "assets/sounds/Floor1_boss.mp3"),
+    2: ("assets/sounds/Floor2_background.mp3", "assets/sounds/Floor2_boss.mp3"),
+    3: ("assets/sounds/Floor3_background.mp3", "assets/sounds/Floor3_boss.mp3"),
+    4: ("assets/sounds/Floor4_background.wav", "assets/sounds/Boss.mp3"),
+}
+
+
 class Game:
     def __init__(self):
         self.clock = pygame.time.Clock()
@@ -80,7 +88,7 @@ class Game:
         audio_manager.load_sound("unpause", "assets/sounds/Unpause.wav")
         audio_manager.load_sound("menu_select", "assets/sounds/Menu Select.wav")
         audio_manager.load_sound("menu_move", "assets/sounds/Menu Move.wav")
-        audio_manager.load_music("assets/sounds/New_Menu_Music.mp3")
+        audio_manager.load_music("assets/sounds/Menu_beholder.mp3")
         audio_manager.play_music()
         print(f"[DEBUG] Audio initialized: {audio_manager.initialized}")
         print(f"[DEBUG] Loaded sounds: {list(audio_manager.sounds.keys())}")
@@ -96,6 +104,7 @@ class Game:
         self.world_generator = None
         self.dungeon_generator = None
         self.current_dungeon_floor = 1
+        self._bosses_defeated: set[int] = set()
         self._dungeon_built_rooms = set()
         self._door_frame_counter = 0
         self._pending_room_for_enemies = None
@@ -289,6 +298,7 @@ class Game:
 
     def enter_dungeon(self):
         self.mode = GameMode.DUNGEON
+        self._bosses_defeated.clear()
         self.dungeon_generator = DungeonGenerator(seed=self.dungeon_seed)
         self.load_dungeon_floor()
 
@@ -302,7 +312,8 @@ class Game:
         level = self.dungeon_generator.generate_floor(self.current_dungeon_floor)
         self._tile_map_cache = level
 
-        audio_manager.load_music("assets/sounds/Music.mp3")
+        bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
+        audio_manager.load_music(bg_music)
         audio_manager.play_music()
 
         self.dungeon_generator.set_start_room_visible()
@@ -331,6 +342,11 @@ class Game:
                  door_info["to_room"], )
 
     def _on_enemy_killed(self, entity) -> None:
+        if isinstance(entity, Boss):
+            self._bosses_defeated.add(self.current_dungeon_floor)
+            bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
+            audio_manager.load_music(bg_music)
+            audio_manager.play_music()
         if hasattr(self, "dungeon_generator"):
             room_coord = entity._get_current_room_coord()
             room = self.dungeon_generator.rooms.get(room_coord)
@@ -344,8 +360,6 @@ class Game:
         if hasattr(entity, "cfg"):
             for _ in range(20):
                 EffectFactory.create_spark_particle(ecs_world, cx, cy, groups=[self.all_sprites])
-            audio_manager.load_music("assets/sounds/Music.mp3")
-            audio_manager.play_music()
 
     def _on_enemy_killed_physics(self, entity) -> None:
         if self.physics and hasattr(entity, "physics_name"):
@@ -394,6 +408,9 @@ class Game:
                     Boss(self, boss_pos[0], boss_pos[1], floor=self.current_dungeon_floor)
                     room.enemy_count = 1
                     total_enemies += 1
+                    _, boss_music = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
+                    audio_manager.load_music(boss_music)
+                    audio_manager.play_music()
                 spawned_rooms.append((gx, gy))
             elif room.room_type.value == "enemy":
                 room.enemies_spawned = True
@@ -581,6 +598,9 @@ class Game:
         self._dungeon_built_rooms = set()
         self._sealed_rooms = {}
         self._tile_map_cache = None
+        bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
+        audio_manager.load_music(bg_music)
+        audio_manager.play_music()
         self._tile_map_cache = self.dungeon_generator.generate_floor(
             self.current_dungeon_floor
         )
@@ -939,7 +959,7 @@ class Game:
 
     def return_to_menu(self):
         self.game_state = "menu"
-        audio_manager.load_music("assets/sounds/New_Menu_Music.mp3")
+        audio_manager.load_music("assets/sounds/Menu_beholder.mp3")
         audio_manager.play_music()
         self.main_menu.show()
         self.hud.hide()
@@ -1409,10 +1429,6 @@ class Game:
             return
 
         room = self.dungeon_generator.rooms[room_coord]
-
-        if room.room_type.value == "boss":
-            audio_manager.load_music("assets/sounds/Boss.mp3")
-            audio_manager.play_music()
 
         self._show_room(room_coord)
         self._rebuild_visible_rooms()

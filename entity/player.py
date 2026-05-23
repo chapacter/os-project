@@ -188,6 +188,10 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         self.hitbox.y += self.knockback_velocity.y
         if not self.noclip:
             self._resolve_collision_y("knockback_velocity")
+        self.knockback_velocity *= KNOCKBACK_DECAY
+        if self.knockback_velocity.length() < 0.1:
+            self.knockback_velocity = pygame.math.Vector2(0, 0)
+        self.knockback_comp.velocity = self.knockback_velocity
         self.hitbox.x += self.velocity.x
         if not self.noclip:
             self._resolve_collision_x("velocity")
@@ -203,12 +207,14 @@ class Player(VectorEntity, pygame.sprite.Sprite):
 
         if self.contact_knockback_cooldown > 0:
             self.contact_knockback_cooldown -= 1
-
-        self.apply_movement()
+        if self.knockback_duration_remaining > 0:
+            self.knockback_duration_remaining -= 1
 
         self.collide_enemy()
         self.collide_weapon()
         self.attack()
+        self.apply_movement()
+
         self.dodge_cooldown_update()
         self.wait_after_shoot()
 
@@ -288,8 +294,11 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                         duration = 8
 
                     self.knockback_frame = 0
-                    self.knockback_velocity = contact_dir * force + self.velocity * 0.3
+                    vel_along = max(0, self.velocity.dot(contact_dir))
+                    self.knockback_velocity = contact_dir * force + contact_dir * vel_along * 0.3
                     self.knockback_duration_remaining = duration
+                    self.knockback_comp.velocity = self.knockback_velocity
+                    self.knockback_comp.duration_remaining = duration
                     if self.action_state != "dodge":
                         self.action_state = "knockback"
                     self.contact_knockback_cooldown = CONTACT_KNOCKBACK_INTERVAL
@@ -431,6 +440,8 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                 self.shoot_state = "shoot"
 
     def damage(self, amount):
+        if self.action_state in ("knockback", "dodge"):
+            return
         super().damage(amount)
 
     def _on_death(self):
