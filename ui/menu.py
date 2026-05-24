@@ -9,6 +9,7 @@ from ui.font_manager import font_manager
 from utils.audio import audio_manager
 from utils.settings import WHITE, BLACK, YELLOW
 
+RED = (255, 0, 0)
 GOLD = (255, 215, 0)
 GREEN = (80, 200, 120)
 BORDER_COLOR = (180, 180, 180)
@@ -212,6 +213,49 @@ class MainMenu:
                     )
                     self.story_timer = 0.0
 
+    def _parse_colored_segments(self, text, start_depth=0, start_trim_spaces=False):
+        segments = []
+        current = ""
+        depth = start_depth
+        trim_leading_spaces = start_trim_spaces
+        for char in text:
+            if char == '(':
+                trim_leading_spaces = False
+                if depth == 0:
+                    if current:
+                        segments.append((current.rstrip(), False))
+                    current = " "
+                else:
+                    current += char
+                depth += 1
+            elif char == ')':
+                depth -= 1
+                if depth == 0:
+                    segments.append((current, True))
+                    current = ""
+                    trim_leading_spaces = True
+                else:
+                    current += char
+            elif char == ' ':
+                if trim_leading_spaces:
+                    continue
+                current += char
+            else:
+                trim_leading_spaces = False
+                current += char
+        if current:
+            segments.append((current, depth > 0))
+        return segments, depth, trim_leading_spaces
+
+    def _draw_colored_line(self, surface, text, x, y, font_size, default_color, shadow_color, start_depth=0, start_trim_spaces=False):
+        segments, _, _ = self._parse_colored_segments(text, start_depth, start_trim_spaces)
+        offset_x = x
+        for segment_text, is_bracketed in segments:
+            color = RED if is_bracketed else default_color
+            segment_surf = font_manager.render(segment_text, font_size, color, shadow=shadow_color)
+            surface.blit(segment_surf, (offset_x, y))
+            offset_x += segment_surf.get_width()
+
     def _draw_speech_bubble(self, surface, rect, bg_color, border_color, tail_size=100, border_radius=15, tail_y=None):
         if tail_y is None:
             tail_y = rect.centery - rect.y
@@ -275,18 +319,31 @@ class MainMenu:
             max_width = panel_width - 40
             words = story_text.split()
             lines = []
+            line_depths = []
+            line_trims = []
             current_line = ""
+            current_depth = 0
+            current_trim = False
             for word in words:
                 test_line = current_line + (" " if current_line else "") + word
-                test_surf = font_manager.get_font(18).render(test_line, True, YELLOW)
-                if test_surf.get_width() > max_width:
+                segments, _, _ = self._parse_colored_segments(test_line, current_depth, current_trim)
+                total_width = sum(font_manager.get_font(18).render(seg[0], True, RED if seg[1] else YELLOW).get_width() for seg in segments)
+                if total_width > max_width:
                     if current_line:
                         lines.append(current_line)
+                        _, end_depth, end_trim = self._parse_colored_segments(current_line, current_depth, current_trim)
+                        line_depths.append(end_depth)
+                        line_trims.append(end_trim)
+                        current_depth = end_depth
+                        current_trim = end_trim
                     current_line = word
                 else:
                     current_line = test_line
             if current_line:
                 lines.append(current_line)
+                _, end_depth, end_trim = self._parse_colored_segments(current_line, current_depth, current_trim)
+                line_depths.append(end_depth)
+                line_trims.append(end_trim)
 
             num_lines = len(lines)
             panel_height = max(100, num_lines * line_height + 40)
@@ -304,9 +361,9 @@ class MainMenu:
             self._draw_speech_bubble(surface, panel_rect_content, PANEL_BG, BORDER_COLOR, tail_size=tail_size, border_radius=15, tail_y=tail_y)
 
             for i, line in enumerate(lines):
-                line_surf = font_manager.render(line, 18, YELLOW, shadow=BLACK)
-                line_rect = line_surf.get_rect(topleft=(panel_x + 20, panel_y + 20 + i * line_height))
-                surface.blit(line_surf, line_rect)
+                depth = line_depths[i - 1] if i > 0 else 0
+                trim = line_trims[i - 1] if i > 0 else False
+                self._draw_colored_line(surface, line, panel_x + 20, panel_y + 20 + i * line_height, 18, YELLOW, BLACK, depth, trim)
 
         if self.notification and self.notification_timer > 0:
             notif_surf = font_manager.render(self.notification, 24, YELLOW, shadow=BLACK)
