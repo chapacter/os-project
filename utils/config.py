@@ -54,6 +54,10 @@ def load_config():
 
     if "music_volume" not in config["Audio"]:
         config["Audio"]["music_volume"] = "0.5"
+    if "menu_music_volume" not in config["Audio"]:
+        config["Audio"]["menu_music_volume"] = "0.8"
+    if "dungeon_music_volume" not in config["Audio"]:
+        config["Audio"]["dungeon_music_volume"] = "0.5"
     if "sfx_volume" not in config["Audio"]:
         config["Audio"]["sfx_volume"] = "0.5"
 
@@ -121,7 +125,7 @@ def set_scale(scale):
 
 
 def get_music_volume():
-    return config.getfloat("Audio", "music_volume", fallback=0.7)
+    return config.getfloat("Audio", "music_volume", fallback=0.5)
 
 
 def set_music_volume(volume):
@@ -129,8 +133,26 @@ def set_music_volume(volume):
     save_config()
 
 
+def get_menu_music_volume():
+    return config.getfloat("Audio", "menu_music_volume", fallback=0.5)
+
+
+def set_menu_music_volume(volume):
+    config["Audio"]["menu_music_volume"] = str(volume)
+    save_config()
+
+
+def get_dungeon_music_volume():
+    return config.getfloat("Audio", "dungeon_music_volume", fallback=0.5)
+
+
+def set_dungeon_music_volume(volume):
+    config["Audio"]["dungeon_music_volume"] = str(volume)
+    save_config()
+
+
 def get_sfx_volume():
-    return config.getfloat("Audio", "sfx_volume", fallback=0.8)
+    return config.getfloat("Audio", "sfx_volume", fallback=1.0)
 
 
 def set_sfx_volume(volume):

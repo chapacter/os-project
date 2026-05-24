@@ -20,5 +20,12 @@
   "final_menu.message": "there is no god beyond",
   "final_menu.continue": "Arena",
   "final_menu.menu": "Menu",
-  "final_menu.quit": "Quit"
+  "final_menu.quit": "Quit",
+  "settings.title": "Settings",
+  "settings.menu_music_volume": "Menu music volume",
+  "settings.dungeon_music_volume": "Dungeon music volume",
+  "settings.sfx_volume": "SFX volume",
+  "settings.back": "Back",
+  "story.text": "A small but brave kitten falls asleep in his cozy bed. He has no idea that this night will change everything. For the first time in his life, he is visited by an incredibly vivid dream, dragging the hero into the depths of a shifting and perilous dungeon. To return to his ordinary feline life, \"The Great Child\" must endure dozens of deadly trials. And even if this nightmare cuts his journey short, the fluffy hero will awaken here time and time again, donning new mystical guises. Will our brave \"The Great Child\" overcome the creatures of darkness, or will this dream turn into an eternal nightmare?",
+  "story.read_hint": "Read backstory"
 }

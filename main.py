@@ -37,6 +37,7 @@ from ui.game_over import GameOverMenu
 from ui.hud import HUD
 from ui.menu import MainMenu
 from ui.pause import PauseMenu
+from ui.settings import SettingsMenu
 from utils import config, weighted_choice
 from utils.audio import audio_manager
 from utils.camera import Camera
@@ -81,6 +82,7 @@ class Game:
         self.effects_spritesheet = Spritesheet("assets/effects.png")
 
         audio_manager.init()
+        pygame.key.set_repeat(200, 15)
         audio_manager.load_sound("hit", "assets/sounds/Hit.wav")
         audio_manager.load_sound("swipe", "assets/sounds/Swipe.wav")
         audio_manager.load_sound("evade", "assets/sounds/Evade.wav")
@@ -89,7 +91,7 @@ class Game:
         audio_manager.load_sound("menu_select", "assets/sounds/Menu Select.wav")
         audio_manager.load_sound("menu_move", "assets/sounds/Menu Move.wav")
         audio_manager.load_music("assets/sounds/Menu_beholder.mp3")
-        audio_manager.play_music()
+        audio_manager.play_music(context="menu", volume_multiplier=2.0)
         print(f"[DEBUG] Audio initialized: {audio_manager.initialized}")
         print(f"[DEBUG] Loaded sounds: {list(audio_manager.sounds.keys())}")
 
@@ -123,9 +125,11 @@ class Game:
         self.ui_manager = None
         self.main_menu = None
         self.pause_menu = None
+        self.settings_menu = None
         self.dungeon_map = None
         self.hud = None
         self.final_menu = None
+        self._prev_game_state = None
 
         self.game_mode = "standard"
         self.arena_generator = None
@@ -205,6 +209,7 @@ class Game:
         self.ui_manager = pygame_gui.UIManager(self.sc.get_size())
         self.main_menu = MainMenu(self)
         self.pause_menu = PauseMenu(self)
+        self.settings_menu = SettingsMenu(self)
         self.game_over_menu = GameOverMenu(self)
         self.final_menu = FinalMenu(self)
         self.dungeon_map = DungeonMap(self)
@@ -314,7 +319,8 @@ class Game:
 
         bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
         audio_manager.load_music(bg_music)
-        audio_manager.play_music()
+        mult = 1.5 if self.current_dungeon_floor == 3 else 1.0
+        audio_manager.play_music(context="dungeon", volume_multiplier=mult)
 
         self.dungeon_generator.set_start_room_visible()
 
@@ -346,7 +352,8 @@ class Game:
             self._bosses_defeated.add(self.current_dungeon_floor)
             bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
             audio_manager.load_music(bg_music)
-            audio_manager.play_music()
+            mult = 1.5 if self.current_dungeon_floor == 3 else 1.0
+            audio_manager.play_music(context="dungeon", volume_multiplier=mult)
         if hasattr(self, "dungeon_generator"):
             room_coord = entity._get_current_room_coord()
             room = self.dungeon_generator.rooms.get(room_coord)
@@ -410,7 +417,8 @@ class Game:
                     total_enemies += 1
                     _, boss_music = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
                     audio_manager.load_music(boss_music)
-                    audio_manager.play_music()
+                    mult = 1.5 if self.current_dungeon_floor == 3 else 1.0
+                    audio_manager.play_music(context="dungeon", volume_multiplier=mult)
                 spawned_rooms.append((gx, gy))
             elif room.room_type.value == "enemy":
                 room.enemies_spawned = True
@@ -600,7 +608,8 @@ class Game:
         self._tile_map_cache = None
         bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
         audio_manager.load_music(bg_music)
-        audio_manager.play_music()
+        mult = 1.5 if self.current_dungeon_floor == 3 else 1.0
+        audio_manager.play_music(context="dungeon", volume_multiplier=mult)
         self._tile_map_cache = self.dungeon_generator.generate_floor(
             self.current_dungeon_floor
         )
@@ -950,7 +959,16 @@ class Game:
         self.game_over_menu.show()
 
     def open_settings(self):
-        print("Settings menu - coming soon!")
+        self.main_menu.reset_story()
+        self._prev_game_state = self.game_state
+        self.game_state = "settings"
+        self.settings_menu.show()
+
+    def settings_back(self):
+        self.main_menu.reset_story()
+        self.settings_menu.hide()
+        self.game_state = self._prev_game_state
+        self._prev_game_state = None
 
     def quit_game(self):
         self.running = False
@@ -960,7 +978,7 @@ class Game:
     def return_to_menu(self):
         self.game_state = "menu"
         audio_manager.load_music("assets/sounds/Menu_beholder.mp3")
-        audio_manager.play_music()
+        audio_manager.play_music(context="menu", volume_multiplier=2.0)
         self.main_menu.show()
         self.hud.hide()
 
@@ -1032,6 +1050,8 @@ class Game:
                         self.pause()
                     elif self.game_state == "paused":
                         self.resume()
+                    elif self.game_state == "settings":
+                        self.settings_back()
                     else:
                         pygame.quit()
                         sys.exit()
@@ -1109,6 +1129,8 @@ class Game:
                 self.main_menu.handle_event(event)
             elif self.game_state == "paused":
                 self.pause_menu.handle_event(event)
+            elif self.game_state == "settings":
+                self.settings_menu.handle_event(event)
             elif self.game_state == "game_over":
                 self.game_over_menu.handle_event(event)
             elif self.game_state == "final_menu":
@@ -1118,6 +1140,9 @@ class Game:
         if self.game_state == "menu":
             self.sc.fill(BLACK)
             self.main_menu.draw(self.sc)
+        elif self.game_state == "settings":
+            self.sc.fill(BLACK)
+            self.settings_menu.draw(self.sc)
         elif self.game_state == "game_over":
             self.render_surface.fill(BLACK)
             for sprite in self.all_sprites.sprites():
@@ -1514,6 +1539,8 @@ class Game:
 
             if self.game_state == "menu":
                 self.main_menu.update(time_delta)
+            elif self.game_state == "settings":
+                self.settings_menu.update(time_delta)
             elif self.game_state == "game_over":
                 self.game_over_menu.update(time_delta)
             elif self.game_state == "paused":

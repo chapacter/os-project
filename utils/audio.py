@@ -8,6 +8,10 @@ from utils.config import (
     get_sfx_volume,
     set_music_volume,
     set_sfx_volume,
+    get_menu_music_volume,
+    get_dungeon_music_volume,
+    set_menu_music_volume,
+    set_dungeon_music_volume,
 )
 
 
@@ -15,17 +19,23 @@ class AudioManager:
     def __init__(self):
         self.initialized = False
         self.music_volume = 0.5
-        self.sfx_volume = 0.5
+        self.menu_music_volume = 0.8
+        self.dungeon_music_volume = 0.5
+        self.sfx_volume = 1.0
 
         self.sounds = {}
         self.music_playing = False
         self.current_music = None
+        self.music_context = "menu"
 
     def sync_from_config(self):
         self.music_volume = get_music_volume()
+        self.menu_music_volume = get_menu_music_volume()
+        self.dungeon_music_volume = get_dungeon_music_volume()
         self.sfx_volume = get_sfx_volume()
         if self.initialized:
-            pygame.mixer.music.set_volume(self.music_volume)
+            volume = self.menu_music_volume if self.music_context == "menu" else self.dungeon_music_volume
+            pygame.mixer.music.set_volume(volume)
             for sound in self.sounds.values():
                 sound.set_volume(self.sfx_volume)
 
@@ -81,7 +91,7 @@ class AudioManager:
             sound.stop()
 
     def set_sfx_volume(self, volume):
-        self.sfx_volume = max(0.0, min(1.0, volume))
+        self.sfx_volume = max(0.0, min(2.0, volume))
         for sound in self.sounds.values():
             sound.set_volume(self.sfx_volume)
 
@@ -118,12 +128,16 @@ class AudioManager:
             print(f"Failed to load music: {e}")
             return False
 
-    def play_music(self, loops=-1, start=0.0, fade_ms=0):
+    def play_music(self, loops=-1, start=0.0, fade_ms=0, context=None, volume_multiplier=1.0):
         if not self.initialized or not self.current_music:
             return
 
+        if context:
+            self.music_context = context
+        volume = self.menu_music_volume if self.music_context == "menu" else self.dungeon_music_volume
+        volume = min(1.0, volume * volume_multiplier)
         try:
-            pygame.mixer.music.set_volume(self.music_volume)
+            pygame.mixer.music.set_volume(volume)
             pygame.mixer.music.play(loops=loops, start=start, fade_ms=fade_ms)
             self.music_playing = True
         except pygame.error as e:
@@ -150,10 +164,17 @@ class AudioManager:
         if self.initialized and self.music_playing:
             pygame.mixer.music.unpause()
 
-    def set_music_volume(self, volume):
-        self.music_volume = max(0.0, min(1.0, volume))
-        if self.initialized:
-            pygame.mixer.music.set_volume(self.music_volume)
+    def set_menu_music_volume(self, volume):
+        self.menu_music_volume = max(0.0, min(1.0, volume))
+        set_menu_music_volume(self.menu_music_volume)
+        if self.music_context == "menu" and self.initialized:
+            pygame.mixer.music.set_volume(self.menu_music_volume)
+
+    def set_dungeon_music_volume(self, volume):
+        self.dungeon_music_volume = max(0.0, min(1.0, volume))
+        set_dungeon_music_volume(self.dungeon_music_volume)
+        if self.music_context == "dungeon" and self.initialized:
+            pygame.mixer.music.set_volume(self.dungeon_music_volume)
 
     def is_music_playing(self):
         if self.initialized:
