@@ -1,3 +1,4 @@
+import math
 import random
 
 import pygame
@@ -41,6 +42,22 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.always_chase = cfg["always_chase"]
         self.has_blink = cfg["has_blink"]
         self.blink_interval = cfg.get("blink_interval", 8)
+
+        self.burst_shot = cfg.get("burst_shot", False)
+        self.death_explosion = cfg.get("death_explosion", False)
+
+        self.enrage_threshold = cfg.get("enrage_threshold", 0.0)
+        self.enrage_speed_mult = cfg.get("enrage_speed_mult", 1.0)
+        self.enrage_damage_mult = cfg.get("enrage_damage_mult", 1.0)
+        self.enraged = False
+        self._base_speed_mod = self.speed_mod
+        self._base_damage = self.attack_damage
+
+        self.has_charge = cfg.get("has_charge", False)
+        self.charge_range = cfg.get("charge_range", 0)
+        self.charge_speed = cfg.get("charge_speed", 0.0)
+        self.charge_cooldown = cfg.get("charge_cooldown", 0)
+        self.charge_timer = 0
 
         self.healthbar = Enemy_Healthbar(game, self, x, y)
 
@@ -228,13 +245,22 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
             start_x = self.hitbox.centerx
             start_y = self.hitbox.centery
             if ENEMY_TYPES[self.enemy_type].get("cone_attack"):
-                import math
                 cone_spread = 0.2
                 target_x = player.hitbox.centerx
                 target_y = player.hitbox.centery
                 angle = math.atan2(target_y - start_y, target_x - start_x)
                 for i in range(-1, 2):
                     a = angle + i * cone_spread
+                    ex = start_x + math.cos(a) * 100
+                    ey = start_y + math.sin(a) * 100
+                    Enemy_Bullet(self.game, start_x, start_y, ex, ey)
+            elif self.burst_shot:
+                burst_spread = 0.08
+                target_x = player.hitbox.centerx
+                target_y = player.hitbox.centery
+                angle = math.atan2(target_y - start_y, target_x - start_x)
+                for i in range(-1, 2):
+                    a = angle + i * burst_spread
                     ex = start_x + math.cos(a) * 100
                     ey = start_y + math.sin(a) * 100
                     Enemy_Bullet(self.game, start_x, start_y, ex, ey)
@@ -261,6 +287,23 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
             if self._is_player_in_melee_range():
                 self.game.player.damage(self.attack_damage)
             self.melee_timer = 0
+
+    def _charge(self):
+        if not self.game.player:
+            return
+        if self.charge_timer == 0:
+            self.charge_timer = 20
+            dx = self.game.player.rect.centerx - self.rect.centerx
+            dy = self.game.player.rect.centery - self.rect.centery
+            vec = pygame.math.Vector2(dx, dy)
+            if vec.length() > 0:
+                vec = vec.normalize()
+            self.velocity = vec * self.charge_speed
+            self.direction = self.get_direction_from_velocity()
+        if self.game.player and self.rect.colliderect(self.game.player.rect):
+            self.game.player.damage(self.attack_damage)
+            self.charge_timer = -self.charge_cooldown
+            self.velocity = pygame.math.Vector2(0, 0)
 
     def _handle_blink(self):
         self.blink_timer += 1
@@ -313,6 +356,20 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         if distance <= self.detection_range:
             self.has_seen_player = True
 
+        if self.enrage_threshold > 0 and self.health / self.max_health <= self.enrage_threshold:
+            if not self.enraged:
+                self.enraged = True
+                self.speed_mod = self._base_speed_mod * self.enrage_speed_mult
+                self.attack_damage = int(self._base_damage * self.enrage_damage_mult)
+
+        if self.charge_timer > 0:
+            self.charge_timer -= 1
+            if self.charge_timer <= 0:
+                self.charge_timer = -self.charge_cooldown
+                self.velocity = pygame.math.Vector2(0, 0)
+        elif self.charge_timer < 0:
+            self.charge_timer += 1
+
         if not self.has_seen_player:
             state = "patrol"
         elif (
@@ -325,6 +382,8 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
             state = "retreat"
         elif self.wait_after_retreat > 0:
             state = "wait"
+        elif self.has_charge and self.charge_timer >= 0 and distance <= self.charge_range and distance > self.melee_range:
+            state = "charge"
         elif distance <= self.melee_range:
             state = "melee"
         elif distance <= self.attack_range and self.shoot_cooldown > 0:
@@ -344,6 +403,8 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
             self._ranged_attack()
         elif state == "melee":
             self._melee_attack()
+        elif state == "charge":
+            self._charge()
 
         if self.has_blink:
             if state in ["patrol", "chase"] and self.velocity.length() > 0:
@@ -371,6 +432,11 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
             self.animation_counter += 0.2
             if self.animation_counter >= self.frame_move:
                 self.animation_counter = 0
+
+        if self.enraged:
+            tinted = self.image.copy()
+            tinted.fill((255, 100, 100), special_flags=pygame.BLEND_RGB_MULT)
+            self.image = tinted
 
         if self.has_blink:
             self.image.set_alpha(255 if self.visible else 0)
@@ -432,6 +498,12 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         else:
             for _ in range(random.randint(1, 3)):
                 Coin(self.game, self.rect.centerx, self.rect.centery, coin_type="bronze")
+        if self.death_explosion:
+            for i in range(8):
+                angle = (i / 8) * math.pi * 2
+                ex = self.hitbox.centerx + math.cos(angle) * 100
+                ey = self.hitbox.centery + math.sin(angle) * 100
+                Enemy_Bullet(self.game, self.hitbox.centerx, self.hitbox.centery, ex, ey)
         self.kill()
 
     # ─── Room ─────────────────────────────────────────────────────

@@ -117,6 +117,11 @@ class Game:
         self._last_run_enemies = 0
         self._last_run_bosses = 0
         self._dungeon_built_rooms = set()
+        self.double_attack_unlocked = False
+        self.cone_attack_unlocked = False
+        self.pierce_unlocked = False
+        self.explode_unlocked = False
+        self.boomerang_unlocked = False
         self._door_frame_counter = 0
         self._pending_room_for_enemies = None
         self._sealed_rooms = {}
@@ -948,13 +953,20 @@ class Game:
                 self.dungeon_seed = save_data.get(
                     "dungeon_seed", random.randint(0, 1000000)
                 )
+                self.game_mode = "standard"
+                self.double_attack_unlocked = save_data.get("double_attack_unlocked", False)
+                self.cone_attack_unlocked = save_data.get("cone_attack_unlocked", False)
+                self.pierce_unlocked = save_data.get("pierce_unlocked", False)
+                self.explode_unlocked = save_data.get("explode_unlocked", False)
+                self.boomerang_unlocked = save_data.get("boomerang_unlocked", False)
                 self.main_menu.hide()
                 self.create()
+                if hasattr(self, "player") and self.player:
+                    self.player.coins = save_data.get("coins", 0)
                 self.hud.show()
                 self.game_state = "playing"
                 return True
             except Exception as e:
-                # print(f"Error loading save: {e}")
                 return False
         return False
 
@@ -1000,11 +1012,16 @@ class Game:
             "mode": self.mode,
             "world_seed": self.world_seed,
             "dungeon_seed": self.dungeon_seed,
+            "coins": getattr(self.player, "coins", 0) if hasattr(self, "player") and self.player else 0,
+            "double_attack_unlocked": self.double_attack_unlocked,
+            "cone_attack_unlocked": self.cone_attack_unlocked,
+            "pierce_unlocked": self.pierce_unlocked,
+            "explode_unlocked": self.explode_unlocked,
+            "boomerang_unlocked": self.boomerang_unlocked,
         }
         try:
             with open("savegame.json", "w") as f:
                 json.dump(save_data, f)
-            # print("Game saved!")
         except Exception as e:
             print(f"Error saving game: {e}")
 

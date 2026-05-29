@@ -175,10 +175,11 @@
     "retreat_distance": 0,
     "melee_range": 0,
     "damage": 1,
-    "shoot_cooldown": 25,
+    "shoot_cooldown": 40,
     "melee_cooldown": 0,
     "always_chase": true,
-    "has_blink": false
+    "has_blink": false,
+    "burst_shot": true
   },
   "7": {
     "sheet": "assets/enemy/fallen_warrior.png",
@@ -197,7 +198,7 @@
       "left": 3
     },
     "weight": 1,
-    "hp": 7,
+    "hp": 9,
     "speed_mod": 0.5,
     "detection_range": 300,
     "attack_range": 200,
@@ -208,7 +209,8 @@
     "shoot_cooldown": 25,
     "melee_cooldown": 0,
     "always_chase": true,
-    "has_blink": false
+    "has_blink": false,
+    "death_explosion": true
   },
   "8": {
     "sheet": "assets/enemy/BlackWidow.png",
@@ -259,18 +261,21 @@
       "left": 3
     },
     "weight": 1,
-    "hp": 7,
+    "hp": 6,
     "speed_mod": 2.0,
     "detection_range": 400,
     "attack_range": 0,
     "retreat_range": 0,
     "retreat_distance": 0,
     "melee_range": 80,
-    "damage": 1,
+    "damage": 2,
     "shoot_cooldown": 0,
-    "melee_cooldown": 10,
+    "melee_cooldown": 15,
     "always_chase": true,
-    "has_blink": false
+    "has_blink": false,
+    "enrage_threshold": 0.5,
+    "enrage_speed_mult": 2.0,
+    "enrage_damage_mult": 2.0
   },
   "10": {
     "sheet": "assets/enemy/toad.png",
@@ -290,8 +295,8 @@
       "left": 3
     },
     "weight": 1,
-    "hp": 7,
-    "speed_mod": 2.0,
+    "hp": 6,
+    "speed_mod": 1.5,
     "detection_range": 400,
     "attack_range": 0,
     "retreat_range": 0,
@@ -301,7 +306,11 @@
     "shoot_cooldown": 0,
     "melee_cooldown": 10,
     "always_chase": true,
-    "has_blink": false
+    "has_blink": false,
+    "has_charge": true,
+    "charge_range": 200,
+    "charge_speed": 6.0,
+    "charge_cooldown": 120
   },
   "11": {
     "sheet": "assets/enemy/witch1.png",

@@ -109,7 +109,7 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         self.hitbox = pygame.Rect(0, 0, self.cfg["hitbox_size"], self.cfg["hitbox_size"])
         self.hitbox.center = self.rect.center
 
-        self.max_health = self.cfg["hp"]
+        self.max_health = self.boss_cfg["hp"]
         self.health = self.max_health
         self.current_phase = 1
 
