@@ -70,5 +70,7 @@ class WeaponLoot(AnimatedLoot):
 
     def on_pickup(self, player):
         player.sword_equipped = True
+        player.double_attack_unlocked = True
+        player.game.double_attack_unlocked = True
         audio_manager.play_sound("menu_select")
         self.kill()

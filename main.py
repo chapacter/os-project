@@ -332,7 +332,7 @@ class Game:
 
         start_x, start_y = self.dungeon_generator.get_start_position()
         # print(f"[DEBUG] Player spawn position: {start_x}, {start_y}, map_size: {self.dungeon_generator.map_width}x{self.dungeon_generator.map_height}")
-        self.player = Player(self, start_x, start_y)
+        self.player = Player(self, start_x, start_y, self.double_attack_unlocked)
         # print(f"[DEBUG] Player created at: {self.player.rect.x}, {self.player.rect.y}")
 
         if hasattr(self, "camera"):
@@ -618,7 +618,7 @@ class Game:
         self.create_dungeon_doors()
         self.spawn_dungeon_enemies()
         start_x, start_y = self.dungeon_generator.get_start_position()
-        self.player = Player(self, start_x, start_y)
+        self.player = Player(self, start_x, start_y, self.double_attack_unlocked)
         self.camera.set_map_size(
             self.dungeon_generator.map_width * TILESIZE,
             self.dungeon_generator.map_height * TILESIZE,
@@ -827,6 +827,7 @@ class Game:
         self.current_dungeon_floor = 1
         self.world_seed = random.randint(0, 1000000)
         self.dungeon_seed = random.randint(0, 1000000)
+        self.double_attack_unlocked = False
         self.main_menu.hide()
         self.create()
         self.hud.show()

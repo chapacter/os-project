@@ -10,7 +10,7 @@ from utils.settings import *
 
 
 class Player(VectorEntity, pygame.sprite.Sprite):
-    def __init__(self, game, x, y):
+    def __init__(self, game, x, y, double_attack_unlocked=False):
         self.game = game
         self._layer = PLAYER_LAYER
 
@@ -91,6 +91,10 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         VectorEntity.__init__(self, game, "player", 4)
 
         self.sword_equipped = True
+        self.double_attack_unlocked = double_attack_unlocked
+        self._pending_double_attack = False
+        self._double_attack_delay = 0
+        self._last_attack_data = None
 
         self.counter = 0
         self.wait_time = 10
@@ -213,6 +217,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         self.collide_enemy()
         self.collide_weapon()
         self.attack()
+        self._update_double_attack()
         self.apply_movement()
 
         self.dodge_cooldown_update()
@@ -365,15 +370,16 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         else:
             self.attack_direction = "down" if attack_dir.y > 0 else "up"
 
-        force = SWORD_KNOCKBACK_FORCE if self.sword_equipped else BULLET_KNOCKBACK_FORCE
-        Bullet(
-            self.game,
-            start_x,
-            start_y,
-            start_x + attack_dir.x,
-            start_y + attack_dir.y,
-            knockback_force=force,
-        )
+        target_x = start_x + attack_dir.x
+        target_y = start_y + attack_dir.y
+
+        self._spawn_bullet(target_x, target_y)
+        self._last_attack_data = {"target_x": target_x, "target_y": target_y}
+
+        if self.double_attack_unlocked and not self._pending_double_attack:
+            self._pending_double_attack = True
+            self._double_attack_delay = 5
+
         self._finish_attack()
 
     def _attack_cursor(self):
@@ -386,16 +392,40 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         else:
             self.attack_direction = "down" if dy > 0 else "up"
 
+        target_x = mouse_world[0]
+        target_y = mouse_world[1]
+
+        self._spawn_bullet(target_x, target_y)
+        self._last_attack_data = {"target_x": target_x, "target_y": target_y}
+
+        if self.double_attack_unlocked and not self._pending_double_attack:
+            self._pending_double_attack = True
+            self._double_attack_delay = 5
+
+        self._finish_attack()
+
+    def _update_double_attack(self):
+        if self._pending_double_attack:
+            self._double_attack_delay -= 1
+            if self._double_attack_delay <= 0:
+                self._pending_double_attack = False
+                if self._last_attack_data:
+                    self._spawn_bullet(
+                        self._last_attack_data["target_x"],
+                        self._last_attack_data["target_y"],
+                    )
+                    audio_manager.play_sound("swipe")
+
+    def _spawn_bullet(self, target_x, target_y):
         force = SWORD_KNOCKBACK_FORCE if self.sword_equipped else BULLET_KNOCKBACK_FORCE
         Bullet(
             self.game,
             self.hitbox.centerx,
             self.hitbox.centery,
-            mouse_world[0],
-            mouse_world[1],
+            target_x,
+            target_y,
             knockback_force=force,
         )
-        self._finish_attack()
 
     def _finish_attack(self):
         if self.action_state != "dodge":
@@ -445,6 +475,8 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         super().damage(amount)
 
     def _on_death(self):
+        self.double_attack_unlocked = False
+        self.game.double_attack_unlocked = False
         self.kill()
         if hasattr(self.game, "game_over"):
             self.game.game_over()
