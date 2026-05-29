@@ -10,7 +10,8 @@ from utils.settings import *
 
 
 class Player(VectorEntity, pygame.sprite.Sprite):
-    def __init__(self, game, x, y, double_attack_unlocked=False):
+    def __init__(self, game, x, y, coins=0, double_attack_unlocked=False, cone_attack_unlocked=False,
+                 pierce_unlocked=False, explode_unlocked=False, boomerang_unlocked=False):
         self.game = game
         self._layer = PLAYER_LAYER
 
@@ -91,7 +92,12 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         VectorEntity.__init__(self, game, "player", 4)
 
         self.sword_equipped = True
+        self.coins = coins
         self.double_attack_unlocked = double_attack_unlocked
+        self.cone_attack_unlocked = cone_attack_unlocked
+        self.pierce_unlocked = pierce_unlocked
+        self.explode_unlocked = explode_unlocked
+        self.boomerang_unlocked = boomerang_unlocked
         self._pending_double_attack = False
         self._double_attack_delay = 0
         self._last_attack_data = None
@@ -373,13 +379,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         target_x = start_x + attack_dir.x
         target_y = start_y + attack_dir.y
 
-        self._spawn_bullet(target_x, target_y)
-        self._last_attack_data = {"target_x": target_x, "target_y": target_y}
-
-        if self.double_attack_unlocked and not self._pending_double_attack:
-            self._pending_double_attack = True
-            self._double_attack_delay = 5
-
+        self._execute_attack(target_x, target_y)
         self._finish_attack()
 
     def _attack_cursor(self):
@@ -392,17 +392,30 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         else:
             self.attack_direction = "down" if dy > 0 else "up"
 
-        target_x = mouse_world[0]
-        target_y = mouse_world[1]
+        self._execute_attack(mouse_world[0], mouse_world[1])
+        self._finish_attack()
 
-        self._spawn_bullet(target_x, target_y)
-        self._last_attack_data = {"target_x": target_x, "target_y": target_y}
+    def _execute_attack(self, target_x, target_y):
+        base_x, base_y = self.hitbox.centerx, self.hitbox.centery
+        angle = math.atan2(target_y - base_y, target_x - base_x)
+
+        if self.cone_attack_unlocked:
+            self._fire_cone(angle)
+        else:
+            self._spawn_bullet(target_x, target_y)
 
         if self.double_attack_unlocked and not self._pending_double_attack:
+            self._last_attack_data = {"angle": angle}
             self._pending_double_attack = True
             self._double_attack_delay = 5
 
-        self._finish_attack()
+    def _fire_cone(self, angle):
+        spread = [-0.2, 0, 0.2]
+        for s in spread:
+            a = angle + s
+            tx = self.hitbox.centerx + math.cos(a) * 100
+            ty = self.hitbox.centery + math.sin(a) * 100
+            self._spawn_bullet(tx, ty)
 
     def _update_double_attack(self):
         if self._pending_double_attack:
@@ -410,10 +423,13 @@ class Player(VectorEntity, pygame.sprite.Sprite):
             if self._double_attack_delay <= 0:
                 self._pending_double_attack = False
                 if self._last_attack_data:
-                    self._spawn_bullet(
-                        self._last_attack_data["target_x"],
-                        self._last_attack_data["target_y"],
-                    )
+                    angle = self._last_attack_data["angle"]
+                    if self.cone_attack_unlocked:
+                        self._fire_cone(angle)
+                    else:
+                        tx = self.hitbox.centerx + math.cos(angle) * 100
+                        ty = self.hitbox.centery + math.sin(angle) * 100
+                        self._spawn_bullet(tx, ty)
                     audio_manager.play_sound("swipe")
 
     def _spawn_bullet(self, target_x, target_y):
@@ -425,6 +441,9 @@ class Player(VectorEntity, pygame.sprite.Sprite):
             target_x,
             target_y,
             knockback_force=force,
+            piercing=self.pierce_unlocked,
+            explosive=self.explode_unlocked,
+            boomerang=self.boomerang_unlocked,
         )
 
     def _finish_attack(self):
@@ -475,8 +494,10 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         super().damage(amount)
 
     def _on_death(self):
-        self.double_attack_unlocked = False
-        self.game.double_attack_unlocked = False
+        for flag in ("double_attack_unlocked", "cone_attack_unlocked",
+                     "pierce_unlocked", "explode_unlocked", "boomerang_unlocked"):
+            setattr(self, flag, False)
+            setattr(self.game, flag, False)
         self.kill()
         if hasattr(self.game, "game_over"):
             self.game.game_over()

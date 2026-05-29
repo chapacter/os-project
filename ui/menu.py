@@ -49,6 +49,8 @@ class MainMenu:
         self.story_timer = 0.0
         self.story_full_text = ""
         self.story_panel_rect = pygame.Rect(0, 0, 540, 200)
+        self.confirm_new_game = False
+        self.confirm_hovered = -1
         self.create_widgets()
 
     def create_widgets(self):
@@ -79,6 +81,9 @@ class MainMenu:
                 "y_offset": -80 + self.button_spacing * 4,
             },
         ]
+
+        self.confirm_new_game_rect = pygame.Rect(center_x - 210, center_y + 30, 200, 50)
+        self.confirm_continue_rect = pygame.Rect(center_x + 10, center_y + 30, 200, 50)
 
         for config in button_configs:
             rect = pygame.Rect(
@@ -128,6 +133,9 @@ class MainMenu:
     #     return combined
 
     def handle_event(self, event):
+        if self.confirm_new_game:
+            self._handle_confirm_event(event)
+            return
         self.manager.process_events(event)
         if event.type == pygame.MOUSEMOTION:
             if self.title_rect.collidepoint(event.pos):
@@ -170,6 +178,10 @@ class MainMenu:
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
             audio_manager.play_sound("menu_select")
             if event.ui_object_id == "standard_button":
+                if self._has_save_file():
+                    self.confirm_new_game = True
+                    self.confirm_hovered = -1
+                    return
                 self.is_active = False
                 self.game.start_standard()
             elif event.ui_object_id == "arena_button":
@@ -370,6 +382,17 @@ class MainMenu:
             notif_rect = notif_surf.get_rect(center=(center_x, center_y + 270))
             surface.blit(notif_surf, notif_rect)
 
+        gold = (255, 215, 0)
+        total_coins = getattr(self.game, 'total_coins', 0)
+        coins_surf = font_manager.render(
+            font_manager.t("menu.total_coins").format(total_coins), 24, gold, shadow=BLACK)
+        coins_rect = coins_surf.get_rect(center=(center_x, center_y + 300))
+        surface.blit(coins_surf, coins_rect)
+
+        if self.confirm_new_game:
+            self._draw_confirm_dialog(surface, center_x, center_y)
+            return
+
         for btn_id, btn in self.buttons.items():
             text = font_manager.t(btn["text_key"])
 
@@ -390,8 +413,92 @@ class MainMenu:
 
             pygame.draw.rect(surface, frame_color, btn["rect"], 2)
 
+    def _handle_confirm_event(self, event):
+        if event.type == pygame.MOUSEMOTION:
+            prev = self.confirm_hovered
+            if self.confirm_new_game_rect.collidepoint(event.pos):
+                self.confirm_hovered = 0
+            elif self.confirm_continue_rect.collidepoint(event.pos):
+                self.confirm_hovered = 1
+            else:
+                self.confirm_hovered = -1
+            if prev != self.confirm_hovered and self.confirm_hovered >= 0:
+                audio_manager.play_sound("menu_move")
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            if self.confirm_hovered == 0:
+                audio_manager.play_sound("menu_select")
+                self.game.clear_save()
+                self.confirm_new_game = False
+                self.is_active = False
+                self.game.start_standard()
+            elif self.confirm_hovered == 1:
+                audio_manager.play_sound("menu_select")
+                self.confirm_new_game = False
+                if not self.game.load_game():
+                    self.show_notification("Нет доступного сохранения")
+                else:
+                    self.is_active = False
+        elif event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_ESCAPE:
+                self.confirm_new_game = False
+                self.confirm_hovered = -1
+                audio_manager.play_sound("menu_select")
+            elif event.key in (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_a, pygame.K_d):
+                self.confirm_hovered = 1 - self.confirm_hovered if self.confirm_hovered >= 0 else 0
+                audio_manager.play_sound("menu_move")
+            elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
+                audio_manager.play_sound("menu_select")
+                if self.confirm_hovered == 0:
+                    self.game.clear_save()
+                    self.confirm_new_game = False
+                    self.is_active = False
+                    self.game.start_standard()
+                elif self.confirm_hovered == 1:
+                    self.confirm_new_game = False
+                    if not self.game.load_game():
+                        self.show_notification("Нет доступного сохранения")
+                    else:
+                        self.is_active = False
+
+    def _draw_confirm_dialog(self, surface, center_x, center_y):
+        overlay = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
+        overlay.fill((0, 0, 0, 140))
+        surface.blit(overlay, (0, 0))
+
+        panel = pygame.Rect(center_x - 600, center_y - 120, 1200, 240)
+        pygame.draw.rect(surface, PANEL_BG, panel)
+        pygame.draw.rect(surface, BORDER_COLOR, panel, 2)
+
+        title_surf = font_manager.render(
+            font_manager.t("menu.confirm_new_game_title"), 36, RED, shadow=BLACK)
+        title_rect = title_surf.get_rect(center=(center_x, center_y - 80))
+        surface.blit(title_surf, title_rect)
+
+        gray = (200, 200, 200)
+        line1 = font_manager.t("menu.confirm_new_game_line1")
+        line2 = font_manager.t("menu.confirm_new_game_line2")
+        line1_surf = font_manager.render(line1, 20, gray, shadow=BLACK)
+        line1_rect = line1_surf.get_rect(center=(center_x, center_y - 30))
+        surface.blit(line1_surf, line1_rect)
+        line2_surf = font_manager.render(line2, 20, gray, shadow=BLACK)
+        line2_rect = line2_surf.get_rect(center=(center_x, center_y - 5))
+        surface.blit(line2_surf, line2_rect)
+
+        for i, (rect, key) in enumerate([
+            (self.confirm_new_game_rect, "menu.confirm_new_game"),
+            (self.confirm_continue_rect, "menu.continue"),
+        ]):
+            focused = self.confirm_hovered == i
+            color = YELLOW if focused else WHITE
+            text_surf = font_manager.render(font_manager.t(key), 24, color, shadow=BLACK)
+            text_rect = text_surf.get_rect(center=rect.center)
+            surface.blit(text_surf, text_rect)
+            pygame.draw.rect(surface, color, rect, 2)
+
     def show(self):
         self.reset_story()
+        self.confirm_new_game = False
+        self.confirm_hovered = -1
         self._update_continue_button_state()
         self.is_active = True
 

@@ -425,6 +425,13 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
 
     def _on_death(self):
         self.healthbar.kill_bar()
+        from items.coin import Coin
+        if self.enemy_type in (13, 14):
+            for _ in range(random.randint(1, 3)):
+                Coin(self.game, self.rect.centerx, self.rect.centery, coin_type="silver")
+        else:
+            for _ in range(random.randint(1, 3)):
+                Coin(self.game, self.rect.centerx, self.rect.centery, coin_type="bronze")
         self.kill()
 
     # ─── Room ─────────────────────────────────────────────────────

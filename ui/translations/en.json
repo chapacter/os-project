@@ -26,6 +26,14 @@
   "settings.dungeon_music_volume": "Dungeon music volume",
   "settings.sfx_volume": "SFX volume",
   "settings.back": "Back",
+  "game_over.enemies_killed": "Enemies killed: {0}",
+  "game_over.bosses_killed": "Bosses killed: {0}",
+  "game_over.coins_collected": "Coins collected: {0}",
+  "menu.total_coins": "Total coins: {0}",
+  "menu.confirm_new_game_title": "Warning!",
+  "menu.confirm_new_game_line1": "A saved game exists.",
+  "menu.confirm_new_game_line2": "Starting a new game will erase all resources collected in the saved run.",
+  "menu.confirm_new_game": "New Game",
   "story.text": "A small but brave kitten falls asleep in his cozy bed. He has no idea that this night will change everything. For the first time in his life, he is visited by an incredibly vivid dream, dragging the hero into the depths of a shifting and perilous dungeon. To return to his ordinary feline life, \"The Great Child\" must endure dozens of deadly trials (through the 9 circles of Hell, no less). And even if this nightmare cuts his journey short, the fluffy hero will awaken here time and time again (BECAUSE YOU CAN'T JUST LEAVE HELL!!), donning new mystical guises. Will our brave \"The Great Child\" overcome the creatures of darkness (AND BECOME THE NEW KING OF HELL!!), or will this dream turn into an eternal nightmare?",
   "story.read_hint": "Read backstory"
 }

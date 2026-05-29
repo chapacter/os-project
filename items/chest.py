@@ -26,6 +26,18 @@ class Chest(Item):
         self.rect.x = self.x
         self.rect.y = self.y
 
+        self._weapon_type = self._pick_weapon_type()
+
+    def _pick_weapon_type(self):
+        types = list(WEAPON_TYPES.keys())
+        seed = getattr(self.game, "dungeon_seed", 0) or 0
+        floor = getattr(self.game, "current_dungeon_floor", 1) or 1
+        h = seed
+        h = h * 31 + floor
+        h = h * 31 + int(self.x)
+        h = h * 31 + int(self.y)
+        return types[abs(h) % len(types)]
+
     def _update_sprite(self):
         floor = getattr(self.game, "current_dungeon_floor", 1)
         theme = FLOOR_THEMES.get(floor, FLOOR_THEMES[1])
@@ -48,7 +60,7 @@ class Chest(Item):
         self.opened = True
         self._update_sprite()
 
-        WeaponLoot(self.game, self.x, self.y)
+        WeaponLoot(self.game, self.x, self.y, weapon_type=self._weapon_type)
 
         for _ in range(2):
             Food(self.game, self.x, self.y)

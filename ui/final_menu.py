@@ -139,6 +139,25 @@ class FinalMenu:
             notif_rect = notif_surf.get_rect(center=(center_x, notif_y))
             surface.blit(notif_surf, notif_rect)
 
+        g = self.game
+        stat_y = center_y + 165
+        gold = (255, 215, 0)
+        enemies_text = font_manager.render(
+            font_manager.t("game_over.enemies_killed").format(getattr(g, '_last_run_enemies', 0)),
+            22, WHITE, shadow=BLACK)
+        enemies_rect = enemies_text.get_rect(center=(center_x, stat_y))
+        surface.blit(enemies_text, enemies_rect)
+        bosses_text = font_manager.render(
+            font_manager.t("game_over.bosses_killed").format(getattr(g, '_last_run_bosses', 0)),
+            22, WHITE, shadow=BLACK)
+        bosses_rect = bosses_text.get_rect(center=(center_x, stat_y + 25))
+        surface.blit(bosses_text, bosses_rect)
+        coins_text = font_manager.render(
+            font_manager.t("game_over.coins_collected").format(getattr(g, '_last_run_coins', 0)),
+            22, gold, shadow=BLACK)
+        coins_rect = coins_text.get_rect(center=(center_x, stat_y + 50))
+        surface.blit(coins_text, coins_rect)
+
     def show(self):
         self.is_active = True
 

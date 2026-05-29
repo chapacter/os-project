@@ -7,6 +7,10 @@ from entity.factories.effect_factory import EffectFactory
 from utils.settings import *
 
 
+EXPLOSION_RADIUS = 48
+BOOMERANG_TURN_DISTANCE = 250
+
+
 class Bullet(pygame.sprite.Sprite):
     def __init__(
             self,
@@ -17,6 +21,9 @@ class Bullet(pygame.sprite.Sprite):
             target_y,
             scatter=0,
             knockback_force=None,
+            piercing=False,
+            explosive=False,
+            boomerang=False,
     ):
         self.game = game
         self._layer = PLAYER_LAYER
@@ -50,22 +57,49 @@ class Bullet(pygame.sprite.Sprite):
 
         self.damage = 3
 
+        self.piercing = piercing
+        self.explosive = explosive
+        self.boomerang = boomerang
+        self._hit_enemies = []
+        self._returning = False
+
     def move(self):
         self.x += self.dx
         self.y += self.dy
         self.rect.center = (self.x, self.y)
         self.distance_traveled += BULLET_SPEED
+
+        if self.boomerang:
+            if not self._returning and self.distance_traveled >= BOOMERANG_TURN_DISTANCE:
+                self._returning = True
+            if self._returning:
+                px, py = self.game.player.rect.center
+                angle = math.atan2(py - self.y, px - self.x)
+                self.dx = math.cos(angle) * BULLET_SPEED
+                self.dy = math.sin(angle) * BULLET_SPEED
+                if math.hypot(self.x - px, self.y - py) < 20:
+                    self.kill()
+                    return
+
         if self.distance_traveled >= BULLET_MAX_DISTANCE:
-            self.kill()
+            if self.explosive:
+                self.explode()
+            else:
+                self.kill()
 
     def collide_block(self):
         collide = pygame.sprite.spritecollide(self, self.game.blocks, False)
         if collide:
-            self.kill()
+            if self.explosive:
+                self.explode()
+            else:
+                self.kill()
 
     def collide_enemy(self):
         for enemy in self.game.enemies:
-            if self.rect.colliderect(enemy.hitbox):
+            if self.rect.colliderect(enemy.hitbox) and enemy not in self._hit_enemies:
+                self._hit_enemies.append(enemy)
+
                 knockback_dir = pygame.math.Vector2(
                     enemy.rect.centerx - self.rect.centerx,
                     enemy.rect.centery - self.rect.centery,
@@ -76,11 +110,37 @@ class Bullet(pygame.sprite.Sprite):
                     knockback_dir = self.hit_dir.copy()
 
                 EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "hit",
-                                                groups=[self.game.all_sprites], )
+                                                groups=[self.game.all_sprites])
                 enemy.take_knockback(knockback_dir, self.knockback_force)
                 enemy.damage(self.damage)
-                self.kill()
-                break
+
+                if self.explosive:
+                    self.explode(kill=not self.piercing)
+                    if not self.piercing:
+                        return
+                elif not self.piercing:
+                    self.kill()
+                    return
+
+    def explode(self, kill=True):
+        for enemy in self.game.enemies:
+            dist = math.hypot(
+                self.rect.centerx - enemy.rect.centerx,
+                self.rect.centery - enemy.rect.centery,
+            )
+            if dist < EXPLOSION_RADIUS:
+                dir = pygame.math.Vector2(
+                    enemy.rect.centerx - self.rect.centerx,
+                    enemy.rect.centery - self.rect.centery,
+                )
+                if dir.length() > 0:
+                    dir = dir.normalize()
+                enemy.take_knockback(dir, self.knockback_force * 1.5)
+                enemy.damage(self.damage)
+        EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "hit",
+                                        groups=[self.game.all_sprites])
+        if kill:
+            self.kill()
 
     def update(self):
         self.move()
@@ -112,6 +172,9 @@ class Enemy_Bullet(pygame.sprite.Sprite):
         self.height = TILESIZE
 
         self.image, _ = game.effects_spritesheet.get_effect("bullet", SPRITE_EFFECTS)
+        tinted = self.image.copy()
+        tinted.fill(pygame.Color(255, 80, 80), special_flags=pygame.BLEND_RGB_MULT)
+        self.image = tinted
         self.rect = self.image.get_rect()
         self.rect.center = (start_x, start_y)
 

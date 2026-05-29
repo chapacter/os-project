@@ -1,32 +1,37 @@
 {
   "0": {
-    "name": "sword",
-    "sheet": "sword.png",
-    "grid": [
-      3,
-      1
-    ],
+    "name": "double_weapon",
+    "sheet": "double_weapon.png",
+    "grid": [1, 1],
     "col": 0,
     "damage": 1
   },
   "1": {
-    "name": "axe",
-    "sheet": "sword.png",
-    "grid": [
-      3,
-      1
-    ],
-    "col": 1,
+    "name": "cone_weapon",
+    "sheet": "cone_weapon.png",
+    "grid": [1, 1],
+    "col": 0,
     "damage": 1
   },
   "2": {
-    "name": "mace",
-    "sheet": "sword.png",
-    "grid": [
-      3,
-      1
-    ],
-    "col": 2,
+    "name": "pierce_weapon",
+    "sheet": "pierce_weapon.png",
+    "grid": [1, 1],
+    "col": 0,
+    "damage": 1
+  },
+  "3": {
+    "name": "explode_weapon",
+    "sheet": "explode_weapon.png",
+    "grid": [1, 1],
+    "col": 0,
+    "damage": 1
+  },
+  "4": {
+    "name": "boomerang_weapon",
+    "sheet": "boomerang_weapon.png",
+    "grid": [1, 1],
+    "col": 0,
     "damage": 1
   }
 }

@@ -480,6 +480,9 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
     def _on_death(self):
         if self.healthbar:
             self.healthbar.kill_bar()
+        from items.coin import Coin
+        for _ in range(random.randint(3, 5)):
+            Coin(self.game, self.rect.centerx, self.rect.centery, coin_type="gold")
         self.kill()
 
     def _get_current_room_coord(self):

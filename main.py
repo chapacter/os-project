@@ -49,6 +49,9 @@ from utils.settings import *
 # ─── AI Helpers ───────────────────────────────────────────────
 
 
+STATS_FILE = "stats.json"
+
+
 class GameMode:
     WORLD = "world"
     DUNGEON = "dungeon"
@@ -107,6 +110,12 @@ class Game:
         self.dungeon_generator = None
         self.current_dungeon_floor = 1
         self._bosses_defeated: set[int] = set()
+        self._run_enemies_killed = 0
+        self._run_bosses_killed = 0
+        self.total_coins = 0
+        self._last_run_coins = 0
+        self._last_run_enemies = 0
+        self._last_run_bosses = 0
         self._dungeon_built_rooms = set()
         self._door_frame_counter = 0
         self._pending_room_for_enemies = None
@@ -151,6 +160,7 @@ class Game:
         self.target_scale = self.scale
         self.current_scale = self.scale
         self.scale_speed = 0.1
+        self._load_stats()
 
     def create_window(self):
         mode = config.get_window_mode()
@@ -310,6 +320,7 @@ class Game:
     def load_dungeon_floor(self):
         if self.dungeon_map:
             self.dungeon_map.visible = False
+        saved_coins = getattr(self.player, 'coins', 0) if hasattr(self, 'player') and self.player else 0
         self.clear_sprites()
         self._dungeon_built_rooms = set()
         self._sealed_rooms = {}
@@ -332,7 +343,13 @@ class Game:
 
         start_x, start_y = self.dungeon_generator.get_start_position()
         # print(f"[DEBUG] Player spawn position: {start_x}, {start_y}, map_size: {self.dungeon_generator.map_width}x{self.dungeon_generator.map_height}")
-        self.player = Player(self, start_x, start_y, self.double_attack_unlocked)
+        self.player = Player(self, start_x, start_y,
+                             coins=saved_coins,
+                             double_attack_unlocked=self.double_attack_unlocked,
+                             cone_attack_unlocked=self.cone_attack_unlocked,
+                             pierce_unlocked=self.pierce_unlocked,
+                             explode_unlocked=self.explode_unlocked,
+                             boomerang_unlocked=self.boomerang_unlocked)
         # print(f"[DEBUG] Player created at: {self.player.rect.x}, {self.player.rect.y}")
 
         if hasattr(self, "camera"):
@@ -349,11 +366,14 @@ class Game:
 
     def _on_enemy_killed(self, entity) -> None:
         if isinstance(entity, Boss):
+            self._run_bosses_killed += 1
             self._bosses_defeated.add(self.current_dungeon_floor)
             bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
             audio_manager.load_music(bg_music)
             mult = 1.5 if self.current_dungeon_floor == 3 else 1.0
             audio_manager.play_music(context="dungeon", volume_multiplier=mult)
+        else:
+            self._run_enemies_killed += 1
         if hasattr(self, "dungeon_generator"):
             room_coord = entity._get_current_room_coord()
             room = self.dungeon_generator.rooms.get(room_coord)
@@ -594,6 +614,11 @@ class Game:
             self.current_dungeon_floor += 1
             self.fade_out(lambda: self._reload_dungeon_floor())
         elif self.game_mode == "standard":
+            self._last_run_coins = getattr(self.player, 'coins', 0) if hasattr(self, 'player') and self.player else 0
+            self._last_run_enemies = self._run_enemies_killed
+            self._last_run_bosses = self._run_bosses_killed
+            self.total_coins += self._last_run_coins
+            self._save_stats()
             self.game_state = "final_menu"
             self.final_menu.show()
         else:
@@ -602,6 +627,7 @@ class Game:
     def _reload_dungeon_floor(self):
         if self.dungeon_map:
             self.dungeon_map.visible = False
+        saved_coins = getattr(self.player, 'coins', 0) if hasattr(self, 'player') and self.player else 0
         self.clear_sprites()
         self._dungeon_built_rooms = set()
         self._sealed_rooms = {}
@@ -618,7 +644,13 @@ class Game:
         self.create_dungeon_doors()
         self.spawn_dungeon_enemies()
         start_x, start_y = self.dungeon_generator.get_start_position()
-        self.player = Player(self, start_x, start_y, self.double_attack_unlocked)
+        self.player = Player(self, start_x, start_y,
+                             coins=saved_coins,
+                             double_attack_unlocked=self.double_attack_unlocked,
+                             cone_attack_unlocked=self.cone_attack_unlocked,
+                             pierce_unlocked=self.pierce_unlocked,
+                             explode_unlocked=self.explode_unlocked,
+                             boomerang_unlocked=self.boomerang_unlocked)
         self.camera.set_map_size(
             self.dungeon_generator.map_width * TILESIZE,
             self.dungeon_generator.map_height * TILESIZE,
@@ -828,6 +860,13 @@ class Game:
         self.world_seed = random.randint(0, 1000000)
         self.dungeon_seed = random.randint(0, 1000000)
         self.double_attack_unlocked = False
+        self._run_enemies_killed = 0
+        self._run_bosses_killed = 0
+        self.cone_attack_unlocked = False
+        self.pierce_unlocked = False
+        self.explode_unlocked = False
+        self.boomerang_unlocked = False
+        self.player = None
         self.main_menu.hide()
         self.create()
         self.hud.show()
@@ -837,6 +876,8 @@ class Game:
         self.game_mode = "arena"
         self.current_dungeon_floor = 0
         self.arena_spawn_timer = 0
+        self._run_enemies_killed = 0
+        self._run_bosses_killed = 0
         self.main_menu.hide()
         self.create()
         self.hud.show()
@@ -899,7 +940,6 @@ class Game:
                     save_data = json.load(f)
                 if not save_data.get("save_valid", False):
                     return False
-                self.game_state = "playing"
                 self.current_zone = tuple(save_data.get("zone", (0, 0)))
                 self.current_dungeon_floor = save_data.get("floor", 1)
                 self.world_seed = save_data.get(
@@ -911,6 +951,7 @@ class Game:
                 self.main_menu.hide()
                 self.create()
                 self.hud.show()
+                self.game_state = "playing"
                 return True
             except Exception as e:
                 # print(f"Error loading save: {e}")
@@ -926,6 +967,30 @@ class Game:
             return save_data.get("save_valid", False)
         except Exception:
             return False
+
+    def _load_stats(self):
+        self.total_coins = 0
+        try:
+            if os.path.exists(STATS_FILE):
+                with open(STATS_FILE) as f:
+                    data = json.load(f)
+                    self.total_coins = data.get("total_coins", 0)
+        except Exception:
+            pass
+
+    def _save_stats(self):
+        try:
+            with open(STATS_FILE, "w") as f:
+                json.dump({"total_coins": self.total_coins}, f)
+        except Exception as e:
+            print(f"Error saving stats: {e}")
+
+    def clear_save(self):
+        if os.path.exists("savegame.json"):
+            try:
+                os.remove("savegame.json")
+            except Exception as e:
+                print(f"Error removing save: {e}")
 
     def save_game(self):
         save_data = {
@@ -944,6 +1009,12 @@ class Game:
             print(f"Error saving game: {e}")
 
     def game_over(self):
+        self._last_run_coins = getattr(self.player, 'coins', 0) if hasattr(self, 'player') and self.player else 0
+        self._last_run_enemies = self._run_enemies_killed
+        self._last_run_bosses = self._run_bosses_killed
+        self.total_coins += self._last_run_coins
+        self._save_stats()
+
         if os.path.exists("savegame.json"):
             try:
                 with open("savegame.json", "r") as f:

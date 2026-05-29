@@ -68,9 +68,20 @@ class WeaponLoot(AnimatedLoot):
         self._init_flight()
         self._init_animation()
 
+    _FLAG_MAP = {
+        "double_weapon": "double_attack_unlocked",
+        "cone_weapon": "cone_attack_unlocked",
+        "pierce_weapon": "pierce_unlocked",
+        "explode_weapon": "explode_unlocked",
+        "boomerang_weapon": "boomerang_unlocked",
+    }
+
     def on_pickup(self, player):
         player.sword_equipped = True
-        player.double_attack_unlocked = True
-        player.game.double_attack_unlocked = True
+        name = self.config["name"]
+        flag = self._FLAG_MAP.get(name)
+        if flag:
+            setattr(player, flag, True)
+            setattr(player.game, flag, True)
         audio_manager.play_sound("menu_select")
         self.kill()
