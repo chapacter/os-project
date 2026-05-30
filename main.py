@@ -1,3 +1,4 @@
+import asyncio
 import json
 import os
 import random
@@ -45,7 +46,6 @@ from utils.config import get_language, get_font
 from utils.physics import PhysicsEngine
 from utils.settings import *
 
-
 # ─── AI Helpers ───────────────────────────────────────────────
 
 
@@ -75,28 +75,6 @@ class Game:
         self.scale = config.get_scale()
         self.sc = self.create_window()
         self.clock = pygame.time.Clock()
-        self.terrain_spritesheet = Spritesheet("assets/blocs.png")
-        self.player_spritesheet = Spritesheet(SPRITE_PLAYER["sheet"])
-        self.enemy_spritesheets = {
-            enemy_type: Spritesheet(cfg["sheet"])
-            for enemy_type, cfg in ENEMY_TYPES.items()
-        }
-        self.weapon_spritesheet = Spritesheet("assets/sword.png")
-        self.effects_spritesheet = Spritesheet("assets/effects.png")
-
-        audio_manager.init()
-        pygame.key.set_repeat(200, 15)
-        audio_manager.load_sound("hit", "assets/sounds/Hit.wav")
-        audio_manager.load_sound("swipe", "assets/sounds/Swipe.wav")
-        audio_manager.load_sound("evade", "assets/sounds/Evade.wav")
-        audio_manager.load_sound("pause", "assets/sounds/Pause.wav")
-        audio_manager.load_sound("unpause", "assets/sounds/Unpause.wav")
-        audio_manager.load_sound("menu_select", "assets/sounds/Menu Select.wav")
-        audio_manager.load_sound("menu_move", "assets/sounds/Menu Move.wav")
-        audio_manager.load_music("assets/sounds/Menu_beholder.mp3")
-        audio_manager.play_music(context="menu", volume_multiplier=2.0)
-        print(f"[DEBUG] Audio initialized: {audio_manager.initialized}")
-        print(f"[DEBUG] Loaded sounds: {list(audio_manager.sounds.keys())}")
 
         self.running = True
         self.enemy_collided = False
@@ -132,7 +110,6 @@ class Game:
         self.fade_direction = 0
         self.fade_callback = None
 
-        self.tmx_loader = TiledLoader(self)
         self.current_tmx_map = None
 
         self.game_state = "menu"
@@ -166,6 +143,33 @@ class Game:
         self.current_scale = self.scale
         self.scale_speed = 0.1
         self._load_stats()
+
+    async def async_init(self):
+        loop = asyncio.get_event_loop()
+        self.terrain_spritesheet = await loop.run_in_executor(None, Spritesheet, "assets/blocs.png")
+        self.player_spritesheet = await loop.run_in_executor(None, Spritesheet, SPRITE_PLAYER["sheet"])
+        self.enemy_spritesheets = {}
+        for enemy_type, cfg in ENEMY_TYPES.items():
+            sheet = await loop.run_in_executor(None, Spritesheet, cfg["sheet"])
+            self.enemy_spritesheets[enemy_type] = sheet
+        self.weapon_spritesheet = await loop.run_in_executor(None, Spritesheet, "assets/sword.png")
+        self.effects_spritesheet = await loop.run_in_executor(None, Spritesheet, "assets/effects.png")
+
+        audio_manager.init()
+        pygame.key.set_repeat(200, 15)
+        audio_manager.load_sound("hit", "assets/sounds/Hit.wav")
+        audio_manager.load_sound("swipe", "assets/sounds/Swipe.wav")
+        audio_manager.load_sound("evade", "assets/sounds/Evade.wav")
+        audio_manager.load_sound("pause", "assets/sounds/Pause.wav")
+        audio_manager.load_sound("unpause", "assets/sounds/Unpause.wav")
+        audio_manager.load_sound("menu_select", "assets/sounds/Menu Select.wav")
+        audio_manager.load_sound("menu_move", "assets/sounds/Menu Move.wav")
+        audio_manager.load_music("assets/sounds/Menu_beholder.mp3")
+        audio_manager.play_music(context="menu", volume_multiplier=2.0)
+        print(f"[DEBUG] Audio initialized: {audio_manager.initialized}")
+        print(f"[DEBUG] Loaded sounds: {list(audio_manager.sounds.keys())}")
+
+        self.tmx_loader = TiledLoader(self)
 
     def create_window(self):
         mode = config.get_window_mode()
@@ -1127,8 +1131,6 @@ class Game:
             self._update_arena()
 
     def events(self):
-        time_delta = self.clock.tick(60) / 1000.0
-
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
@@ -1286,7 +1288,6 @@ class Game:
             self.fade_surface.set_alpha(int(self.fade_alpha))
             self.sc.blit(self.fade_surface, (0, 0))
 
-        self.clock.tick(FPS)
         pygame.display.update()
 
     def _draw_interact_hints(self):
@@ -1620,45 +1621,50 @@ class Game:
     def handle_camera_movement(self):
         pass
 
-    def main(self):
-        while self.running:
-            time_delta = self.clock.tick(60) / 1000.0
+    def run_frame(self):
+        time_delta = self.clock.tick(60) / 1000.0
 
-            self.events()
+        self.events()
 
-            if self.game_state == "menu":
-                self.main_menu.update(time_delta)
-            elif self.game_state == "settings":
-                self.settings_menu.update(time_delta)
-            elif self.game_state == "game_over":
-                self.game_over_menu.update(time_delta)
-            elif self.game_state == "paused":
-                self.pause_menu.update(time_delta)
-            elif self.game_state == "final_menu":
-                self.final_menu.update(time_delta)
-            elif self.game_state == "playing":
-                self.update_fade()
-                if not self.is_fading or self.fade_direction == -1:
-                    if self.game_mode != "arena":
-                        self.check_zone_transition()
-                        self.check_dungeon_transition()
-                    self.handle_camera_movement()
-                    self.update()
-                if self.camera:
-                    self.camera.follow_sprite(self.player)
-                    self.camera.update(1.0 / 60.0)
-                self.hud.update(time_delta)
+        if self.game_state == "menu":
+            self.main_menu.update(time_delta)
+        elif self.game_state == "settings":
+            self.settings_menu.update(time_delta)
+        elif self.game_state == "game_over":
+            self.game_over_menu.update(time_delta)
+        elif self.game_state == "paused":
+            self.pause_menu.update(time_delta)
+        elif self.game_state == "final_menu":
+            self.final_menu.update(time_delta)
+        elif self.game_state == "playing":
+            self.update_fade()
+            if not self.is_fading or self.fade_direction == -1:
+                if self.game_mode != "arena":
+                    self.check_zone_transition()
+                    self.check_dungeon_transition()
+                self.handle_camera_movement()
+                self.update()
+            if self.camera:
+                self.camera.follow_sprite(self.player)
+                self.camera.update(1.0 / 60.0)
+            self.hud.update(time_delta)
 
-            self.draw()
+        self.draw()
 
 
-if __name__ == "__main__":
+async def main_game_loop():
     pygame.init()
     game = Game()
+    await game.async_init()
     game.init_ui()
 
     while game.running:
-        game.main()
+        game.run_frame()
+        await asyncio.sleep(0)
 
     pygame.quit()
     sys.exit()
+
+
+if __name__ == "__main__":
+    asyncio.run(main_game_loop())
