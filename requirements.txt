@@ -5,5 +5,3 @@ pymunk~=7.2.0
 noise~=1.2.2
 numpy~=2.4.1
 opencv-python~=4.13.0.92
-
-pygame
