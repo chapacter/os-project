@@ -32,9 +32,9 @@
 | Клавиша        | Действие                      |
 |----------------|-------------------------------|
 | WASD / Стрелки | Передвижение                  |
-| SPACE          | Рывок (неуязвимость)          |
+| SPACE          | Перекат (неуязвимость)          |
 | J / ЛКМ        | Атака                         |
-| E              | Взаимодействие (сундуки, NPC) |
+| E              | Взаимодействие (сундуки, порталы) |
 | M              | карта (подземелье)            |
 | ESC            | Пауза / Выход                 |
 | O              | Сменить язык                  |
@@ -45,8 +45,8 @@
 ## Установка и запуск
 
 ```bash
-git clone <repo-url>
-cd sonetaiko
+git clone https://github.com/chapacter/os-project
+cd os-project
 python -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
