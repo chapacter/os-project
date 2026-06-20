@@ -1,5 +1,6 @@
 from core.ecs_world import System, World
 from entity.components.render.animation import AnimationComponent
+from entity.components.render.manual_animation import ManualAnimation
 from entity.components.render.render import RenderComponent
 
 
@@ -11,20 +12,27 @@ class AnimationSystem(System):
         entities = self.world.query(RenderComponent, AnimationComponent)
         for entity in entities:
             anim = self.world.get_component(entity, AnimationComponent)
+            manual = self.world.get_component(entity, ManualAnimation)
+
             if anim.finished:
                 continue
 
-            anim.frame_index += anim.speed
+            if not manual:
+                anim.frame_index += anim.speed
 
-            if anim.frame_index >= anim.frame_count:
-                if anim.looping:
-                    anim.frame_index = 0.0
-                else:
-                    anim.frame_index = float(anim.frame_count - 1)
-                    anim.finished = True
+                if anim.frame_index >= anim.frame_count:
+                    if anim.looping:
+                        anim.frame_index = 0.0
+                    else:
+                        anim.frame_index = float(anim.frame_count - 1)
+                        anim.finished = True
 
             render = self.world.get_component(entity, RenderComponent)
             if render:
-                render.image = anim.current_frame
-                if hasattr(entity, "image"):
-                    entity.image = render.image
+                if manual:
+                    if hasattr(entity, "image"):
+                        render.image = entity.image
+                else:
+                    render.image = anim.current_frame
+                    if hasattr(entity, "image"):
+                        entity.image = render.image

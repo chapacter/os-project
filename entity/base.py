@@ -4,7 +4,8 @@ from entity.components.collision.block_collider import BlockColliderComponent
 from entity.components.combat.health import HealthComponent
 from entity.components.combat.hit_flash import HitFlashComponent
 from entity.components.combat.knockback import KnockbackComponent
-from entity.ecs_helpers import ecs_unregister
+from entity.components.render.manual_animation import ManualAnimation
+from entity.ecs_helpers import ecs_register, ecs_unregister
 from utils.settings import *
 
 
@@ -32,6 +33,8 @@ class VectorEntity:
             w.add_component(self, self.hit_flash_comp)
             w.add_component(self, self.knockback_comp)
             w.add_component(self, self.block_collider_comp)
+            ecs_register(w, self, image=getattr(self, "image", None))
+            w.add_component(self, ManualAnimation())
 
         if hasattr(self, "_pos_x"):
             self.block_collider_comp.pos_x = self._pos_x
