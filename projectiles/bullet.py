@@ -75,12 +75,6 @@ class Bullet(pygame.sprite.Sprite):
             ecs_unregister(self.game.ecs_world, self)
         super().kill()
 
-    def collide_block(self):
-        pass
-
-    def collide_enemy(self):
-        pass
-
     def update(self):
         pass
 
@@ -133,12 +127,6 @@ class Enemy_Bullet(pygame.sprite.Sprite):
         if self.game and self.game.ecs_world:
             ecs_unregister(self.game.ecs_world, self)
         super().kill()
-
-    def collide_block(self):
-        pass
-
-    def collide_player(self):
-        pass
 
     def update(self):
         pass

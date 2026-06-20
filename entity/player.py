@@ -208,8 +208,6 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         if self.contact_knockback_cooldown > 0:
             self.contact_knockback_cooldown -= 1
 
-        self.collide_enemy()
-        self.collide_weapon()
         self.attack()
         self._update_double_attack()
 
@@ -271,12 +269,6 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                     self.action_frame = 0
             else:
                 self.image = self.animations["move"][self.direction][0]
-
-    def collide_enemy(self):
-        pass
-
-    def collide_weapon(self):
-        pass
 
     def attack(self):
         if self.shoot_state != "shoot":

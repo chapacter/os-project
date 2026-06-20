@@ -34,16 +34,6 @@ class Weapon(Item):
             ecs_register(game.ecs_world, self, rect=self.rect, image=self.image)
             game.ecs_world.add_component(self, WeaponMarker())
 
-    def animate(self):
-        anim = self.anim_comp
-        anim.frame_index += anim.speed
-        if anim.frame_index >= anim.frame_count:
-            anim.frame_index = 0.0
-        self.image = anim.current_frame
-
-    def update(self):
-        self.animate()
-
 
 class WeaponLoot(AnimatedLoot):
     def __init__(self, game, x, y, weapon_type=None):
