@@ -3,7 +3,6 @@ import random
 import pygame
 
 from items.loot import AnimatedLoot
-from utils.audio import audio_manager
 from utils.settings import FOOD_TYPES, WEAPON_LAYER, PLAYER_HEALTH
 
 
@@ -49,5 +48,5 @@ class Food(AnimatedLoot):
             player.health = min(player.health + self.HEAL_AMOUNT, PLAYER_HEALTH)
             if hasattr(player, "healthbar"):
                 player.healthbar.damage(PLAYER_HEALTH, player.health)
-        audio_manager.play_sound("menu_select")
+        self.game.services.audio.play_sound("menu_select")
         self.kill()

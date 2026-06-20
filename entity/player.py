@@ -5,7 +5,6 @@ import pygame
 from entity.base import VectorEntity
 from entity.factories.effect_factory import EffectFactory
 from projectiles.bullet import Bullet
-from utils.audio import audio_manager
 from utils.settings import *
 
 
@@ -430,7 +429,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                         tx = self.hitbox.centerx + math.cos(angle) * 100
                         ty = self.hitbox.centery + math.sin(angle) * 100
                         self._spawn_bullet(tx, ty)
-                    audio_manager.play_sound("swipe")
+                    self.game.services.audio.play_sound("swipe")
 
     def _spawn_bullet(self, target_x, target_y):
         force = SWORD_KNOCKBACK_FORCE if self.sword_equipped else BULLET_KNOCKBACK_FORCE
@@ -451,7 +450,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
             self.action_state = "attack"
         self.action_frame = 0
         self.shoot_state = "wait"
-        audio_manager.play_sound("swipe")
+        self.game.services.audio.play_sound("swipe")
 
     def dodge_roll(self):
         self.is_dodging = True
@@ -472,7 +471,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
             self.dodge_velocity = (
                     dir_map.get(self.direction, pygame.math.Vector2(1, 0)) * dodge_speed
             )
-        audio_manager.play_sound("evade")
+        self.game.services.audio.play_sound("evade")
 
     def dodge_cooldown_update(self):
         if self.dodge_state == "cooldown":

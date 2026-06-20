@@ -2,8 +2,6 @@ import random
 
 import pygame
 
-from utils import config
-
 
 class Camera:
     def __init__(
@@ -13,7 +11,7 @@ class Camera:
         self.screen_width = screen_width
         self.screen_height = screen_height
 
-        default_w, default_h = config.get_window_size()
+        default_w, default_h = self.game.services.config.get_window_size()
         self.map_width = map_width or (default_w * 2)
         self.map_height = map_height or (default_h * 2)
 

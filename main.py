@@ -11,6 +11,7 @@ import pytmx
 from core.ecs_world import World
 from core.event_bus import EventBus
 from core.events import ENEMY_KILLED
+from core.services import ServiceContainer
 from entity.boss import Boss
 from entity.enemy import Enemy
 from entity.factories.effect_factory import EffectFactory
@@ -33,23 +34,19 @@ from map.world_generator import WorldGenerator
 from sprites import Spritesheet
 from ui.dungeon_map import DungeonMap
 from ui.final_menu import FinalMenu
-from ui.font_manager import font_manager, FONTS
+from ui.font_manager import FONTS
 from ui.game_over import GameOverMenu
 from ui.hud import HUD
 from ui.menu import MainMenu
 from ui.pause import PauseMenu
 from ui.settings import SettingsMenu
-from utils import config, weighted_choice
-from utils.audio import audio_manager
+from utils import weighted_choice
 from utils.camera import Camera
-from utils.config import get_language, get_font
 from utils.physics import PhysicsEngine
 from utils.settings import *
 
+
 # ─── AI Helpers ───────────────────────────────────────────────
-
-
-STATS_FILE = "stats.json"
 
 
 class GameMode:
@@ -59,20 +56,23 @@ class GameMode:
 
 
 FLOOR_MUSIC_MAP: dict[int, tuple[str, str]] = {
-    1: ("assets/sounds/Floor1_background.mp3", "assets/sounds/Floor1_boss.mp3"),
-    2: ("assets/sounds/Floor2_background.mp3", "assets/sounds/Floor2_boss.mp3"),
-    3: ("assets/sounds/Floor3_background.mp3", "assets/sounds/Floor3_boss.mp3"),
-    4: ("assets/sounds/Floor4_background.wav", "assets/sounds/Boss.mp3"),
+    1: ("assets/sounds/Floor1_background.ogg", "assets/sounds/Floor1_boss.ogg"),
+    2: ("assets/sounds/Floor2_background.ogg", "assets/sounds/Floor2_boss.ogg"),
+    3: ("assets/sounds/Floor3_background.ogg", "assets/sounds/Floor3_boss.ogg"),
+    4: ("assets/sounds/Floor4_background.ogg", "assets/sounds/Boss.ogg"),
 }
 
 
 class Game:
     def __init__(self):
         self.clock = pygame.time.Clock()
-        config.load_config()
-        font_manager.init(get_language(), get_font())
-        audio_manager.sync_from_config()
-        self.scale = config.get_scale()
+        self.services = ServiceContainer()
+        self.services.config.init()
+        self.services.font.init(self.services.config.get_language(), self.services.config.get_font())
+        self.services.audio.set_config(self.services.config)
+        self.services.audio.sync_from_config()
+        self.services.save.init()
+        self.scale = self.services.config.get_scale()
         self.sc = self.create_window()
         self.clock = pygame.time.Clock()
 
@@ -136,49 +136,49 @@ class Game:
         self.camera_enabled = True
 
         self.audio_enabled = False
-        self.audio = audio_manager
+        self.audio = self.services.audio
 
         self.render_surface = None
         self.target_scale = self.scale
         self.current_scale = self.scale
         self.scale_speed = 0.1
-        self._load_stats()
+        self.total_coins = self.services.save.total_coins
 
     async def async_init(self):
-        loop = asyncio.get_event_loop()
-        self.terrain_spritesheet = await loop.run_in_executor(None, Spritesheet, "assets/blocs.png")
-        self.player_spritesheet = await loop.run_in_executor(None, Spritesheet, SPRITE_PLAYER["sheet"])
-        self.enemy_spritesheets = {}
-        for enemy_type, cfg in ENEMY_TYPES.items():
-            sheet = await loop.run_in_executor(None, Spritesheet, cfg["sheet"])
-            self.enemy_spritesheets[enemy_type] = sheet
-        self.weapon_spritesheet = await loop.run_in_executor(None, Spritesheet, "assets/sword.png")
-        self.effects_spritesheet = await loop.run_in_executor(None, Spritesheet, "assets/effects.png")
+        self.terrain_spritesheet = Spritesheet("assets/blocs.png")
+        self.player_spritesheet = Spritesheet(SPRITE_PLAYER["sheet"])
+        self.enemy_spritesheets = {
+            enemy_type: Spritesheet(cfg["sheet"])
+            for enemy_type, cfg in ENEMY_TYPES.items()
+        }
+        self.weapon_spritesheet = Spritesheet("assets/sword.png")
+        self.effects_spritesheet = Spritesheet("assets/effects.png")
 
-        audio_manager.init()
+        self.services.audio.init()
+        self.services.audio.sync_from_config()
         pygame.key.set_repeat(200, 15)
-        audio_manager.load_sound("hit", "assets/sounds/Hit.wav")
-        audio_manager.load_sound("swipe", "assets/sounds/Swipe.wav")
-        audio_manager.load_sound("evade", "assets/sounds/Evade.wav")
-        audio_manager.load_sound("pause", "assets/sounds/Pause.wav")
-        audio_manager.load_sound("unpause", "assets/sounds/Unpause.wav")
-        audio_manager.load_sound("menu_select", "assets/sounds/Menu Select.wav")
-        audio_manager.load_sound("menu_move", "assets/sounds/Menu Move.wav")
-        audio_manager.load_music("assets/sounds/Menu_beholder.mp3")
-        audio_manager.play_music(context="menu", volume_multiplier=2.0)
-        print(f"[DEBUG] Audio initialized: {audio_manager.initialized}")
-        print(f"[DEBUG] Loaded sounds: {list(audio_manager.sounds.keys())}")
+        self.services.audio.load_sound("hit", "assets/sounds/Hit.ogg")
+        self.services.audio.load_sound("swipe", "assets/sounds/Swipe.ogg")
+        self.services.audio.load_sound("evade", "assets/sounds/Evade.ogg")
+        self.services.audio.load_sound("pause", "assets/sounds/Pause.ogg")
+        self.services.audio.load_sound("unpause", "assets/sounds/Unpause.ogg")
+        self.services.audio.load_sound("menu_select", "assets/sounds/Menu Select.ogg")
+        self.services.audio.load_sound("menu_move", "assets/sounds/Menu Move.ogg")
+        self.services.audio.load_music("assets/sounds/Menu_beholder.ogg")
+        self.services.audio.play_music(context="menu", volume_multiplier=2.0)
+        print(f"[DEBUG] Audio initialized: {self.services.audio.initialized}")
+        print(f"[DEBUG] Loaded sounds: {list(self.services.audio.sounds.keys())}")
 
         self.tmx_loader = TiledLoader(self)
 
     def create_window(self):
-        mode = config.get_window_mode()
-        display_index = config.get_display()
+        mode = self.services.config.get_window_mode()
+        display_index = self.services.config.get_display()
 
         try:
-            screen_w, screen_h = config.get_display_resolution(display_index)
+            screen_w, screen_h = self.services.config.get_display_resolution(display_index)
         except Exception:
-            screen_w, screen_h = config.get_screen_size()
+            screen_w, screen_h = self.services.config.get_screen_size()
             print(
                 f"[WARNING] Display {display_index} unavailable, falling back to primary"
             )
@@ -194,7 +194,7 @@ class Game:
             width = screen_w
             height = screen_h
         elif mode == "windowed":
-            width, height = config.get_window_size()
+            width, height = self.services.config.get_window_size()
         else:
             width, height = screen_w, screen_h
 
@@ -206,8 +206,8 @@ class Game:
         return self.sc
 
     def toggle_fullscreen(self):
-        next_mode = config.get_next_window_mode()
-        config.set_window_mode(next_mode)
+        next_mode = self.services.config.get_next_window_mode()
+        self.services.config.set_window_mode(next_mode)
         self.sc = self.create_window()
         self.render_surface = pygame.Surface(
             (
@@ -337,10 +337,11 @@ class Game:
         level = self.dungeon_generator.generate_floor(self.current_dungeon_floor)
         self._tile_map_cache = level
 
-        bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
-        audio_manager.load_music(bg_music)
+        bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor,
+                                          ("assets/sounds/Music.ogg", "assets/sounds/Boss.ogg"))
+        self.services.audio.load_music(bg_music)
         mult = 1.5 if self.current_dungeon_floor == 3 else 1.0
-        audio_manager.play_music(context="dungeon", volume_multiplier=mult)
+        self.services.audio.play_music(context="dungeon", volume_multiplier=mult)
 
         self.dungeon_generator.set_start_room_visible()
 
@@ -377,10 +378,11 @@ class Game:
         if isinstance(entity, Boss):
             self._run_bosses_killed += 1
             self._bosses_defeated.add(self.current_dungeon_floor)
-            bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
-            audio_manager.load_music(bg_music)
+            bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor,
+                                              ("assets/sounds/Music.ogg", "assets/sounds/Boss.ogg"))
+            self.services.audio.load_music(bg_music)
             mult = 1.5 if self.current_dungeon_floor == 3 else 1.0
-            audio_manager.play_music(context="dungeon", volume_multiplier=mult)
+            self.services.audio.play_music(context="dungeon", volume_multiplier=mult)
         else:
             self._run_enemies_killed += 1
         if hasattr(self, "dungeon_generator"):
@@ -444,10 +446,11 @@ class Game:
                     Boss(self, boss_pos[0], boss_pos[1], floor=self.current_dungeon_floor)
                     room.enemy_count = 1
                     total_enemies += 1
-                    _, boss_music = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
-                    audio_manager.load_music(boss_music)
+                    _, boss_music = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor,
+                                                        ("assets/sounds/Music.ogg", "assets/sounds/Boss.ogg"))
+                    self.services.audio.load_music(boss_music)
                     mult = 1.5 if self.current_dungeon_floor == 3 else 1.0
-                    audio_manager.play_music(context="dungeon", volume_multiplier=mult)
+                    self.services.audio.play_music(context="dungeon", volume_multiplier=mult)
                 spawned_rooms.append((gx, gy))
             elif room.room_type.value == "enemy":
                 room.enemies_spawned = True
@@ -627,7 +630,7 @@ class Game:
             self._last_run_enemies = self._run_enemies_killed
             self._last_run_bosses = self._run_bosses_killed
             self.total_coins += self._last_run_coins
-            self._save_stats()
+            self.services.save.save_stats(self.total_coins)
             self.game_state = "final_menu"
             self.final_menu.show()
         else:
@@ -641,10 +644,11 @@ class Game:
         self._dungeon_built_rooms = set()
         self._sealed_rooms = {}
         self._tile_map_cache = None
-        bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor, ("assets/sounds/Music.mp3", "assets/sounds/Boss.mp3"))
-        audio_manager.load_music(bg_music)
+        bg_music, _ = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor,
+                                          ("assets/sounds/Music.ogg", "assets/sounds/Boss.ogg"))
+        self.services.audio.load_music(bg_music)
         mult = 1.5 if self.current_dungeon_floor == 3 else 1.0
-        audio_manager.play_music(context="dungeon", volume_multiplier=mult)
+        self.services.audio.play_music(context="dungeon", volume_multiplier=mult)
         self._tile_map_cache = self.dungeon_generator.generate_floor(
             self.current_dungeon_floor
         )
@@ -984,23 +988,6 @@ class Game:
         except Exception:
             return False
 
-    def _load_stats(self):
-        self.total_coins = 0
-        try:
-            if os.path.exists(STATS_FILE):
-                with open(STATS_FILE) as f:
-                    data = json.load(f)
-                    self.total_coins = data.get("total_coins", 0)
-        except Exception:
-            pass
-
-    def _save_stats(self):
-        try:
-            with open(STATS_FILE, "w") as f:
-                json.dump({"total_coins": self.total_coins}, f)
-        except Exception as e:
-            print(f"Error saving stats: {e}")
-
     def clear_save(self):
         if os.path.exists("savegame.json"):
             try:
@@ -1034,17 +1021,8 @@ class Game:
         self._last_run_enemies = self._run_enemies_killed
         self._last_run_bosses = self._run_bosses_killed
         self.total_coins += self._last_run_coins
-        self._save_stats()
-
-        if os.path.exists("savegame.json"):
-            try:
-                with open("savegame.json", "r") as f:
-                    save_data = json.load(f)
-                save_data["save_valid"] = False
-                with open("savegame.json", "w") as f:
-                    json.dump(save_data, f)
-            except Exception as e:
-                print(f"Error invalidating save: {e}")
+        self.services.save.save_stats(self.total_coins)
+        self.services.save.invalidate_save()
 
         if self.dungeon_map:
             self.dungeon_map.visible = False
@@ -1065,13 +1043,11 @@ class Game:
 
     def quit_game(self):
         self.running = False
-        pygame.quit()
-        sys.exit()
 
     def return_to_menu(self):
         self.game_state = "menu"
-        audio_manager.load_music("assets/sounds/Menu_beholder.mp3")
-        audio_manager.play_music(context="menu", volume_multiplier=2.0)
+        self.services.audio.load_music("assets/sounds/Menu_beholder.ogg")
+        self.services.audio.play_music(context="menu", volume_multiplier=2.0)
         self.main_menu.show()
         self.hud.hide()
 
@@ -1081,7 +1057,7 @@ class Game:
                 self.dungeon_map.visible = False
             self.game_state = "paused"
             self.pause_menu.show()
-            audio_manager.play_sound("pause")
+            self.services.audio.play_sound("pause")
 
     def resume(self):
         if self.game_state == "paused":
@@ -1144,27 +1120,26 @@ class Game:
                     elif self.game_state == "settings":
                         self.settings_back()
                     else:
-                        pygame.quit()
-                        sys.exit()
+                        self.running = False
                 elif event.key == pygame.K_F11:
                     self.toggle_fullscreen()
                 elif event.key == pygame.K_MINUS or event.key == pygame.K_KP_MINUS:
-                    audio_manager.adjust_sfx_volume(-0.05)
+                    self.services.audio.adjust_sfx_volume(-0.05)
                 elif event.key == pygame.K_EQUALS or event.key == pygame.K_KP_PLUS:
-                    audio_manager.adjust_sfx_volume(0.05)
+                    self.services.audio.adjust_sfx_volume(0.05)
                 elif event.key == pygame.K_e:
                     if self.game_state == "playing" and hasattr(self, "player"):
                         self.player.interact()
                 elif event.key == pygame.K_o:
-                    current = font_manager.get_locale()
-                    supported = font_manager.get_supported_locales()
+                    current = self.services.font.get_locale()
+                    supported = self.services.font.get_supported_locales()
                     if current in supported:
                         idx = supported.index(current)
                         new_locale = supported[(idx + 1) % len(supported)]
                     else:
                         new_locale = supported[0] if supported else "en"
-                    font_manager.set_locale(new_locale)
-                    audio_manager.play_sound("menu_select")
+                    self.services.font.set_locale(new_locale)
+                    self.services.audio.play_sound("menu_select")
                     if self.game_state == "menu" and self.main_menu:
                         self.main_menu.update_texts()
                     elif self.game_state == "paused" and self.pause_menu:
@@ -1172,14 +1147,14 @@ class Game:
                     elif self.game_state == "playing" and self.hud:
                         self.hud.update_texts()
                 elif event.key == pygame.K_p:
-                    current_font_key = font_manager.get_font_key()
+                    current_font_key = self.services.font.get_font_key()
                     if current_font_key.isdigit():
                         current_idx = int(current_font_key)
                         new_idx = (current_idx + 1) % len(FONTS)
                     else:
                         new_idx = 0
-                    font_manager.set_font(str(new_idx))
-                    audio_manager.play_sound("menu_select")
+                    self.services.font.set_font(str(new_idx))
+                    self.services.audio.play_sound("menu_select")
                     if self.game_state == "menu" and self.main_menu:
                         self.main_menu.update_texts()
                     elif self.game_state == "paused" and self.pause_menu:
@@ -1191,8 +1166,8 @@ class Game:
                         self.dungeon_map.toggle()
 
             if event.type == pygame.VIDEORESIZE:
-                if config.get_window_mode() == "windowed":
-                    config.set_window_size(event.w, event.h)
+                if self.services.config.get_window_mode() == "windowed":
+                    self.services.config.set_window_size(event.w, event.h)
                     self.sc = self.create_window()
                     self.render_surface = pygame.Surface(
                         (
@@ -1214,7 +1189,7 @@ class Game:
             if event.type == pygame.MOUSEWHEEL:
                 new_target = max(0.25, min(4.0, self.target_scale + event.y * 0.1))
                 self.target_scale = round(new_target, 1)
-                config.set_scale(self.target_scale)
+                self.services.config.set_scale(self.target_scale)
 
             if self.game_state == "menu":
                 self.main_menu.handle_event(event)
@@ -1325,7 +1300,7 @@ class Game:
         pygame.draw.rect(self.render_surface, BLACK, screen_e)
         pygame.draw.rect(self.render_surface, WHITE, screen_e, 1)
 
-        text = font_manager.get_font(16).render("E", True, WHITE)
+        text = self.services.font.get_font(16).render("E", True, WHITE)
         text_rect = text.get_rect(center=screen_e.center)
         self.render_surface.blit(text, text_rect)
 
@@ -1621,21 +1596,23 @@ class Game:
     def handle_camera_movement(self):
         pass
 
-    def run_frame(self):
+    async def run_frame(self):
         time_delta = self.clock.tick(60) / 1000.0
-
         self.events()
+        await self._update(time_delta)
+        self.draw()
 
+    async def _update(self, dt):
         if self.game_state == "menu":
-            self.main_menu.update(time_delta)
+            self.main_menu.update(dt)
         elif self.game_state == "settings":
-            self.settings_menu.update(time_delta)
+            self.settings_menu.update(dt)
         elif self.game_state == "game_over":
-            self.game_over_menu.update(time_delta)
+            self.game_over_menu.update(dt)
         elif self.game_state == "paused":
-            self.pause_menu.update(time_delta)
+            self.pause_menu.update(dt)
         elif self.game_state == "final_menu":
-            self.final_menu.update(time_delta)
+            self.final_menu.update(dt)
         elif self.game_state == "playing":
             self.update_fade()
             if not self.is_fading or self.fade_direction == -1:
@@ -1647,9 +1624,12 @@ class Game:
             if self.camera:
                 self.camera.follow_sprite(self.player)
                 self.camera.update(1.0 / 60.0)
-            self.hud.update(time_delta)
+            self.hud.update(dt)
 
-        self.draw()
+    async def _game_loop(self):
+        while self.running:
+            await self.run_frame()
+            await asyncio.sleep(0)
 
 
 async def main_game_loop():
@@ -1658,9 +1638,8 @@ async def main_game_loop():
     await game.async_init()
     game.init_ui()
 
-    while game.running:
-        game.run_frame()
-        await asyncio.sleep(0)
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(game._game_loop())
 
     pygame.quit()
     sys.exit()

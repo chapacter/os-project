@@ -4,7 +4,6 @@ from entity.components.combat.health import HealthComponent
 from entity.components.combat.hit_flash import HitFlashComponent
 from entity.components.combat.knockback import KnockbackComponent
 from entity.factories.effect_factory import EffectFactory
-from utils.audio import audio_manager
 from utils.settings import *
 
 
@@ -141,7 +140,7 @@ class VectorEntity:
     def damage(self, amount):
         self.health -= amount
         self.health_comp.health = self.health
-        audio_manager.play_sound("hit")
+        self.game.services.audio.play_sound("hit")
         self.hit_flash_timer = self.hit_flash_duration
         self.hit_flash_comp.timer = self.hit_flash_duration
         self.hit_scale_timer = self.hit_scale_duration

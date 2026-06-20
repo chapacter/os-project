@@ -2,8 +2,6 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton
 
-from ui.font_manager import font_manager
-from utils.audio import audio_manager
 from utils.settings import WHITE, BLACK, YELLOW
 
 
@@ -80,13 +78,13 @@ class GameOverMenu:
             btn_id = event.ui_object_id.replace("_button", "")
             if btn_id in self.buttons:
                 self.buttons[btn_id]["hovered"] = True
-            audio_manager.play_sound("menu_move")
+            self.game.services.audio.play_sound("menu_move")
         elif event.type == pygame_gui.UI_BUTTON_ON_UNHOVERED:
             btn_id = event.ui_object_id.replace("_button", "")
             if btn_id in self.buttons:
                 self.buttons[btn_id]["hovered"] = False
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            audio_manager.play_sound("menu_select")
+            self.game.services.audio.play_sound("menu_select")
             if event.ui_object_id == "menu_button":
                 self.hide()
                 self.game.return_to_menu()
@@ -114,18 +112,18 @@ class GameOverMenu:
         center_x = self.game.sc.get_width() // 2
         center_y = self.game.sc.get_height() // 2
 
-        title_surf = font_manager.render(
-            font_manager.t("game_over.title"), 48, (200, 0, 0), shadow=BLACK
+        title_surf = self.game.services.font.render(
+            self.game.services.font.t("game_over.title"), 48, (200, 0, 0), shadow=BLACK
         )
         title_rect = title_surf.get_rect(center=(center_x, center_y - 120))
         surface.blit(title_surf, title_rect)
 
         for btn_id, btn in self.buttons.items():
-            text = font_manager.t(btn["text_key"])
+            text = self.game.services.font.t(btn["text_key"])
             text_color = YELLOW if btn.get("hovered") else WHITE
             frame_color = YELLOW if btn.get("hovered") else WHITE
 
-            text_surf = font_manager.render(text, 24, text_color, shadow=BLACK)
+            text_surf = self.game.services.font.render(text, 24, text_color, shadow=BLACK)
 
             bx, by, bw, bh = btn["rect"]
             text_rect = text_surf.get_rect(center=(bx + bw // 2, by + bh // 2))
@@ -134,7 +132,7 @@ class GameOverMenu:
             pygame.draw.rect(surface, frame_color, btn["rect"], 2)
 
         if self.notification and self.notification_timer > 0:
-            notif_surf = font_manager.render(self.notification, 24, YELLOW, shadow=BLACK)
+            notif_surf = self.game.services.font.render(self.notification, 24, YELLOW, shadow=BLACK)
             last_btn = self.buttons[list(self.buttons.keys())[-1]]
             notif_y = last_btn["rect"].y + last_btn["rect"].height + 30
             notif_rect = notif_surf.get_rect(center=(center_x, notif_y))
@@ -143,18 +141,18 @@ class GameOverMenu:
         g = self.game
         stat_y = center_y + 105
         gold = (255, 215, 0)
-        enemies_text = font_manager.render(
-            font_manager.t("game_over.enemies_killed").format(getattr(g, '_last_run_enemies', 0)),
+        enemies_text = self.game.services.font.render(
+            self.game.services.font.t("game_over.enemies_killed").format(getattr(g, '_last_run_enemies', 0)),
             22, WHITE, shadow=BLACK)
         enemies_rect = enemies_text.get_rect(center=(center_x, stat_y))
         surface.blit(enemies_text, enemies_rect)
-        bosses_text = font_manager.render(
-            font_manager.t("game_over.bosses_killed").format(getattr(g, '_last_run_bosses', 0)),
+        bosses_text = self.game.services.font.render(
+            self.game.services.font.t("game_over.bosses_killed").format(getattr(g, '_last_run_bosses', 0)),
             22, WHITE, shadow=BLACK)
         bosses_rect = bosses_text.get_rect(center=(center_x, stat_y + 25))
         surface.blit(bosses_text, bosses_rect)
-        coins_text = font_manager.render(
-            font_manager.t("game_over.coins_collected").format(getattr(g, '_last_run_coins', 0)),
+        coins_text = self.game.services.font.render(
+            self.game.services.font.t("game_over.coins_collected").format(getattr(g, '_last_run_coins', 0)),
             22, gold, shadow=BLACK)
         coins_rect = coins_text.get_rect(center=(center_x, stat_y + 50))
         surface.blit(coins_text, coins_rect)

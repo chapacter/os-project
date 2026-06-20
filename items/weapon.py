@@ -4,7 +4,6 @@ import pygame
 
 from items.base import Item
 from items.loot import AnimatedLoot
-from utils.audio import audio_manager
 from utils.settings import GROUND_LAYER, WEAPON_TYPES, WEAPON_LAYER
 
 
@@ -83,5 +82,5 @@ class WeaponLoot(AnimatedLoot):
         if flag:
             setattr(player, flag, True)
             setattr(player.game, flag, True)
-        audio_manager.play_sound("menu_select")
+        self.game.services.audio.play_sound("menu_select")
         self.kill()

@@ -1,12 +1,7 @@
-import os
-import random
-
 import pygame
 
 from items.loot import AnimatedLoot
-from utils.audio import audio_manager
 from utils.settings import WEAPON_LAYER
-
 
 COIN_CONFIG = {
     "bronze": {"file": "assets/bronze_coin.png", "value": 1},
@@ -41,5 +36,5 @@ class Coin(AnimatedLoot):
     def on_pickup(self, player):
         if hasattr(player, "coins"):
             player.coins += self.value
-        audio_manager.play_sound("menu_select")
+        self.game.services.audio.play_sound("menu_select")
         self.kill()

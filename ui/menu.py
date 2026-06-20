@@ -5,8 +5,6 @@ import pygame
 import pygame_gui
 from pygame_gui.elements import UIButton
 
-from ui.font_manager import font_manager
-from utils.audio import audio_manager
 from utils.settings import WHITE, BLACK, YELLOW
 
 RED = (255, 0, 0)
@@ -121,8 +119,8 @@ class MainMenu:
 
     # def _render_button_text(self, button_id):
     #     btn = self.buttons[button_id]
-    #     text = font_manager.t(btn["text_key"])
-    #     text_surf = font_manager.render(text, 24, WHITE, shadow=BLACK)
+    #     text = self.game.services.font.t(btn["text_key"])
+    #     text_surf = self.game.services.font.render(text, 24, WHITE, shadow=BLACK)
     #
     #     tw, th = text_surf.get_size()
     #     bw, bh = btn["rect"].size
@@ -141,7 +139,7 @@ class MainMenu:
             if self.title_rect.collidepoint(event.pos):
                 if not self.title_hovered:
                     self.title_hovered = True
-                    audio_manager.play_sound("menu_move")
+                    self.game.services.audio.play_sound("menu_move")
             else:
                 if self.title_hovered:
                     self.title_hovered = False
@@ -150,9 +148,9 @@ class MainMenu:
                 if not self.story_fully_revealed:
                     self.story_chars = list(self.story_full_text)
                     self.story_fully_revealed = True
-                    audio_manager.play_sound("menu_select")
+                    self.game.services.audio.play_sound("menu_select")
             elif self.title_rect.collidepoint(event.pos):
-                audio_manager.play_sound("menu_select")
+                self.game.services.audio.play_sound("menu_select")
                 self.story_opened = not self.story_opened
                 if self.story_opened:
                     self.story_visible = True
@@ -170,13 +168,13 @@ class MainMenu:
             btn_id = event.ui_object_id.replace("_button", "")
             if btn_id in self.buttons:
                 self.buttons[btn_id]["hovered"] = True
-            audio_manager.play_sound("menu_move")
+            self.game.services.audio.play_sound("menu_move")
         elif event.type == pygame_gui.UI_BUTTON_ON_UNHOVERED:
             btn_id = event.ui_object_id.replace("_button", "")
             if btn_id in self.buttons:
                 self.buttons[btn_id]["hovered"] = False
         if event.type == pygame_gui.UI_BUTTON_PRESSED:
-            audio_manager.play_sound("menu_select")
+            self.game.services.audio.play_sound("menu_select")
             if event.ui_object_id == "standard_button":
                 if self._has_save_file():
                     self.confirm_new_game = True
@@ -211,7 +209,7 @@ class MainMenu:
             if self.notification_timer <= 0:
                 self.notification = None
         if self.story_opened and not self.story_fully_revealed:
-            full_text = font_manager.t("story.text")
+            full_text = self.game.services.font.t("story.text")
             if self.story_full_text != full_text:
                 self.story_full_text = full_text
                 self.story_chars = []
@@ -264,7 +262,7 @@ class MainMenu:
         offset_x = x
         for segment_text, is_bracketed in segments:
             color = RED if is_bracketed else default_color
-            segment_surf = font_manager.render(segment_text, font_size, color, shadow=shadow_color)
+            segment_surf = self.game.services.font.render(segment_text, font_size, color, shadow=shadow_color)
             surface.blit(segment_surf, (offset_x, y))
             offset_x += segment_surf.get_width()
 
@@ -308,7 +306,7 @@ class MainMenu:
 
         title_text = "SONETAIKO"
         title_color = (255, 230, 0) if self.title_hovered else GOLD
-        title_surf = font_manager.render(title_text, 48, title_color, shadow=BLACK)
+        title_surf = self.game.services.font.render(title_text, 48, title_color, shadow=BLACK)
         title_rect = title_surf.get_rect(center=(center_x, center_y - 150))
         surface.blit(title_surf, title_rect)
 
@@ -318,8 +316,8 @@ class MainMenu:
         if self.title_hovered:
             pygame.draw.rect(surface, GREEN, self.title_rect, 3)
 
-            hint_text = font_manager.t("story.read_hint")
-            hint_surf = font_manager.render(hint_text, 22, YELLOW, shadow=BLACK)
+            hint_text = self.game.services.font.t("story.read_hint")
+            hint_surf = self.game.services.font.render(hint_text, 22, YELLOW, shadow=BLACK)
             hint_rect = hint_surf.get_rect(topleft=(self.title_rect.right + 10, title_rect.centery + 10))
             surface.blit(hint_surf, hint_rect)
 
@@ -339,7 +337,9 @@ class MainMenu:
             for word in words:
                 test_line = current_line + (" " if current_line else "") + word
                 segments, _, _ = self._parse_colored_segments(test_line, current_depth, current_trim)
-                total_width = sum(font_manager.get_font(18).render(seg[0], True, RED if seg[1] else YELLOW).get_width() for seg in segments)
+                total_width = sum(
+                    self.game.services.font.get_font(18).render(seg[0], True, RED if seg[1] else YELLOW).get_width() for
+                    seg in segments)
                 if total_width > max_width:
                     if current_line:
                         lines.append(current_line)
@@ -362,7 +362,8 @@ class MainMenu:
             panel_x = center_x + 140
             panel_y = center_y - 80
 
-            hint_surf = font_manager.render(font_manager.t("story.read_hint"), 22, YELLOW, shadow=BLACK)
+            hint_surf = self.game.services.font.render(self.game.services.font.t("story.read_hint"), 22, YELLOW,
+                                                       shadow=BLACK)
             hint_center_y = title_rect.centery + 10
             tail_y = hint_center_y - panel_y
             tail_y = max(45, min(panel_height - 45, tail_y))
@@ -378,14 +379,14 @@ class MainMenu:
                 self._draw_colored_line(surface, line, panel_x + 20, panel_y + 20 + i * line_height, 18, YELLOW, BLACK, depth, trim)
 
         if self.notification and self.notification_timer > 0:
-            notif_surf = font_manager.render(self.notification, 24, YELLOW, shadow=BLACK)
+            notif_surf = self.game.services.font.render(self.notification, 24, YELLOW, shadow=BLACK)
             notif_rect = notif_surf.get_rect(center=(center_x, center_y + 270))
             surface.blit(notif_surf, notif_rect)
 
         gold = (255, 215, 0)
         total_coins = getattr(self.game, 'total_coins', 0)
-        coins_surf = font_manager.render(
-            font_manager.t("menu.total_coins").format(total_coins), 24, gold, shadow=BLACK)
+        coins_surf = self.game.services.font.render(
+            self.game.services.font.t("menu.total_coins").format(total_coins), 24, gold, shadow=BLACK)
         coins_rect = coins_surf.get_rect(center=(center_x, center_y + 300))
         surface.blit(coins_surf, coins_rect)
 
@@ -394,7 +395,7 @@ class MainMenu:
             return
 
         for btn_id, btn in self.buttons.items():
-            text = font_manager.t(btn["text_key"])
+            text = self.game.services.font.t(btn["text_key"])
 
             is_disabled = btn_id == "continue" and not btn.get("has_save", False)
 
@@ -405,7 +406,7 @@ class MainMenu:
                 text_color = YELLOW if btn.get("hovered") else WHITE
                 frame_color = YELLOW if btn.get("hovered") else WHITE
 
-            text_surf = font_manager.render(text, 24, text_color, shadow=BLACK)
+            text_surf = self.game.services.font.render(text, 24, text_color, shadow=BLACK)
 
             bx, by, bw, bh = btn["rect"]
             text_rect = text_surf.get_rect(center=(bx + bw // 2, by + bh // 2))
@@ -423,16 +424,16 @@ class MainMenu:
             else:
                 self.confirm_hovered = -1
             if prev != self.confirm_hovered and self.confirm_hovered >= 0:
-                audio_manager.play_sound("menu_move")
+                self.game.services.audio.play_sound("menu_move")
         elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             if self.confirm_hovered == 0:
-                audio_manager.play_sound("menu_select")
+                self.game.services.audio.play_sound("menu_select")
                 self.game.clear_save()
                 self.confirm_new_game = False
                 self.is_active = False
                 self.game.start_standard()
             elif self.confirm_hovered == 1:
-                audio_manager.play_sound("menu_select")
+                self.game.services.audio.play_sound("menu_select")
                 self.confirm_new_game = False
                 if not self.game.load_game():
                     self.show_notification("Нет доступного сохранения")
@@ -442,12 +443,12 @@ class MainMenu:
             if event.key == pygame.K_ESCAPE:
                 self.confirm_new_game = False
                 self.confirm_hovered = -1
-                audio_manager.play_sound("menu_select")
+                self.game.services.audio.play_sound("menu_select")
             elif event.key in (pygame.K_LEFT, pygame.K_RIGHT, pygame.K_a, pygame.K_d):
                 self.confirm_hovered = 1 - self.confirm_hovered if self.confirm_hovered >= 0 else 0
-                audio_manager.play_sound("menu_move")
+                self.game.services.audio.play_sound("menu_move")
             elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
-                audio_manager.play_sound("menu_select")
+                self.game.services.audio.play_sound("menu_select")
                 if self.confirm_hovered == 0:
                     self.game.clear_save()
                     self.confirm_new_game = False
@@ -469,18 +470,18 @@ class MainMenu:
         pygame.draw.rect(surface, PANEL_BG, panel)
         pygame.draw.rect(surface, BORDER_COLOR, panel, 2)
 
-        title_surf = font_manager.render(
-            font_manager.t("menu.confirm_new_game_title"), 36, RED, shadow=BLACK)
+        title_surf = self.game.services.font.render(
+            self.game.services.font.t("menu.confirm_new_game_title"), 36, RED, shadow=BLACK)
         title_rect = title_surf.get_rect(center=(center_x, center_y - 80))
         surface.blit(title_surf, title_rect)
 
         gray = (200, 200, 200)
-        line1 = font_manager.t("menu.confirm_new_game_line1")
-        line2 = font_manager.t("menu.confirm_new_game_line2")
-        line1_surf = font_manager.render(line1, 20, gray, shadow=BLACK)
+        line1 = self.game.services.font.t("menu.confirm_new_game_line1")
+        line2 = self.game.services.font.t("menu.confirm_new_game_line2")
+        line1_surf = self.game.services.font.render(line1, 20, gray, shadow=BLACK)
         line1_rect = line1_surf.get_rect(center=(center_x, center_y - 30))
         surface.blit(line1_surf, line1_rect)
-        line2_surf = font_manager.render(line2, 20, gray, shadow=BLACK)
+        line2_surf = self.game.services.font.render(line2, 20, gray, shadow=BLACK)
         line2_rect = line2_surf.get_rect(center=(center_x, center_y - 5))
         surface.blit(line2_surf, line2_rect)
 
@@ -490,7 +491,7 @@ class MainMenu:
         ]):
             focused = self.confirm_hovered == i
             color = YELLOW if focused else WHITE
-            text_surf = font_manager.render(font_manager.t(key), 24, color, shadow=BLACK)
+            text_surf = self.game.services.font.render(self.game.services.font.t(key), 24, color, shadow=BLACK)
             text_rect = text_surf.get_rect(center=rect.center)
             surface.blit(text_surf, text_rect)
             pygame.draw.rect(surface, color, rect, 2)

@@ -1,7 +1,6 @@
 import pygame
 
 from map.room import RoomType
-from ui.font_manager import font_manager
 from utils.settings import WHITE, BLACK, YELLOW
 
 ROOM_COLORS = {
@@ -60,7 +59,7 @@ class DungeonMap:
         offset_y = (h - map_h) // 2 - 20
 
         floor = self.game.current_dungeon_floor
-        title = font_manager.render(f"Floor {floor}", 32, WHITE, shadow=BLACK)
+        title = self.game.services.font.render(f"Floor {floor}", 32, WHITE, shadow=BLACK)
         title_rect = title.get_rect(center=(w // 2, offset_y - 30))
         surface.blit(title, title_rect)
 
@@ -90,7 +89,7 @@ class DungeonMap:
 
             label = ROOM_LABELS.get(room.room_type, "")
             if label:
-                label_surf = font_manager.render(label, 16, WHITE, shadow=BLACK)
+                label_surf = self.game.services.font.render(label, 16, WHITE, shadow=BLACK)
                 label_rect = label_surf.get_rect(center=rect.center)
                 surface.blit(label_surf, label_rect)
 
@@ -106,9 +105,9 @@ class DungeonMap:
         for i, (rtype, color) in enumerate(ROOM_COLORS.items()):
             ly = legend_y_start + i * 25
             pygame.draw.rect(surface, color, (legend_x, ly, 14, 14))
-            lbl = font_manager.render(ROOM_LABELS[rtype], 14, WHITE, shadow=BLACK)
+            lbl = self.game.services.font.render(ROOM_LABELS[rtype], 14, WHITE, shadow=BLACK)
             surface.blit(lbl, (legend_x + 20, ly - 2))
 
-        hint = font_manager.render("[M] \u0417\u0430\u043a\u0440\u044b\u0442\u044c", 16, WHITE, shadow=BLACK)
+        hint = self.game.services.font.render("[M] \u0417\u0430\u043a\u0440\u044b\u0442\u044c", 16, WHITE, shadow=BLACK)
         hint_rect = hint.get_rect(center=(w // 2, h - 20))
         surface.blit(hint, hint_rect)

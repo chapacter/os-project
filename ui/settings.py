@@ -1,8 +1,5 @@
 import pygame
 
-from ui.font_manager import font_manager
-from utils.audio import audio_manager
-from utils.config import set_menu_music_volume, set_dungeon_music_volume, set_sfx_volume
 from utils.settings import WHITE, BLACK, YELLOW
 
 SLIDER_TRACK = (50, 50, 50)
@@ -43,38 +40,29 @@ class SettingsMenu:
         self.sliders = [
             {
                 "label_key": "settings.menu_music_volume",
-                "getter": lambda: audio_manager.menu_music_volume,
-                "setter": lambda v: (
-                    audio_manager.set_menu_music_volume(v),
-                    set_menu_music_volume(v),
-                ),
+                "getter": lambda: self.game.services.audio.menu_music_volume,
+                "setter": lambda v: self.game.services.audio.set_menu_music_volume(v),
                 "rect": pygame.Rect(cx - self.slider_width // 2, cy - 40, self.slider_width, self.track_height),
                 "label_y": cy - 70,
-                "value": audio_manager.menu_music_volume,
+                "value": self.game.services.audio.menu_music_volume,
                 "max_val": 1.0,
             },
             {
                 "label_key": "settings.dungeon_music_volume",
-                "getter": lambda: audio_manager.dungeon_music_volume,
-                "setter": lambda v: (
-                    audio_manager.set_dungeon_music_volume(v),
-                    set_dungeon_music_volume(v),
-                ),
+                "getter": lambda: self.game.services.audio.dungeon_music_volume,
+                "setter": lambda v: self.game.services.audio.set_dungeon_music_volume(v),
                 "rect": pygame.Rect(cx - self.slider_width // 2, cy + 20, self.slider_width, self.track_height),
                 "label_y": cy - 10,
-                "value": audio_manager.dungeon_music_volume,
+                "value": self.game.services.audio.dungeon_music_volume,
                 "max_val": 1.0,
             },
             {
                 "label_key": "settings.sfx_volume",
-                "getter": lambda: audio_manager.sfx_volume,
-                "setter": lambda v: (
-                    audio_manager.set_sfx_volume(v),
-                    set_sfx_volume(v),
-                ),
+                "getter": lambda: self.game.services.audio.sfx_volume,
+                "setter": lambda v: self.game.services.audio.set_sfx_volume(v),
                 "rect": pygame.Rect(cx - self.slider_width // 2, cy + 80, self.slider_width, self.track_height),
                 "label_y": cy + 50,
-                "value": audio_manager.sfx_volume,
+                "value": self.game.services.audio.sfx_volume,
                 "max_val": 2.0,
             },
         ]
@@ -100,10 +88,10 @@ class SettingsMenu:
                     self.drag_index = i
                     ratio = (pos[0] - s["rect"].left) / s["rect"].width
                     self._update_slider_value(i, ratio * s["max_val"])
-                    audio_manager.play_sound("menu_move")
+                    self.game.services.audio.play_sound("menu_move")
                     return
             if self.back_rect.collidepoint(pos):
-                audio_manager.play_sound("menu_select")
+                self.game.services.audio.play_sound("menu_select")
                 self.game.settings_back()
                 return
 
@@ -122,12 +110,12 @@ class SettingsMenu:
                 if s["rect"].collidepoint(event.pos):
                     self.focused_index = i
                     if prev != self.focused_index:
-                        audio_manager.play_sound("menu_move")
+                        self.game.services.audio.play_sound("menu_move")
                     return
             if self.back_rect.collidepoint(event.pos):
                 self.focused_index = len(self.sliders)
                 if prev != self.focused_index:
-                    audio_manager.play_sound("menu_move")
+                    self.game.services.audio.play_sound("menu_move")
 
         elif event.type == pygame.MOUSEWHEEL:
             if 0 <= self.focused_index < len(self.sliders):
@@ -152,11 +140,11 @@ class SettingsMenu:
                     self._update_slider_value(self.focused_index, s["value"] + s["max_val"] * STEP_RATIO)
             elif event.key in (pygame.K_RETURN, pygame.K_SPACE):
                 if self.focused_index >= len(self.sliders):
-                    audio_manager.play_sound("menu_select")
+                    self.game.services.audio.play_sound("menu_select")
                     self.game.settings_back()
                     return
             if prev != self.focused_index:
-                audio_manager.play_sound("menu_move")
+                self.game.services.audio.play_sound("menu_move")
 
     def update(self, time_delta):
         pass
@@ -171,8 +159,8 @@ class SettingsMenu:
         pygame.draw.rect(surface, (25, 25, 40), panel)
         pygame.draw.rect(surface, SLIDER_BORDER, panel, 2)
 
-        title_surf = font_manager.render(
-            font_manager.t("settings.title"), 36, WHITE, shadow=BLACK
+        title_surf = self.game.services.font.render(
+            self.game.services.font.t("settings.title"), 36, WHITE, shadow=BLACK
         )
         title_rect = title_surf.get_rect(center=(cx, cy - 130))
         surface.blit(title_surf, title_rect)
@@ -186,7 +174,7 @@ class SettingsMenu:
 
     def _draw_slider(self, surface, s, focused):
         cx = self.game.sc.get_width() // 2
-        label_surf = font_manager.render(font_manager.t(s["label_key"]), 22, WHITE, shadow=BLACK)
+        label_surf = self.game.services.font.render(self.game.services.font.t(s["label_key"]), 22, WHITE, shadow=BLACK)
         label_rect = label_surf.get_rect(center=(cx, s["label_y"]))
         surface.blit(label_surf, label_rect)
 
@@ -208,7 +196,7 @@ class SettingsMenu:
         pygame.draw.rect(surface, HANDLE_COLOR, handle_rect)
 
         pct = int(s["value"] / s["max_val"] * 100)
-        pct_surf = font_manager.render(f"{pct}%", 18, WHITE, shadow=BLACK)
+        pct_surf = self.game.services.font.render(f"{pct}%", 18, WHITE, shadow=BLACK)
         pct_rect = pct_surf.get_rect(midleft=(rect.right + 10, rect.centery))
         surface.blit(pct_surf, pct_rect)
 
@@ -216,8 +204,8 @@ class SettingsMenu:
         color = SLIDER_FOCUS if focused else YELLOW
         pygame.draw.rect(surface, color, self.back_rect, 2)
 
-        text = font_manager.t("settings.back")
-        text_surf = font_manager.render(text, 24, color, shadow=BLACK)
+        text = self.game.services.font.t("settings.back")
+        text_surf = self.game.services.font.render(text, 24, color, shadow=BLACK)
         text_rect = text_surf.get_rect(center=self.back_rect.center)
         surface.blit(text_surf, text_rect)
 

@@ -1,12 +1,10 @@
+import math
 import os
 import random
 
-import cv2
-import numpy as np
 import pygame
 
 from items.base import Item
-from utils.audio import audio_manager
 from utils.settings import WEAPON_LAYER, LOOT_ANIMATION_STEP, LOOT_ANIMATION_MAX_ANGLE, LOOT_FLY_DURATION, PLAYER_HEALTH
 
 
@@ -21,54 +19,9 @@ class AnimatedLoot(Item):
         if w == 0 or h == 0:
             return surface
 
-        surf = surface.convert_alpha()
-
-        arr_rgb = pygame.surfarray.array3d(surf)
-        arr_rgb = np.transpose(arr_rgb, (1, 0, 2))
-        arr_bgr = arr_rgb[..., ::-1]
-
-        arr_alpha = pygame.surfarray.array_alpha(surf)
-        arr_alpha = np.transpose(arr_alpha, (1, 0))
-
-        scale = np.cos(np.radians(angle_deg))
-        half_w = w / 2.0
-        min_scale = 0.15
-        left_scale = max(min_scale, scale)
-        right_scale = max(min_scale, scale)
-
-        center_x = half_w
-        pts1 = np.float32([[0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1]])
-        pts2 = np.float32(
-            [
-                [center_x - half_w * left_scale, 0],
-                [center_x + half_w * right_scale, 0],
-                [center_x - half_w * left_scale, h - 1],
-                [center_x + half_w * right_scale, h - 1],
-            ]
-        )
-
-        M = cv2.getPerspectiveTransform(pts1, pts2)
-
-        warped_rgb = cv2.warpPerspective(arr_bgr, M, (w, h))
-        warped_alpha = cv2.warpPerspective(arr_alpha, M, (w, h))
-
-        warped_rgba = np.dstack([warped_rgb[..., ::-1], warped_alpha])
-
-        new_surf = pygame.Surface((w, h), pygame.SRCALPHA)
-        new_surf.lock()
-        for y in range(h):
-            for x in range(w):
-                if warped_alpha[y, x] > 0:
-                    color = (
-                        warped_rgba[y, x, 0],
-                        warped_rgba[y, x, 1],
-                        warped_rgba[y, x, 2],
-                        warped_alpha[y, x],
-                    )
-                    new_surf.set_at((x, y), color)
-        new_surf.unlock()
-
-        return new_surf
+        scale = max(0.15, abs(math.cos(math.radians(angle_deg))))
+        new_w = max(1, int(w * scale))
+        return pygame.transform.scale(surface, (new_w, h))
 
     @classmethod
     def _ensure_cache(cls, base_surface, cache_key):
@@ -159,7 +112,7 @@ class AnimatedLoot(Item):
             player.health = min(player.health + self.HEAL_AMOUNT, PLAYER_HEALTH)
             if hasattr(player, "healthbar"):
                 player.healthbar.damage(PLAYER_HEALTH, player.health)
-        audio_manager.play_sound("menu_select")
+        self.game.services.audio.play_sound("menu_select")
         self.kill()
 
 
