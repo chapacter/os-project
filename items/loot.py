@@ -4,6 +4,8 @@ import random
 
 import pygame
 
+from entity.components.tags import LootMarker
+from entity.ecs_helpers import ecs_register
 from items.base import Item
 from utils.settings import WEAPON_LAYER, LOOT_ANIMATION_STEP, LOOT_ANIMATION_MAX_ANGLE, LOOT_FLY_DURATION, PLAYER_HEALTH
 
@@ -59,6 +61,11 @@ class AnimatedLoot(Item):
         self.rotation_angle = 0
         self._rotation_direction = 1
 
+    def _register_ecs(self):
+        if self.game and self.game.ecs_world:
+            ecs_register(self.game.ecs_world, self, rect=self.rect, image=self.image)
+            self.game.ecs_world.add_component(self, LootMarker())
+
     def _get_parabola_pos(self, t):
         one_minus_t = 1 - t
         return (
@@ -95,10 +102,6 @@ class AnimatedLoot(Item):
                 self.state = "landed"
                 self.rect.x = self.end_pos.x
                 self.rect.y = self.end_pos.y
-        else:
-            collide = pygame.sprite.spritecollide(self, self.game.mainPlayer, False)
-            if collide:
-                self.on_pickup(collide[0])
 
         self.animate()
 
@@ -149,3 +152,4 @@ class LootItem(AnimatedLoot):
 
         self._init_flight()
         self._init_animation()
+        self._register_ecs()

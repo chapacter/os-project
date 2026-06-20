@@ -32,6 +32,7 @@ class Coin(AnimatedLoot):
 
         self._init_flight()
         self._init_animation()
+        self._register_ecs()
 
     def on_pickup(self, player):
         if hasattr(player, "coins"):
