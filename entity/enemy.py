@@ -100,10 +100,6 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.blink_timer = 0
         self.visible = True
 
-        # Float position accumulators — fix sub-pixel truncation
-        self._pos_x = float(self.hitbox.x)
-        self._pos_y = float(self.hitbox.y)
-
         # Patrol improvements
         self.patrol_timer = 0
         self.patrol_target_x = 0
@@ -129,6 +125,9 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.physics_name = f"enemy_{id(self)}"
         VectorEntity.__init__(self, game, self.physics_name, collision_type=COLLISION_ENTITY, max_health=int(cfg["hp"] * hp_multiplier))
         self.knockback_comp.decay = ENEMY_KNOCKBACK_DECAY
+        self.block_collider_comp.use_float_pos = True
+        self.block_collider_comp.pos_x = float(self.hitbox.x)
+        self.block_collider_comp.pos_y = float(self.hitbox.y)
 
         # Replace default pymunk body with one sized to hitbox
         if self.body:
@@ -442,31 +441,9 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         if self.has_blink:
             self.image.set_alpha(255 if self.visible else 0)
 
-    def apply_movement(self):
-        kb = self.knockback_comp.velocity
-        if kb.length() > 0:
-            self._pos_x += kb.x
-            self.hitbox.x = int(self._pos_x)
-            self._resolve_collision_x(kb)
-            self._pos_y += kb.y
-            self.hitbox.y = int(self._pos_y)
-            self._resolve_collision_y(kb)
-
-        self._pos_x += self.velocity.x
-        self.hitbox.x = int(self._pos_x)
-        self._resolve_collision_x(self.velocity)
-        self._pos_y += self.velocity.y
-        self.hitbox.y = int(self._pos_y)
-        self._resolve_collision_y(self.velocity)
-
-        self.rect.center = self.hitbox.center
-        self.sync_physics()
-
     def update(self):
         self.move()
         self.animation()
-
-        self.apply_movement()
 
         # Home room management
         if not self._is_inside_home_room():
@@ -532,8 +509,9 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.rect.x = center_x * TILESIZE - self.width // 2
         self.rect.y = center_y * TILESIZE - self.height // 2
         self.hitbox.center = self.rect.center
-        self._pos_x = float(self.hitbox.x)
-        self._pos_y = float(self.hitbox.y)
+        bc = self.block_collider_comp
+        bc.pos_x = float(self.hitbox.x)
+        bc.pos_y = float(self.hitbox.y)
         self.velocity = pygame.math.Vector2(0, 0)
         self.has_seen_player = False
         self.retreat_progress = 0

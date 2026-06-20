@@ -128,9 +128,6 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         self.previous_direction = "down"
         self.animation_counter = 0
 
-        self._pos_x = float(self.rect.x)
-        self._pos_y = float(self.rect.y)
-
         self.minions = pygame.sprite.Group()
 
         self.in_transition = False
@@ -150,6 +147,9 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
             self, self.game, self.physics_name, collision_type=COLLISION_ENTITY, max_health=self.boss_cfg["hp"]
         )
         self.knockback_comp.decay = ENEMY_KNOCKBACK_DECAY
+        self.block_collider_comp.use_float_pos = True
+        self.block_collider_comp.pos_x = float(self.rect.x)
+        self.block_collider_comp.pos_y = float(self.rect.y)
 
         if self.body:
             game.physics.remove_body(self.physics_name)
@@ -252,10 +252,11 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
 
         EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "death",
                                         groups=[self.game.all_sprites], )
-        self._pos_x = float(new_x)
-        self._pos_y = float(new_y)
-        self.rect.x = int(self._pos_x)
-        self.rect.y = int(self._pos_y)
+        bc = self.block_collider_comp
+        bc.pos_x = float(new_x)
+        bc.pos_y = float(new_y)
+        self.rect.x = int(bc.pos_x)
+        self.rect.y = int(bc.pos_y)
         self.hitbox.center = self.rect.center
         EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "death",
                                         groups=[self.game.all_sprites], )
@@ -434,31 +435,9 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
                 tinted.fill(color, special_flags=pygame.BLEND_RGB_MULT)
                 self.image = tinted
 
-    def apply_movement(self):
-        kb = self.knockback_comp.velocity
-        if kb.length() > 0:
-            self._pos_x += kb.x
-            self.hitbox.x = int(self._pos_x)
-            self._resolve_collision_x(kb)
-            self._pos_y += kb.y
-            self.hitbox.y = int(self._pos_y)
-            self._resolve_collision_y(kb)
-
-        self._pos_x += self.velocity.x
-        self.hitbox.x = int(self._pos_x)
-        self._resolve_collision_x(self.velocity)
-        self._pos_y += self.velocity.y
-        self.hitbox.y = int(self._pos_y)
-        self._resolve_collision_y(self.velocity)
-
-        self.rect.center = self.hitbox.center
-        self.sync_physics()
-
     def update(self):
         self.move()
         self.animation()
-
-        self.apply_movement()
 
         self.collide_player()
 

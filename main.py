@@ -18,6 +18,7 @@ from entity.factories.effect_factory import EffectFactory
 from entity.player import Player
 from entity.systems.animation_system import AnimationSystem
 from entity.systems.area_damage_system import AreaDamageSystem
+from entity.systems.block_collision_system import BlockCollisionSystem
 from entity.systems.combat_system import CombatSystem
 from entity.systems.hit_flash_system import HitFlashSystem
 from entity.systems.knockback_system import KnockbackSystem
@@ -837,6 +838,7 @@ class Game:
         self.ecs_world.add_system(AreaDamageSystem(self.ecs_world, lambda: getattr(self, "player", None)))
         self.ecs_world.add_system(CombatSystem(self.ecs_world))
         self.ecs_world.add_system(HitFlashSystem(self.ecs_world))
+        self.ecs_world.add_system(BlockCollisionSystem(self.ecs_world, lambda: self.blocks))
         self.ecs_world.add_system(KnockbackSystem(self.ecs_world))
 
         self.create_tile_map()

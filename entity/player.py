@@ -123,8 +123,6 @@ class Player(VectorEntity, pygame.sprite.Sprite):
 
         self.contact_knockback_cooldown = 0
 
-        self.noclip = False
-
         VectorEntity.__init__(
             self,
             game,
@@ -132,14 +130,16 @@ class Player(VectorEntity, pygame.sprite.Sprite):
             create_body=False,
             max_health=PLAYER_HEALTH,
         )
+        self.block_collider_comp.noclip = False
 
     def move(self):
         pressed = pygame.key.get_pressed()
 
         if pressed[pygame.K_F1]:
             if not hasattr(self, '_noclip_toggle') or not self._noclip_toggle:
-                self.noclip = not self.noclip
-                print(f"Noclip: {'ON' if self.noclip else 'OFF'}")
+                bc = self.block_collider_comp
+                bc.noclip = not bc.noclip
+                print(f"Noclip: {'ON' if bc.noclip else 'OFF'}")
                 self._noclip_toggle = True
         else:
             self._noclip_toggle = False
@@ -190,23 +190,6 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                 EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.bottom, "grass",
                                                 groups=[self.game.all_sprites], )
 
-    def apply_movement(self):
-        kb = self.knockback_comp.velocity
-        self.hitbox.x += kb.x
-        if not self.noclip:
-            self._resolve_collision_x(kb)
-        self.hitbox.y += kb.y
-        if not self.noclip:
-            self._resolve_collision_y(kb)
-        self.hitbox.x += self.velocity.x
-        if not self.noclip:
-            self._resolve_collision_x(self.velocity)
-        self.hitbox.y += self.velocity.y
-        if not self.noclip:
-            self._resolve_collision_y(self.velocity)
-        self.rect.center = self.hitbox.center
-        self.sync_physics()
-
     def update(self):
         self.move()
         self.animation()
@@ -218,7 +201,6 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         self.collide_weapon()
         self.attack()
         self._update_double_attack()
-        self.apply_movement()
 
         self.dodge_cooldown_update()
         self.wait_after_shoot()

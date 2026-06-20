@@ -1,5 +1,6 @@
 import pygame
 
+from entity.components.collision.block_collider import BlockColliderComponent
 from entity.components.combat.health import HealthComponent
 from entity.components.combat.hit_flash import HitFlashComponent
 from entity.components.combat.knockback import KnockbackComponent
@@ -20,6 +21,8 @@ class VectorEntity:
         self.health_comp = HealthComponent(health=mh, max_health=mh)
         self.hit_flash_comp = HitFlashComponent()
         self.knockback_comp = KnockbackComponent()
+        hitbox = self.hitbox if hasattr(self, "hitbox") else pygame.Rect(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT)
+        self.block_collider_comp = BlockColliderComponent(hitbox=hitbox)
 
         if hasattr(self, "game") and self.game and hasattr(self.game, "ecs_world") and self.game.ecs_world:
             w = self.game.ecs_world
@@ -28,6 +31,12 @@ class VectorEntity:
             w.add_component(self, self.health_comp)
             w.add_component(self, self.hit_flash_comp)
             w.add_component(self, self.knockback_comp)
+            w.add_component(self, self.block_collider_comp)
+
+        if hasattr(self, "_pos_x"):
+            self.block_collider_comp.pos_x = self._pos_x
+            self.block_collider_comp.pos_y = self._pos_y
+            self.block_collider_comp.use_float_pos = True
 
         self.particle_counter = 0
 
@@ -43,47 +52,6 @@ class VectorEntity:
         elif vy != 0:
             return "down" if vy > 0 else "up"
         return self.direction
-
-    def _resolve_collision_x(self, vel):
-        if vel.x == 0:
-            return False
-        for block in self.game.blocks:
-            if self.hitbox.colliderect(block.rect):
-                if vel.x > 0:
-                    self.hitbox.right = block.rect.left
-                else:
-                    self.hitbox.left = block.rect.right
-                vel.x = 0
-                return True
-        return False
-
-    def _resolve_collision_y(self, vel):
-        if vel.y == 0:
-            return False
-        for block in self.game.blocks:
-            if self.hitbox.colliderect(block.rect):
-                if vel.y > 0:
-                    self.hitbox.bottom = block.rect.top
-                else:
-                    self.hitbox.top = block.rect.bottom
-                vel.y = 0
-                return True
-        return False
-
-    def apply_movement(self):
-        kb = self.knockback_comp.velocity
-        self.hitbox.x += kb.x
-        self._resolve_collision_x(kb)
-        self.hitbox.y += kb.y
-        self._resolve_collision_y(kb)
-
-        self.hitbox.x += self.velocity.x
-        self._resolve_collision_x(self.velocity)
-        self.hitbox.y += self.velocity.y
-        self._resolve_collision_y(self.velocity)
-
-        self.rect.center = self.hitbox.center
-        self.sync_physics()
 
     def sync_physics(self):
         if self.body:
@@ -145,11 +113,10 @@ class Entity(VectorEntity, pygame.sprite.Sprite):
         self.height = TILESIZE
 
         self.rect = pygame.Rect(self.x, self.y, self.width, self.height)
-
-        VectorEntity.__init__(self, game, physics_name, collision_type)
-
         self.hitbox = pygame.Rect(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT)
         self.hitbox.center = self.rect.center
+
+        VectorEntity.__init__(self, game, physics_name, collision_type)
 
     def update_hitbox(self):
         self.hitbox.center = self.rect.center
