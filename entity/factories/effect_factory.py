@@ -53,6 +53,7 @@ class EffectFactory:
         world.add_component(sprite, AnimationComponent(frames=frames, frame_count=frame_count, speed=anim_speed,
                                                        looping=False, ))
         world.add_component(sprite, RenderComponent(image=sprite.image))
+        world.add_component(sprite, LifetimeComponent(remaining=999))
 
         return sprite
 
@@ -96,7 +97,7 @@ class EffectFactory:
 
     @classmethod
     def cleanup_finished(cls, world: World) -> None:
-        anim_entities = world.query(AnimationComponent)
+        anim_entities = world.query(AnimationComponent, LifetimeComponent)
         for entity in anim_entities:
             anim = world.get_component(entity, AnimationComponent)
             if anim and anim.finished:

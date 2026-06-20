@@ -2,6 +2,7 @@ import random
 
 import pygame
 
+from entity.components.render.animation import AnimationComponent
 from items.base import Item
 from items.loot import AnimatedLoot
 from utils.settings import GROUND_LAYER, WEAPON_TYPES, WEAPON_LAYER
@@ -11,24 +12,29 @@ class Weapon(Item):
     def __init__(self, game, x, y):
         super().__init__(game, x, y, GROUND_LAYER, game.all_sprites, game.weapons)
 
-        self.image = game.weapon_spritesheet.get_image(0, 0, self.width, self.height)
+        frames = [
+            game.weapon_spritesheet.get_image(0, 0, self.width, self.height),
+            game.weapon_spritesheet.get_image(27, 0, self.width, self.height),
+            game.weapon_spritesheet.get_image(55, 0, self.width, self.height),
+        ]
+        self.image = frames[1]
+
+        self.anim_comp = AnimationComponent(
+            frames=frames, frame_count=3, speed=0.02, looping=True,
+        )
+        if game.ecs_world:
+            game.ecs_world.add_component(self, self.anim_comp)
+
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
 
-        self.animation_counter = 1
-
     def animate(self):
-        animation = [
-            self.game.weapon_spritesheet.get_image(0, 0, self.width, self.height),
-            self.game.weapon_spritesheet.get_image(27, 0, self.width, self.height),
-            self.game.weapon_spritesheet.get_image(55, 0, self.width, self.height),
-        ]
-        self.image = animation[int(self.animation_counter)]
-
-        self.animation_counter += 0.02
-        if self.animation_counter >= 3:
-            self.animation_counter = 0
+        anim = self.anim_comp
+        anim.frame_index += anim.speed
+        if anim.frame_index >= anim.frame_count:
+            anim.frame_index = 0.0
+        self.image = anim.current_frame
 
     def update(self):
         self.animate()

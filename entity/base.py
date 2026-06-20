@@ -4,7 +4,6 @@ from entity.components.collision.block_collider import BlockColliderComponent
 from entity.components.combat.health import HealthComponent
 from entity.components.combat.hit_flash import HitFlashComponent
 from entity.components.combat.knockback import KnockbackComponent
-from entity.factories.effect_factory import EffectFactory
 from utils.settings import *
 
 
@@ -38,8 +37,6 @@ class VectorEntity:
             self.block_collider_comp.pos_y = self._pos_y
             self.block_collider_comp.use_float_pos = True
 
-        self.particle_counter = 0
-
         if create_body and game.physics_enabled and game.physics:
             self.body, self.shape = game.physics.add_entity_body(0, 0, HITBOX_WIDTH, HITBOX_HEIGHT,
                                                                  name=self.physics_name,
@@ -57,27 +54,6 @@ class VectorEntity:
         if self.body:
             self.game.physics.set_body_velocity(self.physics_name, self.velocity)
             self.game.physics.sync_entity_to_body(self.physics_name, self.rect)
-
-    def apply_hit_effect(self, flash_color=(255, 255, 255, 180)):
-        hf = self.hit_flash_comp
-        if hf.scale_timer > 0:
-            orig_w, orig_h = self.image.get_size()
-            self.image = pygame.transform.scale(self.image, (orig_w + 2, orig_h + 2))
-            self.rect = self.image.get_rect(center=self.rect.center)
-            hf.scale_timer -= 1
-
-        if hf.timer > 0:
-            mask = pygame.mask.from_surface(self.image)
-            silhouette = mask.to_surface(setcolor=flash_color, unsetcolor=(0, 0, 0, 0))
-            self.image.blit(silhouette, (0, 0))
-            hf.timer -= 1
-
-        if self.health_comp.health < self.health_comp.max_health * 0.3:
-            self.particle_counter += 1
-            if self.particle_counter >= 3:
-                self.particle_counter = 0
-                EffectFactory.create_spark_particle(self.game.ecs_world, self.rect.centerx, self.rect.centery,
-                                                    groups=[self.game.all_sprites], )
 
     def take_knockback(self, direction, force):
         kb = self.knockback_comp

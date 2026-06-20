@@ -4,6 +4,7 @@ import random
 import pygame
 
 from entity.base import Healthbar, VectorEntity
+from entity.components.render.animation import AnimationComponent
 from entity.factories.effect_factory import EffectFactory
 from projectiles.bullet import Enemy_Bullet
 from utils import weighted_choice
@@ -88,7 +89,6 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.direction = random.choice(["left", "right", "up", "down"])
         self.ai_state = "patrol"
         self.has_seen_player = False
-        self.animation_counter = 0
 
         self.shoot_counter = 0
         self.shoot_state = "halt"
@@ -128,6 +128,14 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self.block_collider_comp.use_float_pos = True
         self.block_collider_comp.pos_x = float(self.hitbox.x)
         self.block_collider_comp.pos_y = float(self.hitbox.y)
+        self.anim_comp = AnimationComponent(
+            frames=self.animations[self.direction],
+            frame_count=self.frame_move,
+            speed=0.2,
+            looping=True,
+        )
+        if self.game and self.game.ecs_world:
+            self.game.ecs_world.add_component(self, self.anim_comp)
 
         # Replace default pymunk body with one sized to hitbox
         if self.body:
@@ -424,14 +432,18 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
             else self.direction
         )
 
+        anim = self.anim_comp
+        anim.frames = self.animations[anim_dir]
+        anim.frame_count = self.frame_move
+
         if self.velocity.length() == 0:
-            self.image = self.animations[anim_dir][0]
+            anim.frame_index = 0.0
         else:
-            frame_index = int(self.animation_counter) % self.frame_move
-            self.image = self.animations[anim_dir][frame_index]
-            self.animation_counter += 0.2
-            if self.animation_counter >= self.frame_move:
-                self.animation_counter = 0
+            anim.frame_index += anim.speed
+            if anim.frame_index >= anim.frame_count:
+                anim.frame_index = 0.0
+
+        self.image = anim.current_frame
 
         if self.enraged:
             tinted = self.image.copy()

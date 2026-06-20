@@ -56,7 +56,6 @@ class AnimatedLoot(Item):
         self._cache_key = id(self._base_image)
         self._ensure_cache(self._base_image, self._cache_key)
 
-        self.animation_counter = 0
         self.rotation_angle = 0
         self._rotation_direction = 1
 
@@ -69,10 +68,6 @@ class AnimatedLoot(Item):
         )
 
     def animate(self):
-        self.animation_counter += 0.05
-        if self.animation_counter >= 1:
-            self.animation_counter = 0
-
         self.rotation_angle += self._rotation_step * self._rotation_direction
         if self.rotation_angle >= self._rotation_max_angle:
             self.rotation_angle = self._rotation_max_angle

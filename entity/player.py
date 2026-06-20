@@ -3,6 +3,7 @@ import math
 import pygame
 
 from entity.base import VectorEntity
+from entity.components.render.animation import AnimationComponent
 from entity.factories.effect_factory import EffectFactory
 from projectiles.bullet import Bullet
 from utils.settings import *
@@ -131,6 +132,14 @@ class Player(VectorEntity, pygame.sprite.Sprite):
             max_health=PLAYER_HEALTH,
         )
         self.block_collider_comp.noclip = False
+        self.anim_comp = AnimationComponent(
+            frames=self.animations["move"]["right"],
+            frame_count=self.frame_move,
+            speed=0.8,
+            looping=True,
+        )
+        if self.game.ecs_world:
+            self.game.ecs_world.add_component(self, self.anim_comp)
 
     def move(self):
         pressed = pygame.key.get_pressed()
@@ -206,39 +215,44 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         self.wait_after_shoot()
 
     def animation(self):
+        anim = self.anim_comp
+
         if self.action_state == "knockback":
             if self.knockback_type == "weak":
-                self.image = self.animations["knockback_weak"][self.direction][0]
+                anim.frames = self.animations["knockback_weak"][self.direction]
+                self.image = anim.frames[0]
                 if self.knockback_comp.duration_remaining <= 0:
                     self.action_state = "move"
                     self.knockback_type = None
             else:
-                frames = self.animations["knockback_strong"][self.direction]
-                frame_index = min(int(self.knockback_frame), len(frames) - 1)
-                self.image = frames[frame_index]
+                anim.frames = self.animations["knockback_strong"][self.direction]
+                frame_index = min(int(self.knockback_frame), len(anim.frames) - 1)
+                self.image = anim.frames[frame_index]
                 self.knockback_frame += 5.0 / 16.0
-                if self.knockback_frame >= len(frames):
-                    self.knockback_frame = len(frames) - 1
+                if self.knockback_frame >= len(anim.frames):
+                    self.knockback_frame = len(anim.frames) - 1
                 if self.knockback_comp.duration_remaining <= 0:
                     self.action_state = "move"
                     self.knockback_type = None
                     self.knockback_frame = 0
 
         elif self.action_state == "attack":
+            anim.frames = self.animations["attack"][self.attack_direction]
             frame_index = int(self.action_frame)
-            if frame_index >= len(self.animations["attack"][self.attack_direction]):
-                frame_index = len(self.animations["attack"][self.attack_direction]) - 1
-            self.image = self.animations["attack"][self.attack_direction][frame_index]
+            if frame_index >= len(anim.frames):
+                frame_index = len(anim.frames) - 1
+            self.image = anim.frames[frame_index]
             self.action_frame += 0.375
             if self.action_frame >= self.frame_attack:
                 self.action_state = "move"
                 self.action_frame = 0
 
         elif self.action_state == "dodge":
+            anim.frames = self.animations["dodge"][self.direction]
             frame_index = int(self.action_frame)
-            if frame_index >= len(self.animations["dodge"][self.direction]):
-                frame_index = len(self.animations["dodge"][self.direction]) - 1
-            self.image = self.animations["dodge"][self.direction][frame_index]
+            if frame_index >= len(anim.frames):
+                frame_index = len(anim.frames) - 1
+            self.image = anim.frames[frame_index]
             self.action_frame += 0.5
             if self.action_frame >= self.dodge_frames:
                 self.is_dodging = False
@@ -247,8 +261,9 @@ class Player(VectorEntity, pygame.sprite.Sprite):
 
         else:
             if self.is_input_active and self.velocity.length() > 0:
+                anim.frames = self.animations["move"][self.direction]
                 frame_index = int(self.action_frame) % self.frame_move
-                self.image = self.animations["move"][self.direction][frame_index]
+                self.image = anim.frames[frame_index]
                 self.action_frame += 0.8
                 if self.action_frame >= self.frame_move:
                     self.action_frame = 0

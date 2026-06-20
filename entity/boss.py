@@ -4,6 +4,7 @@ import random
 import pygame
 
 from entity.base import Healthbar, VectorEntity
+from entity.components.render.animation import AnimationComponent
 from entity.enemy import Enemy
 from entity.factories.effect_factory import EffectFactory
 from projectiles.bullet import Enemy_Bullet
@@ -89,7 +90,6 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         sprite_w, sprite_h = self.boss_cfg["frame_size"]
 
         self.frame_move = self.boss_cfg["frame_move"]
-        self.animation_counter = 0
         self.animations = {}
         direction_map = self.boss_cfg["direction_map"]
 
@@ -126,7 +126,6 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         self.ranged_timer = 0
 
         self.previous_direction = "down"
-        self.animation_counter = 0
 
         self.minions = pygame.sprite.Group()
 
@@ -150,6 +149,14 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         self.block_collider_comp.use_float_pos = True
         self.block_collider_comp.pos_x = float(self.rect.x)
         self.block_collider_comp.pos_y = float(self.rect.y)
+        self.anim_comp = AnimationComponent(
+            frames=self.animations[self.previous_direction],
+            frame_count=self.frame_move,
+            speed=0.2,
+            looping=True,
+        )
+        if self.game and self.game.ecs_world:
+            self.game.ecs_world.add_component(self, self.anim_comp)
 
         if self.body:
             game.physics.remove_body(self.physics_name)
@@ -417,15 +424,18 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
             else self.previous_direction
         )
 
-        if self.velocity.length() == 0:
-            self.image = self.animations[anim_dir][0]
-        else:
-            frame_index = int(self.animation_counter) % self.frame_move
-            self.image = self.animations[anim_dir][frame_index]
-            self.animation_counter += 0.2
-            if self.animation_counter >= self.frame_move:
-                self.animation_counter = 0
+        anim = self.anim_comp
+        anim.frames = self.animations[anim_dir]
+        anim.frame_count = self.frame_move
 
+        if self.velocity.length() == 0:
+            anim.frame_index = 0.0
+        else:
+            anim.frame_index += anim.speed
+            if anim.frame_index >= anim.frame_count:
+                anim.frame_index = 0.0
+
+        self.image = anim.current_frame
         self.rect = self.image.get_rect(center=self.rect.center)
 
         if self.current_phase > 1:

@@ -8,7 +8,7 @@ class AnimationSystem(System):
         super().__init__(world)
 
     def update(self, dt: float) -> None:
-        entities = self.world.query(AnimationComponent)
+        entities = self.world.query(RenderComponent, AnimationComponent)
         for entity in entities:
             anim = self.world.get_component(entity, AnimationComponent)
             if anim.finished:
