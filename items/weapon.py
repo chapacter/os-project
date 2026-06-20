@@ -3,6 +3,8 @@ import random
 import pygame
 
 from entity.components.render.animation import AnimationComponent
+from entity.components.tags import WeaponMarker
+from entity.ecs_helpers import ecs_register
 from items.base import Item
 from items.loot import AnimatedLoot
 from utils.settings import GROUND_LAYER, WEAPON_TYPES, WEAPON_LAYER
@@ -22,12 +24,15 @@ class Weapon(Item):
         self.anim_comp = AnimationComponent(
             frames=frames, frame_count=3, speed=0.02, looping=True,
         )
-        if game.ecs_world:
-            game.ecs_world.add_component(self, self.anim_comp)
 
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+
+        if game.ecs_world:
+            game.ecs_world.add_component(self, self.anim_comp)
+            ecs_register(game.ecs_world, self, rect=self.rect, image=self.image)
+            game.ecs_world.add_component(self, WeaponMarker())
 
     def animate(self):
         anim = self.anim_comp
@@ -72,6 +77,7 @@ class WeaponLoot(AnimatedLoot):
 
         self._init_flight()
         self._init_animation()
+        self._register_ecs()
 
     _FLAG_MAP = {
         "double_weapon": "double_attack_unlocked",

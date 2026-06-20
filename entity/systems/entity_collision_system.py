@@ -3,7 +3,7 @@ import pygame
 from core.ecs_world import System, World
 from entity.components.bullet import BulletComponent
 from entity.components.collision.block_collider import BlockColliderComponent
-from entity.components.tags import BulletMarker, EnemyMarker, PlayerMarker
+from entity.components.tags import BulletMarker, EnemyMarker, LootMarker, PlayerMarker, WeaponMarker
 from entity.factories.effect_factory import EffectFactory
 from entity.systems.bullet_system import explode_bullet
 from utils.settings import CONTACT_KNOCKBACK_FORCE, CONTACT_KNOCKBACK_INTERVAL, KNOCKBACK_DURATION
@@ -28,6 +28,28 @@ class EntityCollisionSystem(System):
 
         for player in players:
             self._player_vs_enemy(player, enemies)
+            self._player_vs_pickups(player)
+
+    # ── Pickup helpers ────────────────────────────────────────────
+
+    def _player_vs_pickups(self, player):
+        if not hasattr(player, "rect"):
+            return
+        loots = self.world.query(LootMarker)
+        for loot in loots:
+            if not hasattr(loot, "rect"):
+                continue
+            if getattr(loot, "state", None) != "landed":
+                continue
+            if player.rect.colliderect(loot.rect):
+                loot.on_pickup(player)
+        weapons = self.world.query(WeaponMarker)
+        for weapon in weapons:
+            if not hasattr(weapon, "rect"):
+                continue
+            if player.rect.colliderect(weapon.rect):
+                player.sword_equipped = True
+                weapon.kill()
 
     # ── Bullet collision helpers ──────────────────────────────────
 

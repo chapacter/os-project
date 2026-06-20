@@ -276,9 +276,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         pass
 
     def collide_weapon(self):
-        collide = pygame.sprite.spritecollide(self, self.game.weapons, True)
-        if collide:
-            self.sword_equipped = True
+        pass
 
     def attack(self):
         if self.shoot_state != "shoot":
