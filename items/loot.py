@@ -108,10 +108,11 @@ class AnimatedLoot(Item):
         self.animate()
 
     def on_pickup(self, player):
-        if hasattr(player, "health"):
-            player.health = min(player.health + self.HEAL_AMOUNT, PLAYER_HEALTH)
+        if hasattr(player, "health_comp"):
+            hp = player.health_comp
+            hp.health = min(hp.health + self.HEAL_AMOUNT, PLAYER_HEALTH)
             if hasattr(player, "healthbar"):
-                player.healthbar.damage(PLAYER_HEALTH, player.health)
+                player.healthbar.damage(PLAYER_HEALTH, hp.health)
         self.game.services.audio.play_sound("menu_select")
         self.kill()
 

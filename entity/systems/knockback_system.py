@@ -15,10 +15,6 @@ class KnockbackSystem(System):
                 continue
             if comp.duration_remaining > 0:
                 comp.velocity *= comp.decay
-                if hasattr(entity, "knockback_velocity"):
-                    entity.knockback_velocity = comp.velocity
                 comp.duration_remaining -= 1
                 if comp.velocity.length() < 0.1:
                     comp.velocity = pygame.math.Vector2(0, 0)
-                    if hasattr(entity, "knockback_velocity"):
-                        entity.knockback_velocity = comp.velocity

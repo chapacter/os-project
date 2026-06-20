@@ -11,16 +11,13 @@ class VectorEntity:
     def __init__(self, game, physics_name=None, collision_type=None, create_body=True, max_health=None):
         self.game = game
         self.velocity = pygame.math.Vector2(0, 0)
-        self.knockback_velocity = pygame.math.Vector2(0, 0)
         self.direction = "right"
         self.physics_name = physics_name
         self.body = None
         self.shape = None
 
-        self.max_health = max_health if max_health is not None else 5
-        self.health = self.max_health
-
-        self.health_comp = HealthComponent(health=self.health, max_health=self.max_health)
+        mh = max_health if max_health is not None else 5
+        self.health_comp = HealthComponent(health=mh, max_health=mh)
         self.hit_flash_comp = HitFlashComponent()
         self.knockback_comp = KnockbackComponent()
 
@@ -31,13 +28,6 @@ class VectorEntity:
             w.add_component(self, self.health_comp)
             w.add_component(self, self.hit_flash_comp)
             w.add_component(self, self.knockback_comp)
-
-        self.hit_flash_timer = 0
-        self.hit_flash_duration = 2
-        self.hit_scale_timer = 0
-        self.hit_scale_duration = self.hit_flash_duration + 2
-
-        self.knockback_duration_remaining = 0
 
         self.particle_counter = 0
 
@@ -54,8 +44,7 @@ class VectorEntity:
             return "down" if vy > 0 else "up"
         return self.direction
 
-    def _resolve_collision_x(self, velocity_attr="velocity"):
-        vel = getattr(self, velocity_attr)
+    def _resolve_collision_x(self, vel):
         if vel.x == 0:
             return False
         for block in self.game.blocks:
@@ -68,8 +57,7 @@ class VectorEntity:
                 return True
         return False
 
-    def _resolve_collision_y(self, velocity_attr="velocity"):
-        vel = getattr(self, velocity_attr)
+    def _resolve_collision_y(self, vel):
         if vel.y == 0:
             return False
         for block in self.game.blocks:
@@ -83,15 +71,16 @@ class VectorEntity:
         return False
 
     def apply_movement(self):
-        self.hitbox.x += self.knockback_velocity.x
-        self._resolve_collision_x("knockback_velocity")
-        self.hitbox.y += self.knockback_velocity.y
-        self._resolve_collision_y("knockback_velocity")
+        kb = self.knockback_comp.velocity
+        self.hitbox.x += kb.x
+        self._resolve_collision_x(kb)
+        self.hitbox.y += kb.y
+        self._resolve_collision_y(kb)
 
         self.hitbox.x += self.velocity.x
-        self._resolve_collision_x("velocity")
+        self._resolve_collision_x(self.velocity)
         self.hitbox.y += self.velocity.y
-        self._resolve_collision_y("velocity")
+        self._resolve_collision_y(self.velocity)
 
         self.rect.center = self.hitbox.center
         self.sync_physics()
@@ -101,26 +90,21 @@ class VectorEntity:
             self.game.physics.set_body_velocity(self.physics_name, self.velocity)
             self.game.physics.sync_entity_to_body(self.physics_name, self.rect)
 
-    def decay_knockback(self, decay_factor):
-        if self.knockback_velocity.length() > 0:
-            self.knockback_velocity *= decay_factor
-            if self.knockback_velocity.length() < 0.1:
-                self.knockback_velocity = pygame.math.Vector2(0, 0)
-
     def apply_hit_effect(self, flash_color=(255, 255, 255, 180)):
-        if self.hit_scale_timer > 0:
+        hf = self.hit_flash_comp
+        if hf.scale_timer > 0:
             orig_w, orig_h = self.image.get_size()
             self.image = pygame.transform.scale(self.image, (orig_w + 2, orig_h + 2))
             self.rect = self.image.get_rect(center=self.rect.center)
-            self.hit_scale_timer -= 1
+            hf.scale_timer -= 1
 
-        if self.hit_flash_timer > 0:
+        if hf.timer > 0:
             mask = pygame.mask.from_surface(self.image)
             silhouette = mask.to_surface(setcolor=flash_color, unsetcolor=(0, 0, 0, 0))
             self.image.blit(silhouette, (0, 0))
-            self.hit_flash_timer -= 1
+            hf.timer -= 1
 
-        if self.health < self.max_health * 0.3:
+        if self.health_comp.health < self.health_comp.max_health * 0.3:
             self.particle_counter += 1
             if self.particle_counter >= 3:
                 self.particle_counter = 0
@@ -128,25 +112,22 @@ class VectorEntity:
                                                     groups=[self.game.all_sprites], )
 
     def take_knockback(self, direction, force):
-        self.knockback_velocity = direction * force
-        self.knockback_comp.velocity = self.knockback_velocity
-        self.hit_flash_timer = self.hit_flash_duration
-        self.hit_flash_comp.timer = self.hit_flash_duration
-        self.hit_scale_timer = self.hit_scale_duration
-        self.hit_flash_comp.scale_timer = self.hit_scale_duration
-        self.knockback_duration_remaining = 10
-        self.knockback_comp.duration_remaining = 10
+        kb = self.knockback_comp
+        kb.velocity = direction * force
+        hf = self.hit_flash_comp
+        hf.timer = hf.duration
+        hf.scale_timer = hf.scale_duration
+        kb.duration_remaining = 10
 
     def damage(self, amount):
-        self.health -= amount
-        self.health_comp.health = self.health
+        hp = self.health_comp
+        hp.health -= amount
         self.game.services.audio.play_sound("hit")
-        self.hit_flash_timer = self.hit_flash_duration
-        self.hit_flash_comp.timer = self.hit_flash_duration
-        self.hit_scale_timer = self.hit_scale_duration
-        self.hit_flash_comp.scale_timer = self.hit_scale_duration
-        if self.health <= 0:
-            self.health_comp.died = True
+        hf = self.hit_flash_comp
+        hf.timer = hf.duration
+        hf.scale_timer = hf.scale_duration
+        if hp.health <= 0:
+            hp.died = True
 
     def _on_death(self):
         pass

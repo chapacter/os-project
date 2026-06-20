@@ -109,8 +109,6 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         self.hitbox = pygame.Rect(0, 0, self.cfg["hitbox_size"], self.cfg["hitbox_size"])
         self.hitbox.center = self.rect.center
 
-        self.max_health = self.boss_cfg["hp"]
-        self.health = self.max_health
         self.current_phase = 1
 
         self.healthbar = BossHealthbar(game, x, y, self)
@@ -149,8 +147,9 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
 
         self.physics_name = f"boss_{id(self)}"
         VectorEntity.__init__(
-            self, self.game, self.physics_name, collision_type=COLLISION_ENTITY, max_health=self.max_health
+            self, self.game, self.physics_name, collision_type=COLLISION_ENTITY, max_health=self.boss_cfg["hp"]
         )
+        self.knockback_comp.decay = ENEMY_KNOCKBACK_DECAY
 
         if self.body:
             game.physics.remove_body(self.physics_name)
@@ -163,7 +162,7 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
         )
 
     def get_phase(self):
-        hp_percent = self.health / self.max_health
+        hp_percent = self.health_comp.health / self.health_comp.max_health
         if hp_percent > self.cfg["phase_thresholds"][0]:
             return 1
         elif hp_percent > self.cfg["phase_thresholds"][1]:
@@ -436,23 +435,21 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
                 self.image = tinted
 
     def apply_movement(self):
-        if self.knockback_velocity.length() > 0:
-            self._pos_x += self.knockback_velocity.x
+        kb = self.knockback_comp.velocity
+        if kb.length() > 0:
+            self._pos_x += kb.x
             self.hitbox.x = int(self._pos_x)
-            self._resolve_collision_x("knockback_velocity")
-            self._pos_y += self.knockback_velocity.y
+            self._resolve_collision_x(kb)
+            self._pos_y += kb.y
             self.hitbox.y = int(self._pos_y)
-            self._resolve_collision_y("knockback_velocity")
-            self.knockback_velocity *= ENEMY_KNOCKBACK_DECAY
-            if self.knockback_velocity.length() < 0.1:
-                self.knockback_velocity = pygame.math.Vector2(0, 0)
+            self._resolve_collision_y(kb)
 
         self._pos_x += self.velocity.x
         self.hitbox.x = int(self._pos_x)
-        self._resolve_collision_x("velocity")
+        self._resolve_collision_x(self.velocity)
         self._pos_y += self.velocity.y
         self.hitbox.y = int(self._pos_y)
-        self._resolve_collision_y("velocity")
+        self._resolve_collision_y(self.velocity)
 
         self.rect.center = self.hitbox.center
         self.sync_physics()
@@ -467,7 +464,7 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
 
         if self.healthbar:
             self.healthbar.move()
-            self.healthbar.damage(self.max_health, self.health)
+            self.healthbar.damage(self.health_comp.max_health, self.health_comp.health)
 
     def collide_player(self):
         pass
@@ -475,7 +472,7 @@ class Boss(VectorEntity, pygame.sprite.Sprite):
     def damage(self, amount):
         super().damage(amount)
         if self.healthbar:
-            self.healthbar.damage(self.max_health, self.health)
+            self.healthbar.damage(self.health_comp.max_health, self.health_comp.health)
 
     def _on_death(self):
         if self.healthbar:

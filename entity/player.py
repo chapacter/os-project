@@ -191,22 +191,19 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                                                 groups=[self.game.all_sprites], )
 
     def apply_movement(self):
-        self.hitbox.x += self.knockback_velocity.x
+        kb = self.knockback_comp.velocity
+        self.hitbox.x += kb.x
         if not self.noclip:
-            self._resolve_collision_x("knockback_velocity")
-        self.hitbox.y += self.knockback_velocity.y
+            self._resolve_collision_x(kb)
+        self.hitbox.y += kb.y
         if not self.noclip:
-            self._resolve_collision_y("knockback_velocity")
-        self.knockback_velocity *= KNOCKBACK_DECAY
-        if self.knockback_velocity.length() < 0.1:
-            self.knockback_velocity = pygame.math.Vector2(0, 0)
-        self.knockback_comp.velocity = self.knockback_velocity
+            self._resolve_collision_y(kb)
         self.hitbox.x += self.velocity.x
         if not self.noclip:
-            self._resolve_collision_x("velocity")
+            self._resolve_collision_x(self.velocity)
         self.hitbox.y += self.velocity.y
         if not self.noclip:
-            self._resolve_collision_y("velocity")
+            self._resolve_collision_y(self.velocity)
         self.rect.center = self.hitbox.center
         self.sync_physics()
 
@@ -216,8 +213,6 @@ class Player(VectorEntity, pygame.sprite.Sprite):
 
         if self.contact_knockback_cooldown > 0:
             self.contact_knockback_cooldown -= 1
-        if self.knockback_duration_remaining > 0:
-            self.knockback_duration_remaining -= 1
 
         self.collide_enemy()
         self.collide_weapon()
@@ -232,7 +227,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         if self.action_state == "knockback":
             if self.knockback_type == "weak":
                 self.image = self.animations["knockback_weak"][self.direction][0]
-                if self.knockback_duration_remaining <= 0:
+                if self.knockback_comp.duration_remaining <= 0:
                     self.action_state = "move"
                     self.knockback_type = None
             else:
@@ -242,7 +237,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                 self.knockback_frame += 5.0 / 16.0
                 if self.knockback_frame >= len(frames):
                     self.knockback_frame = len(frames) - 1
-                if self.knockback_duration_remaining <= 0:
+                if self.knockback_comp.duration_remaining <= 0:
                     self.action_state = "move"
                     self.knockback_type = None
                     self.knockback_frame = 0
@@ -305,9 +300,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
 
                     self.knockback_frame = 0
                     vel_along = max(0, self.velocity.dot(contact_dir))
-                    self.knockback_velocity = contact_dir * force + contact_dir * vel_along * 0.3
-                    self.knockback_duration_remaining = duration
-                    self.knockback_comp.velocity = self.knockback_velocity
+                    self.knockback_comp.velocity = contact_dir * force + contact_dir * vel_along * 0.3
                     self.knockback_comp.duration_remaining = duration
                     if self.action_state != "dodge":
                         self.action_state = "knockback"

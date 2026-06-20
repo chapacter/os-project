@@ -32,7 +32,7 @@ class HUD:
 
     def update(self, time_delta):
         if hasattr(self.game, "player") and self.game.player:
-            health = self.game.player.health
+            health = self.game.player.health_comp.health
             max_health = 10
             health_percent = max(0, min(1, health / max_health))
 

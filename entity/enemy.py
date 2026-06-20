@@ -128,6 +128,7 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
 
         self.physics_name = f"enemy_{id(self)}"
         VectorEntity.__init__(self, game, self.physics_name, collision_type=COLLISION_ENTITY, max_health=int(cfg["hp"] * hp_multiplier))
+        self.knockback_comp.decay = ENEMY_KNOCKBACK_DECAY
 
         # Replace default pymunk body with one sized to hitbox
         if self.body:
@@ -356,7 +357,7 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         if distance <= self.detection_range:
             self.has_seen_player = True
 
-        if self.enrage_threshold > 0 and self.health / self.max_health <= self.enrage_threshold:
+        if self.enrage_threshold > 0 and self.health_comp.health / self.health_comp.max_health <= self.enrage_threshold:
             if not self.enraged:
                 self.enraged = True
                 self.speed_mod = self._base_speed_mod * self.enrage_speed_mult
@@ -442,25 +443,21 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
             self.image.set_alpha(255 if self.visible else 0)
 
     def apply_movement(self):
-        # Knockback — float-accumulated
-        if self.knockback_velocity.length() > 0:
-            self._pos_x += self.knockback_velocity.x
+        kb = self.knockback_comp.velocity
+        if kb.length() > 0:
+            self._pos_x += kb.x
             self.hitbox.x = int(self._pos_x)
-            self._resolve_collision_x("knockback_velocity")
-            self._pos_y += self.knockback_velocity.y
+            self._resolve_collision_x(kb)
+            self._pos_y += kb.y
             self.hitbox.y = int(self._pos_y)
-            self._resolve_collision_y("knockback_velocity")
-            self.knockback_velocity *= ENEMY_KNOCKBACK_DECAY
-            if self.knockback_velocity.length() < 0.1:
-                self.knockback_velocity = pygame.math.Vector2(0, 0)
+            self._resolve_collision_y(kb)
 
-        # Velocity — float-accumulated (fixes sub-pixel truncation)
         self._pos_x += self.velocity.x
         self.hitbox.x = int(self._pos_x)
-        self._resolve_collision_x("velocity")
+        self._resolve_collision_x(self.velocity)
         self._pos_y += self.velocity.y
         self.hitbox.y = int(self._pos_y)
-        self._resolve_collision_y("velocity")
+        self._resolve_collision_y(self.velocity)
 
         self.rect.center = self.hitbox.center
         self.sync_physics()
@@ -487,7 +484,7 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
 
     def damage(self, amount):
         super().damage(amount)
-        self.healthbar.damage(self.max_health, self.health)
+        self.healthbar.damage(self.health_comp.max_health, self.health_comp.health)
 
     def _on_death(self):
         self.healthbar.kill_bar()
