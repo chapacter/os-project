@@ -19,7 +19,9 @@ from entity.player import Player
 from entity.systems.animation_system import AnimationSystem
 from entity.systems.area_damage_system import AreaDamageSystem
 from entity.systems.block_collision_system import BlockCollisionSystem
+from entity.systems.bullet_system import BulletSystem
 from entity.systems.combat_system import CombatSystem
+from entity.systems.entity_collision_system import EntityCollisionSystem
 from entity.systems.hit_flash_system import HitFlashSystem
 from entity.systems.knockback_system import KnockbackSystem
 from entity.systems.lifetime_system import LifetimeSystem
@@ -835,10 +837,14 @@ class Game:
         self.ecs_world.add_system(AnimationSystem(self.ecs_world))
         self.ecs_world.add_system(LifetimeSystem(self.ecs_world))
         self.ecs_world.add_system(MovementSystem(self.ecs_world))
+        self.ecs_world.add_system(BulletSystem(self.ecs_world, get_player_fn=lambda: getattr(self, "player", None),
+                                               all_sprites=self.all_sprites))
         self.ecs_world.add_system(AreaDamageSystem(self.ecs_world, lambda: getattr(self, "player", None)))
         self.ecs_world.add_system(CombatSystem(self.ecs_world))
         self.ecs_world.add_system(HitFlashSystem(self.ecs_world))
         self.ecs_world.add_system(BlockCollisionSystem(self.ecs_world, lambda: self.blocks))
+        self.ecs_world.add_system(
+            EntityCollisionSystem(self.ecs_world, lambda: self.blocks, all_sprites=self.all_sprites))
         self.ecs_world.add_system(KnockbackSystem(self.ecs_world))
 
         self.create_tile_map()

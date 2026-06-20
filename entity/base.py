@@ -4,6 +4,7 @@ from entity.components.collision.block_collider import BlockColliderComponent
 from entity.components.combat.health import HealthComponent
 from entity.components.combat.hit_flash import HitFlashComponent
 from entity.components.combat.knockback import KnockbackComponent
+from entity.ecs_helpers import ecs_unregister
 from utils.settings import *
 
 
@@ -72,6 +73,14 @@ class VectorEntity:
         hf.scale_timer = hf.scale_duration
         if hp.health <= 0:
             hp.died = True
+
+    def kill(self):
+        if hasattr(self, "game") and self.game and hasattr(self.game, "ecs_world"):
+            ecs_unregister(self.game.ecs_world, self)
+        try:
+            super().kill()
+        except AttributeError:
+            pass
 
     def _on_death(self):
         pass

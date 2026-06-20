@@ -5,6 +5,7 @@ import pygame
 
 from entity.base import Healthbar, VectorEntity
 from entity.components.render.animation import AnimationComponent
+from entity.components.tags import EnemyMarker
 from entity.factories.effect_factory import EffectFactory
 from projectiles.bullet import Enemy_Bullet
 from utils import weighted_choice
@@ -136,6 +137,7 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         )
         if self.game and self.game.ecs_world:
             self.game.ecs_world.add_component(self, self.anim_comp)
+            self.game.ecs_world.add_component(self, EnemyMarker())
 
         # Replace default pymunk body with one sized to hitbox
         if self.body:

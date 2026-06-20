@@ -3,9 +3,11 @@ import random
 
 import pygame
 
-from entity.factories.effect_factory import EffectFactory
+from entity.components.bullet import BulletComponent
+from entity.components.movement.velocity import VelocityComponent
+from entity.components.tags import BulletMarker
+from entity.ecs_helpers import ecs_register, ecs_unregister
 from utils.settings import *
-
 
 EXPLOSION_RADIUS = 48
 BOOMERANG_TURN_DISTANCE = 250
@@ -30,23 +32,15 @@ class Bullet(pygame.sprite.Sprite):
         self.groups = game.all_sprites, game.bullets
         pygame.sprite.Sprite.__init__(self, self.groups)
 
-        self.start_x = start_x
-        self.start_y = start_y
-
         angle = math.atan2(target_y - start_y, target_x - start_x)
         if scatter:
             angle += random.uniform(-scatter, scatter)
-        self.dx = math.cos(angle) * BULLET_SPEED
-        self.dy = math.sin(angle) * BULLET_SPEED
+        dx = math.cos(angle) * BULLET_SPEED
+        dy = math.sin(angle) * BULLET_SPEED
 
-        self.hit_dir = pygame.math.Vector2(self.dx, self.dy)
-        if self.hit_dir.length() > 0:
-            self.hit_dir = self.hit_dir.normalize()
-        self.knockback_force = knockback_force or BULLET_KNOCKBACK_FORCE
-
-        self.x = start_x
-        self.y = start_y
-        self.distance_traveled = 0
+        hit_len = math.hypot(dx, dy)
+        hit_dir_x = dx / hit_len if hit_len > 0 else 1.0
+        hit_dir_y = dy / hit_len if hit_len > 0 else 0.0
 
         self.width = TILESIZE - 2
         self.height = TILESIZE - 2
@@ -55,97 +49,40 @@ class Bullet(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (start_x, start_y)
 
-        self.damage = 3
+        if game.ecs_world:
+            ecs_register(game.ecs_world, self, image=self.image)
+            game.ecs_world.add_component(self, BulletMarker())
+            game.ecs_world.add_component(
+                self,
+                BulletComponent(
+                    damage=3,
+                    knockback_force=knockback_force or BULLET_KNOCKBACK_FORCE,
+                    pos_x=start_x,
+                    pos_y=start_y,
+                    piercing=piercing,
+                    explosive=explosive,
+                    boomerang=boomerang,
+                    hit_dir_x=hit_dir_x,
+                    hit_dir_y=hit_dir_y,
+                    hits_enemies=True,
+                    hits_player=False,
+                ),
+            )
+            game.ecs_world.add_component(self, VelocityComponent(dx=dx, dy=dy))
 
-        self.piercing = piercing
-        self.explosive = explosive
-        self.boomerang = boomerang
-        self._hit_enemies = []
-        self._returning = False
-
-    def move(self):
-        self.x += self.dx
-        self.y += self.dy
-        self.rect.center = (self.x, self.y)
-        self.distance_traveled += BULLET_SPEED
-
-        if self.boomerang:
-            if not self._returning and self.distance_traveled >= BOOMERANG_TURN_DISTANCE:
-                self._returning = True
-            if self._returning:
-                px, py = self.game.player.rect.center
-                angle = math.atan2(py - self.y, px - self.x)
-                self.dx = math.cos(angle) * BULLET_SPEED
-                self.dy = math.sin(angle) * BULLET_SPEED
-                if math.hypot(self.x - px, self.y - py) < 20:
-                    self.kill()
-                    return
-
-        if self.distance_traveled >= BULLET_MAX_DISTANCE:
-            if self.explosive:
-                self.explode()
-            else:
-                self.kill()
+    def kill(self):
+        if self.game and self.game.ecs_world:
+            ecs_unregister(self.game.ecs_world, self)
+        super().kill()
 
     def collide_block(self):
-        collide = pygame.sprite.spritecollide(self, self.game.blocks, False)
-        if collide:
-            if self.explosive:
-                self.explode()
-            else:
-                self.kill()
+        pass
 
     def collide_enemy(self):
-        for enemy in self.game.enemies:
-            if self.rect.colliderect(enemy.hitbox) and enemy not in self._hit_enemies:
-                self._hit_enemies.append(enemy)
-
-                knockback_dir = pygame.math.Vector2(
-                    enemy.rect.centerx - self.rect.centerx,
-                    enemy.rect.centery - self.rect.centery,
-                )
-                if knockback_dir.length() > 0:
-                    knockback_dir = knockback_dir.normalize()
-                else:
-                    knockback_dir = self.hit_dir.copy()
-
-                EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "hit",
-                                                groups=[self.game.all_sprites])
-                enemy.take_knockback(knockback_dir, self.knockback_force)
-                enemy.damage(self.damage)
-
-                if self.explosive:
-                    self.explode(kill=not self.piercing)
-                    if not self.piercing:
-                        return
-                elif not self.piercing:
-                    self.kill()
-                    return
-
-    def explode(self, kill=True):
-        for enemy in self.game.enemies:
-            dist = math.hypot(
-                self.rect.centerx - enemy.rect.centerx,
-                self.rect.centery - enemy.rect.centery,
-            )
-            if dist < EXPLOSION_RADIUS:
-                dir = pygame.math.Vector2(
-                    enemy.rect.centerx - self.rect.centerx,
-                    enemy.rect.centery - self.rect.centery,
-                )
-                if dir.length() > 0:
-                    dir = dir.normalize()
-                enemy.take_knockback(dir, self.knockback_force * 1.5)
-                enemy.damage(self.damage)
-        EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "hit",
-                                        groups=[self.game.all_sprites])
-        if kill:
-            self.kill()
+        pass
 
     def update(self):
-        self.move()
-        self.collide_enemy()
-        self.collide_block()
+        pass
 
 
 class Enemy_Bullet(pygame.sprite.Sprite):
@@ -155,18 +92,11 @@ class Enemy_Bullet(pygame.sprite.Sprite):
         self.groups = game.all_sprites, game.bullets
         pygame.sprite.Sprite.__init__(self, self.groups)
 
-        self.start_x = start_x
-        self.start_y = start_y
-
         angle = math.atan2(target_y - start_y, target_x - start_x)
         if scatter:
             angle += random.uniform(-scatter, scatter)
-        self.dx = math.cos(angle) * BULLET_SPEED
-        self.dy = math.sin(angle) * BULLET_SPEED
-
-        self.x = start_x
-        self.y = start_y
-        self.distance_traveled = 0
+        dx = math.cos(angle) * BULLET_SPEED
+        dy = math.sin(angle) * BULLET_SPEED
 
         self.width = TILESIZE
         self.height = TILESIZE
@@ -178,31 +108,37 @@ class Enemy_Bullet(pygame.sprite.Sprite):
         self.rect = self.image.get_rect()
         self.rect.center = (start_x, start_y)
 
-        self.damage = 1
+        if game.ecs_world:
+            ecs_register(game.ecs_world, self, image=self.image)
+            game.ecs_world.add_component(self, BulletMarker())
+            game.ecs_world.add_component(
+                self,
+                BulletComponent(
+                    damage=1,
+                    knockback_force=2,
+                    pos_x=start_x,
+                    pos_y=start_y,
+                    piercing=False,
+                    explosive=False,
+                    boomerang=False,
+                    hit_dir_x=1,
+                    hit_dir_y=0,
+                    hits_enemies=False,
+                    hits_player=True,
+                ),
+            )
+            game.ecs_world.add_component(self, VelocityComponent(dx=dx, dy=dy))
 
-    def move(self):
-        self.x += self.dx
-        self.y += self.dy
-        self.rect.center = (self.x, self.y)
-        self.distance_traveled += BULLET_SPEED
-        if self.distance_traveled >= BULLET_MAX_DISTANCE:
-            self.kill()
+    def kill(self):
+        if self.game and self.game.ecs_world:
+            ecs_unregister(self.game.ecs_world, self)
+        super().kill()
 
     def collide_block(self):
-        collide = pygame.sprite.spritecollide(self, self.game.blocks, False)
-        if collide:
-            self.kill()
+        pass
 
     def collide_player(self):
-        for player in self.game.mainPlayer:
-            if self.rect.colliderect(player.hitbox):
-                EffectFactory.create_ecs_effect(self.game.ecs_world, self.rect.centerx, self.rect.centery, "hit",
-                                                groups=[self.game.all_sprites], )
-                player.damage(self.damage)
-                self.kill()
-                break
+        pass
 
     def update(self):
-        self.move()
-        self.collide_player()
-        self.collide_block()
+        pass

@@ -4,6 +4,7 @@ import pygame
 
 from entity.base import VectorEntity
 from entity.components.render.animation import AnimationComponent
+from entity.components.tags import PlayerMarker
 from entity.factories.effect_factory import EffectFactory
 from projectiles.bullet import Bullet
 from utils.settings import *
@@ -140,6 +141,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
         )
         if self.game.ecs_world:
             self.game.ecs_world.add_component(self, self.anim_comp)
+            self.game.ecs_world.add_component(self, PlayerMarker())
 
     def move(self):
         pressed = pygame.key.get_pressed()
@@ -271,60 +273,7 @@ class Player(VectorEntity, pygame.sprite.Sprite):
                 self.image = self.animations["move"][self.direction][0]
 
     def collide_enemy(self):
-        MAX_PUSH = 3
-        for enemy in self.game.enemies:
-            if self.hitbox.colliderect(enemy.hitbox):
-                self.game.enemy_collided = True
-
-                if self.contact_knockback_cooldown <= 0:
-                    contact_dir = pygame.math.Vector2(
-                        self.rect.centerx - enemy.rect.centerx,
-                        self.rect.centery - enemy.rect.centery,
-                    )
-                    if contact_dir.length() > 0:
-                        contact_dir = contact_dir.normalize()
-
-                    # Determine knockback type by situation
-                    # strong for reaper types (enemy_type 2 or 3), weak for others
-                    if hasattr(enemy, "enemy_type") and enemy.enemy_type in [2, 3]:
-                        self.knockback_type = "strong"
-                        force = CONTACT_KNOCKBACK_FORCE
-                        duration = KNOCKBACK_DURATION
-                    else:
-                        self.knockback_type = "weak"
-                        force = 4
-                        duration = 8
-
-                    self.knockback_frame = 0
-                    vel_along = max(0, self.velocity.dot(contact_dir))
-                    self.knockback_comp.velocity = contact_dir * force + contact_dir * vel_along * 0.3
-                    self.knockback_comp.duration_remaining = duration
-                    if self.action_state != "dodge":
-                        self.action_state = "knockback"
-                    self.contact_knockback_cooldown = CONTACT_KNOCKBACK_INTERVAL
-
-                overlap_x = min(
-                    self.rect.right - enemy.rect.left,
-                    enemy.rect.right - self.rect.left,
-                )
-                overlap_y = min(
-                    self.rect.bottom - enemy.rect.top,
-                    enemy.rect.bottom - self.rect.top,
-                )
-                if overlap_x < overlap_y:
-                    push = min(overlap_x, MAX_PUSH)
-                    if self.rect.centerx < enemy.rect.centerx:
-                        self.rect.x -= push
-                    else:
-                        self.rect.x += push
-                else:
-                    push = min(overlap_y, MAX_PUSH)
-                    if self.rect.centery < enemy.rect.centery:
-                        self.rect.y -= push
-                    else:
-                        self.rect.y += push
-                return
-        self.game.enemy_collided = False
+        pass
 
     def collide_weapon(self):
         collide = pygame.sprite.spritecollide(self, self.game.weapons, True)
