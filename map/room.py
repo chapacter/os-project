@@ -2,7 +2,7 @@ import random
 from enum import Enum
 
 
-class RoomType(Enum):
+class RoomType(str, Enum):
     LOBBY = "lobby"
     EMPTY = "empty"
     ENEMY = "enemy"
@@ -10,6 +10,13 @@ class RoomType(Enum):
     LOOT = "loot"
     BOSS = "boss"
     EVENT = "event"
+    COMBAT = "combat"
+    GUARDIAN = "guardian"
+    JUDGE = "judge"
+    SHOP = "shop"
+    ALTAR = "altar"
+    LORE = "lore"
+    SECRET = "secret"
 
 
 class Room:

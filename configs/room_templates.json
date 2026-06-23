@@ -1,0 +1,2732 @@
+{
+  "entangled_ingress_guardian_01": {
+    "template_id": "entangled_ingress_guardian_01",
+    "realm_id": "entangled_ingress",
+    "room_type": "guardian",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B...BBBBBBBB...B ",
+      "BB....B.........BB",
+      ".D....B.........D.",
+      ".D....B.........D.",
+      "BB....B.........BB",
+      " B....B.........B ",
+      " B..............B ",
+      " B.........B....B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [
+      {
+        "x": 8,
+        "y": 2,
+        "slot_type": "floor_a"
+      },
+      {
+        "x": 9,
+        "y": 2,
+        "slot_type": "floor_a"
+      }
+    ],
+    "platforms": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 11,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 5,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 13,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 5,
+        "y1": 1,
+        "x2": 13,
+        "y2": 2,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      }
+    },
+    "difficulty_weight": 1.5,
+    "door_sides": [
+      "east",
+      "west"
+    ]
+  },
+  "entangled_ingress_judge_01": {
+    "template_id": "entangled_ingress_judge_01",
+    "realm_id": "entangled_ingress",
+    "room_type": "judge",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..BB.......B..B ",
+      "BB..B........B..B ",
+      ".D..............B ",
+      ".D..............B ",
+      "BB...........B..B ",
+      " B..B........B..B ",
+      " B..BBB....BBB..B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [
+      {
+        "x": 8,
+        "y": 3,
+        "slot_type": "floor_a"
+      },
+      {
+        "x": 9,
+        "y": 3,
+        "slot_type": "floor_a"
+      }
+    ],
+    "platforms": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 7,
+        "y1": 7,
+        "x2": 11,
+        "y2": 11,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 13,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 4,
+        "y1": 1,
+        "x2": 13,
+        "y2": 2,
+        "allowed_sizes": [
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 2.0,
+    "door_sides": [
+      "west"
+    ]
+  },
+  "entangled_ingress_shop_01": {
+    "template_id": "entangled_ingress_shop_01",
+    "realm_id": "entangled_ingress",
+    "room_type": "shop",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      "BB....BBBBBB....BB",
+      ".D....B.........D.",
+      ".D....B.........D.",
+      "BB....B.........BB",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "platforms": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 5,
+        "x2": 11,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 5,
+        "y2": 17,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 13,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 0.0,
+    "door_sides": [
+      "east",
+      "west"
+    ]
+  },
+  "entangled_ingress_altar_01": {
+    "template_id": "entangled_ingress_altar_01",
+    "realm_id": "entangled_ingress",
+    "room_type": "altar",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      "BB.....BBBBB....B ",
+      ".D.........B....D ",
+      ".D.........B....D ",
+      "BB.....B...B....B ",
+      " B..............B ",
+      " B..............B ",
+      " B....B.........B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "platforms": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 5,
+        "y1": 5,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "medium"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 13,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "medium"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 0.0,
+    "door_sides": [
+      "east",
+      "west"
+    ]
+  },
+  "still_bastion_guardian_01": {
+    "template_id": "still_bastion_guardian_01",
+    "realm_id": "still_bastion",
+    "room_type": "guardian",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B....BBB.......B ",
+      " B......BB..TT..B ",
+      " B..............B ",
+      "BB......TTTT....BB",
+      ".D..............D.",
+      ".D..............D.",
+      "BB..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B......BBT.....B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [
+      {
+        "x": 8,
+        "y": 2,
+        "slot_type": "floor_a"
+      }
+    ],
+    "platforms": [
+      {
+        "x": 6,
+        "y": 7,
+        "width": 6,
+        "height": 1
+      }
+    ],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 11,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 5,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 13,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large"
+        ]
+      }
+    },
+    "difficulty_weight": 1.5,
+    "door_sides": [
+      "east",
+      "west"
+    ]
+  },
+  "the_old_world_judge_01": {
+    "template_id": "the_old_world_judge_01",
+    "realm_id": "the_old_world",
+    "room_type": "judge",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      "BB.....BB.......B ",
+      ".D......TT......B ",
+      ".D......T.......B ",
+      "BB.....TT.......B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [
+      {
+        "x": 8,
+        "y": 3,
+        "slot_type": "floor_a"
+      }
+    ],
+    "platforms": [
+      {
+        "x": 4,
+        "y": 4,
+        "width": 10,
+        "height": 1
+      },
+      {
+        "x": 4,
+        "y": 10,
+        "width": 10,
+        "height": 1
+      }
+    ],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 7,
+        "y1": 7,
+        "x2": 11,
+        "y2": 11,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 13,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large"
+        ]
+      }
+    },
+    "difficulty_weight": 2.0,
+    "door_sides": [
+      "west"
+    ]
+  },
+  "entangled_ingress_combat_01": {
+    "template_id": "entangled_ingress_combat_01",
+    "realm_id": "entangled_ingress",
+    "room_type": "combat",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      "BB....BB........BB",
+      ".D.....TT.......D.",
+      ".D......BB......D.",
+      "BB.......TT.....BB",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.0,
+    "door_sides": [
+      "east",
+      "west"
+    ]
+  },
+  "entangled_ingress_combat_02": {
+    "template_id": "entangled_ingress_combat_02",
+    "realm_id": "entangled_ingress",
+    "room_type": "combat",
+    "tile_map": [
+      "       B..B       ",
+      " BBBBBBBDDBBBBBBB ",
+      " B..............B ",
+      " B..........TT..B ",
+      " B..............B ",
+      " B..............B ",
+      " B....BB........B ",
+      " B..............B ",
+      " B..............B ",
+      " B........BB....B ",
+      " B..............B ",
+      " B....BB........B ",
+      " B........TT....B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBDDBBBBBBB ",
+      "       B..B       "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.05,
+    "door_sides": [
+      "north",
+      "south"
+    ]
+  },
+  "entangled_ingress_combat_03": {
+    "template_id": "entangled_ingress_combat_03",
+    "realm_id": "entangled_ingress",
+    "room_type": "combat",
+    "tile_map": [
+      "       B..B       ",
+      " BBBBBBBDDBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B.........TT...B ",
+      " B.....BB......BB",
+      " B..............D.",
+      " B..............D.",
+      " B..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.1,
+    "door_sides": [
+      "north",
+      "east"
+    ]
+  },
+  "entangled_ingress_combat_04": {
+    "template_id": "entangled_ingress_combat_04",
+    "realm_id": "entangled_ingress",
+    "room_type": "combat",
+    "tile_map": [
+      "       B..B       ",
+      " BBBBBBBDDBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B.......T......BB",
+      " B..............D.",
+      " B....TTT.......D.",
+      " B..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B...........BB.B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBDDBBBBBBB ",
+      "       B..B       "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.15,
+    "door_sides": [
+      "north",
+      "south",
+      "east"
+    ]
+  },
+  "entangled_ingress_combat_05": {
+    "template_id": "entangled_ingress_combat_05",
+    "realm_id": "entangled_ingress",
+    "room_type": "combat",
+    "tile_map": [
+      "       B..B       ",
+      " BBBBBBBDDBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      "BB.......TT.....BB",
+      ".D..............D.",
+      ".D..............D.",
+      "BB..............BB",
+      " B...TT.........B ",
+      " B.......TT.....B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBDDBBBBBBB ",
+      "       B..B       "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.2,
+    "door_sides": [
+      "north",
+      "south",
+      "east",
+      "west"
+    ]
+  },
+  "still_bastion_combat_01": {
+    "template_id": "still_bastion_combat_01",
+    "realm_id": "still_bastion",
+    "room_type": "combat",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B....TB..B.....B ",
+      " B.....B..B.T...B ",
+      "BB...BBB..BBB...BB",
+      ".D..............D.",
+      ".D..............D.",
+      "BB...BBB..BBB...BB",
+      " B.....B..B.....B ",
+      " B.....B..B.....B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.25,
+    "door_sides": [
+      "east",
+      "west"
+    ]
+  },
+  "still_bastion_combat_02": {
+    "template_id": "still_bastion_combat_02",
+    "realm_id": "still_bastion",
+    "room_type": "combat",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B........B.....B ",
+      "BB..............B ",
+      ".D.....TTT......B ",
+      ".D..............B ",
+      "BB..........B...B ",
+      " B.........B....B ",
+      " B.........B....B ",
+      " B..............B ",
+      " BB.............B ",
+      " B..............B ",
+      " BBBBBBBDDBBBBBBB ",
+      "       B..B       "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.3,
+    "door_sides": [
+      "west",
+      "south"
+    ]
+  },
+  "still_bastion_combat_03": {
+    "template_id": "still_bastion_combat_03",
+    "realm_id": "still_bastion",
+    "room_type": "combat",
+    "tile_map": [
+      "       B..B       ",
+      " BBBBBBBDDBBBBBBB",
+      " B..............B ",
+      " B..............B ",
+      " B...BB.........B ",
+      " B..............B ",
+      " B..............B ",
+      "BB.......BB.....B ",
+      ".D..............B ",
+      ".D..............B ",
+      "BB.......BB.....B ",
+      " B..............B ",
+      " B..............B ",
+      " B..........BB..B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBDDBBBBBBB ",
+      "       B..B       "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.35,
+    "door_sides": [
+      "north",
+      "south",
+      "west"
+    ]
+  },
+  "wasted_pit_combat_01": {
+    "template_id": "wasted_pit_combat_01",
+    "realm_id": "wasted_pit",
+    "room_type": "combat",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B.....BB.......B ",
+      " B......BB......B ",
+      "BB.......BB.....BB",
+      ".D..............D.",
+      ".D....BB........D.",
+      "BB.....B........BB",
+      " B.....B........B ",
+      " B.....BBB......B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.4,
+    "door_sides": [
+      "east",
+      "west"
+    ]
+  },
+  "wasted_pit_combat_02": {
+    "template_id": "wasted_pit_combat_02",
+    "realm_id": "wasted_pit",
+    "room_type": "combat",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B....B.........B ",
+      " B....BBBB......B ",
+      " B..............BB",
+      " B..............D.",
+      " B....B.........D.",
+      " B..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B.........B....B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBDDBBBBBBB ",
+      "       B..B       "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.45,
+    "door_sides": [
+      "east",
+      "south"
+    ]
+  },
+  "wasted_pit_combat_03": {
+    "template_id": "wasted_pit_combat_03",
+    "realm_id": "wasted_pit",
+    "room_type": "combat",
+    "tile_map": [
+      "       B..B       ",
+      " BBBBBBBDDBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B.....B........B ",
+      " B.....B........B ",
+      "BB....BB........B ",
+      ".D..........BB..B ",
+      ".D..............B ",
+      "BB....BB........B ",
+      " B.....B........B ",
+      " B.....B........B ",
+      " B.........B....B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBDDBBBBBBB ",
+      "       B..B       "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.5,
+    "door_sides": [
+      "north",
+      "west",
+      "south"
+    ]
+  },
+  "living_walls_combat_01": {
+    "template_id": "living_walls_combat_01",
+    "realm_id": "living_walls",
+    "room_type": "combat",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B.....BBBB.....B ",
+      " B..............B ",
+      " B..............B ",
+      "BB.....BBBB.....BB",
+      ".D..............D.",
+      ".D.....BBBB.....D.",
+      "BB..............BB",
+      " B..............B ",
+      " B.....BBBB.....B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.55,
+    "door_sides": [
+      "east",
+      "west"
+    ]
+  },
+  "living_walls_combat_02": {
+    "template_id": "living_walls_combat_02",
+    "realm_id": "living_walls",
+    "room_type": "combat",
+    "tile_map": [
+      "       B..B       ",
+      " BBBBBBBDDBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B.......B......B ",
+      " B........B......B ",
+      " B.......B......B ",
+      "BB..............BB",
+      ".D...BB.........D.",
+      ".D..............D.",
+      "BB.......BB.....BB",
+      " B......B  BB...B ",
+      " B.......BB  B..B ",
+      " B.........BB...B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.6,
+    "door_sides": [
+      "west",
+      "north"
+    ]
+  },
+  "living_walls_combat_03": {
+    "template_id": "living_walls_combat_03",
+    "realm_id": "living_walls",
+    "room_type": "combat",
+    "tile_map": [
+      "       B..B       ",
+      " BBBBBBBDDBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B...B..........B ",
+      " B..B B.........B ",
+      "BB..BB..........BB",
+      ".D..............D.",
+      ".D....BB........D.",
+      "BB........BB....BB",
+      " B.......B  B...B ",
+      " B........BB....B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBDDBBBBBBB ",
+      "       B..B       "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.65,
+    "door_sides": [
+      "north",
+      "south",
+      "east",
+      "west"
+    ]
+  },
+  "the_old_world_combat_01": {
+    "template_id": "the_old_world_combat_01",
+    "realm_id": "the_old_world",
+    "room_type": "combat",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      "BB...B  B.......BB",
+      ".D......B.......D.",
+      ".D.....B  B.....D.",
+      "BB..............BB",
+      " B.......B  B...B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.7,
+    "door_sides": [
+      "east",
+      "west"
+    ]
+  },
+  "the_old_world_combat_02": {
+    "template_id": "the_old_world_combat_02",
+    "realm_id": "the_old_world",
+    "room_type": "combat",
+    "tile_map": [
+      "       B..B       ",
+      " BBBBBBBDDBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B......BBB.....B ",
+      "BB.......BB.....B ",
+      ".D.......TT.....B ",
+      ".D..............B ",
+      "BB..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.75,
+    "door_sides": [
+      "north",
+      "west"
+    ]
+  },
+  "the_old_world_combat_03": {
+    "template_id": "the_old_world_combat_03",
+    "realm_id": "the_old_world",
+    "room_type": "combat",
+    "tile_map": [
+      "       B..B       ",
+      " BBBBBBBDDBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B......B.......BB",
+      " B.......T......D.",
+      " B.......B......D.",
+      " B..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBDDBBBBBBB ",
+      "       B..B       "
+    ],
+    "spawn_slots": [],
+    "slots": {
+      "center_lane": {
+        "zone_name": "center_lane",
+        "x1": 6,
+        "y1": 6,
+        "x2": 12,
+        "y2": 13,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "left_edge": {
+        "zone_name": "left_edge",
+        "x1": 1,
+        "y1": 1,
+        "x2": 4,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "right_edge": {
+        "zone_name": "right_edge",
+        "x1": 14,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium",
+          "small"
+        ]
+      },
+      "back_layer": {
+        "zone_name": "back_layer",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      },
+      "ceiling": {
+        "zone_name": "ceiling",
+        "x1": 1,
+        "y1": 1,
+        "x2": 17,
+        "y2": 3,
+        "allowed_sizes": [
+          "medium",
+          "small"
+        ]
+      },
+      "floor_edges": {
+        "zone_name": "floor_edges",
+        "x1": 1,
+        "y1": 14,
+        "x2": 17,
+        "y2": 17,
+        "allowed_sizes": [
+          "small"
+        ]
+      },
+      "corner_anchors": {
+        "zone_name": "corner_anchors",
+        "x1": 1,
+        "y1": 1,
+        "x2": 3,
+        "y2": 3,
+        "allowed_sizes": [
+          "large",
+          "medium"
+        ]
+      }
+    },
+    "difficulty_weight": 1.8,
+    "door_sides": [
+      "north",
+      "east",
+      "south"
+    ]
+  },
+  "entangled_ingress_lobby_01": {
+    "template_id": "entangled_ingress_lobby_01",
+    "realm_id": "entangled_ingress",
+    "room_type": "lobby",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B......TW......B ",
+      " B......T.......BB",
+      " B..............D.",
+      " B.......H......D.",
+      " B..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "platforms": [],
+    "slots": {},
+    "door_sides": [
+      "east"
+    ],
+    "category": "dead_end"
+  },
+  "entangled_ingress_loot_01": {
+    "template_id": "entangled_ingress_loot_01",
+    "realm_id": "entangled_ingress",
+    "room_type": "loot",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      "BB..............BB",
+      ".D..............D.",
+      ".D.......C......D.",
+      "BB..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "platforms": [],
+    "slots": {},
+    "door_sides": [
+      "west",
+      "east"
+    ],
+    "category": "corridor"
+  },
+  "living_walls_lobby_01": {
+    "template_id": "living_walls_lobby_01",
+    "realm_id": "living_walls",
+    "room_type": "lobby",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............BB",
+      " B..............D.",
+      " B.......H......D.",
+      " B....T.........BB",
+      " B...W..........B ",
+      " B..T.T.........B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "platforms": [],
+    "slots": {},
+    "door_sides": [
+      "east"
+    ],
+    "category": "dead_end"
+  },
+  "living_walls_loot_01": {
+    "template_id": "living_walls_loot_01",
+    "realm_id": "living_walls",
+    "room_type": "loot",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............BB",
+      " D..............D.",
+      " D.......C......D.",
+      " B..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "platforms": [],
+    "slots": {},
+    "door_sides": [
+      "west",
+      "east"
+    ],
+    "category": "corridor"
+  },
+  "still_bastion_lobby_01": {
+    "template_id": "still_bastion_lobby_01",
+    "realm_id": "still_bastion",
+    "room_type": "lobby",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B.............TB ",
+      " B..............BB",
+      " B..............D.",
+      " B.......H......D.",
+      " B..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B....W.........B ",
+      " B.........TT...B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "platforms": [],
+    "slots": {},
+    "door_sides": [
+      "east"
+    ],
+    "category": "dead_end"
+  },
+  "still_bastion_loot_01": {
+    "template_id": "still_bastion_loot_01",
+    "realm_id": "still_bastion",
+    "room_type": "loot",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      "BB..............BB",
+      ".D..............D.",
+      ".D.......C......D.",
+      "BB..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "platforms": [],
+    "slots": {},
+    "door_sides": [
+      "west",
+      "east"
+    ],
+    "category": "corridor"
+  },
+  "the_old_world_lobby_01": {
+    "template_id": "the_old_world_lobby_01",
+    "realm_id": "the_old_world",
+    "room_type": "lobby",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B....T.........B ",
+      " B....WT........BB",
+      " B..............D.",
+      " B.......H......D.",
+      " B..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "platforms": [],
+    "slots": {},
+    "door_sides": [
+      "east"
+    ],
+    "category": "dead_end"
+  },
+  "the_old_world_loot_01": {
+    "template_id": "the_old_world_loot_01",
+    "realm_id": "the_old_world",
+    "room_type": "loot",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      "BB......TWTT....BB",
+      ".D..............D.",
+      ".D.......C......D.",
+      "BB..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "platforms": [],
+    "slots": {},
+    "door_sides": [
+      "west",
+      "east"
+    ],
+    "category": "corridor"
+  },
+  "wasted_pit_lobby_01": {
+    "template_id": "wasted_pit_lobby_01",
+    "realm_id": "wasted_pit",
+    "room_type": "lobby",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B...WT.........BB",
+      " B..............D.",
+      " B.......H......D.",
+      " B..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "platforms": [],
+    "slots": {},
+    "door_sides": [
+      "east"
+    ],
+    "category": "dead_end"
+  },
+  "wasted_pit_loot_01": {
+    "template_id": "wasted_pit_loot_01",
+    "realm_id": "wasted_pit",
+    "room_type": "loot",
+    "tile_map": [
+      "                  ",
+      " BBBBBBBBBBBBBBBB ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      "BB..............BB",
+      ".D..............D.",
+      ".D.......C......D.",
+      "BB..............BB",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " B..............B ",
+      " BBBBBBBBBBBBBBBB ",
+      "                  "
+    ],
+    "spawn_slots": [],
+    "platforms": [],
+    "slots": {},
+    "door_sides": [
+      "west",
+      "east"
+    ],
+    "category": "corridor"
+  }
+}

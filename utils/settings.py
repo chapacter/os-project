@@ -61,6 +61,13 @@ FADE_DURATION = 500
 
 FLOOR_THEMES = ConfigLoader.get("floor_themes")
 
+FLOOR_MUSIC_MAP: dict[int, tuple[str, str]] = {
+    1: ("assets/sounds/Floor1_background.ogg", "assets/sounds/Floor1_boss.ogg"),
+    2: ("assets/sounds/Floor2_background.ogg", "assets/sounds/Floor2_boss.ogg"),
+    3: ("assets/sounds/Floor3_background.ogg", "assets/sounds/Floor3_boss.ogg"),
+    4: ("assets/sounds/Floor4_background.ogg", "assets/sounds/Boss.ogg"),
+}
+
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
 GREEN = (0, 255, 0)

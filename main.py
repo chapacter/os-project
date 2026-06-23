@@ -26,12 +26,12 @@ from entity.systems.hit_flash_system import HitFlashSystem
 from entity.systems.knockback_system import KnockbackSystem
 from entity.systems.lifetime_system import LifetimeSystem
 from entity.systems.movement_system import MovementSystem
-from items.chest import Chest
 from items.weapon import Weapon
+from managers.dungeon_manager import DungeonManager
 from map.arena_generator import ArenaGenerator
 from map.door import Door
 from map.dungeon_generator import DungeonGenerator
-from map.tilemap import Block, Ground, DungeonEntrance, Decoration, Water, NPC, Bed, Wardrobe
+from map.tilemap import Block, Ground, DungeonEntrance, Water, NPC
 from map.tmx_loader import TiledLoader
 from map.world_generator import WorldGenerator
 from sprites import Spritesheet
@@ -43,7 +43,6 @@ from ui.hud import HUD
 from ui.menu import MainMenu
 from ui.pause import PauseMenu
 from ui.settings import SettingsMenu
-from utils import weighted_choice
 from utils.camera import Camera
 from utils.physics import PhysicsEngine
 from utils.settings import *
@@ -58,12 +57,6 @@ class GameMode:
     TMX = "tmx"
 
 
-FLOOR_MUSIC_MAP: dict[int, tuple[str, str]] = {
-    1: ("assets/sounds/Floor1_background.ogg", "assets/sounds/Floor1_boss.ogg"),
-    2: ("assets/sounds/Floor2_background.ogg", "assets/sounds/Floor2_boss.ogg"),
-    3: ("assets/sounds/Floor3_background.ogg", "assets/sounds/Floor3_boss.ogg"),
-    4: ("assets/sounds/Floor4_background.ogg", "assets/sounds/Boss.ogg"),
-}
 
 
 class Game:
@@ -106,6 +99,8 @@ class Game:
         self._door_frame_counter = 0
         self._pending_room_for_enemies = None
         self._sealed_rooms = {}
+        self.dungeon_manager = None
+        self._tile_map_cache = None
 
         self.fade_surface = pygame.Surface((1, 1))
         self.fade_alpha = 0
@@ -327,6 +322,7 @@ class Game:
         self.mode = GameMode.DUNGEON
         self._bosses_defeated.clear()
         self.dungeon_generator = DungeonGenerator(seed=self.dungeon_seed)
+        self.dungeon_manager = DungeonManager(self)
         self.load_dungeon_floor()
 
     def load_dungeon_floor(self):
@@ -407,110 +403,8 @@ class Game:
             self.physics.remove_body(entity.physics_name)
 
     def spawn_dungeon_enemies(self, room_coord=None):
-        room_tile_width = self.dungeon_generator.room_tile_width
-        room_tile_height = self.dungeon_generator.room_tile_height
-        wall_thickness = self.dungeon_generator.wall_thickness
-        room_unit_width = room_tile_width + wall_thickness * 2
-        room_unit_height = room_tile_height + wall_thickness * 2
-
-        rooms_to_spawn = []
-        if room_coord:
-            if room_coord in self.dungeon_generator.rooms:
-                rooms_to_spawn = [room_coord]
-        else:
-            rooms_to_spawn = [
-                (gx, gy)
-                for (gx, gy), room in self.dungeon_generator.rooms.items()
-                if room.visible
-            ]
-
-        total_enemies = 0
-        spawned_rooms = []
-        for gx, gy in rooms_to_spawn:
-            room = self.dungeon_generator.rooms.get((gx, gy))
-            if not room:
-                continue
-            if room.enemy_count > 0:
-                # print(f"[DEBUG] Room {gx},{gy} already has {room.enemy_count} enemies, skipping spawn")
-                continue
-            if room.enemies_spawned:
-                # print(f"[DEBUG] Room {gx},{gy} already spawned enemies, skipping")
-                continue
-            room.enemy_count = 0
-            print(f"[DEBUG] Room {gx},{gy} spawning enemies, type: {room.room_type.value}")
-            # Skip LOBBY rooms - no enemies here
-            if room.room_type.value == "lobby":
-                room.enemies_spawned = True
-                continue
-            if room.room_type.value == "boss":
-                room.enemies_spawned = True
-                boss_pos = self.dungeon_generator.get_boss_position()
-                if boss_pos:
-                    Boss(self, boss_pos[0], boss_pos[1], floor=self.current_dungeon_floor)
-                    room.enemy_count = 1
-                    total_enemies += 1
-                    _, boss_music = FLOOR_MUSIC_MAP.get(self.current_dungeon_floor,
-                                                        ("assets/sounds/Music.ogg", "assets/sounds/Boss.ogg"))
-                    self.services.audio.load_music(boss_music)
-                    mult = 1.5 if self.current_dungeon_floor == 3 else 1.0
-                    self.services.audio.play_music(context="dungeon", volume_multiplier=mult)
-                spawned_rooms.append((gx, gy))
-            elif room.room_type.value == "enemy":
-                room.enemies_spawned = True
-                room_start_x = gx * room_unit_width + wall_thickness
-                room_start_y = gy * room_unit_height + wall_thickness
-                margin = 2
-                for _ in range(random.randint(2, 4)):
-                    if self.current_dungeon_floor == 2:
-                        enemy_type = random.choice([5, 6, 7])
-                    elif self.current_dungeon_floor == 3:
-                        enemy_type = random.choice([8, 9, 10])
-                    elif self.current_dungeon_floor == 4:
-                        enemy_type = random.choice([11, 12, 13, 14])
-                    else:
-                        type_weights = {k: v["weight"] for k, v in ENEMY_TYPES.items() if k < 4}
-                        enemy_type = weighted_choice(type_weights)
-                    ex = random.randint(room_start_x + margin, room_start_x + room_tile_width - 1 - margin)
-                    ey = random.randint(room_start_y + margin, room_start_y + room_tile_height - 1 - margin)
-                    Enemy(
-                        self,
-                        ex,
-                        ey,
-                        enemy_type=enemy_type,
-                    )
-                    room.enemy_count += 1
-                    total_enemies += 1
-                spawned_rooms.append((gx, gy))
-            elif room.room_type.value == "elite":
-                room.enemies_spawned = True
-                room_start_x = gx * room_unit_width + wall_thickness
-                room_start_y = gy * room_unit_height + wall_thickness
-                margin = 2
-                for _ in range(random.randint(6, 12)):
-                    if self.current_dungeon_floor == 2:
-                        enemy_type = random.choice([5, 6, 7])
-                    elif self.current_dungeon_floor == 3:
-                        enemy_type = random.choice([8, 9, 10])
-                    elif self.current_dungeon_floor == 4:
-                        enemy_type = random.choice([11, 12, 13, 14])
-                    else:
-                        type_weights = {k: v["weight"] for k, v in ENEMY_TYPES.items() if k < 4}
-                        enemy_type = weighted_choice(type_weights)
-                    ex = random.randint(room_start_x + margin, room_start_x + room_tile_width - 1 - margin)
-                    ey = random.randint(room_start_y + margin, room_start_y + room_tile_height - 1 - margin)
-                    Enemy(
-                        self,
-                        ex,
-                        ey,
-                        enemy_type=enemy_type,
-                        hp_multiplier=1.5,
-                    )
-                    room.enemy_count += 1
-                    total_enemies += 1
-                spawned_rooms.append((gx, gy))
-
-        for sr in spawned_rooms:
-            self.seal_room_for_battle(sr)
+        if self.dungeon_manager:
+            self.dungeon_manager.spawn_enemies(room_coord)
 
         # print(f"[DEBUG] Spawned {total_enemies} enemies")
 
@@ -526,93 +420,12 @@ class Game:
         return x1 <= tx < x2 and y1 <= ty < y2
 
     def seal_room_for_battle(self, room_coord):
-        room = self.dungeon_generator.rooms.get(room_coord)
-        if not room or room.room_type.value in ("lobby", "loot", "event"):
-            return
-
-        floor = self.current_dungeon_floor
-        theme = FLOOR_THEMES.get(floor, FLOOR_THEMES[1])
-
-        if room.room_type.value == "boss":
-            wall_key = "boss_wall"
-            floor_key = "boss_floor"
-            decor_key = "boss_decor"
-        else:
-            wall_key = "battle_wall"
-            floor_key = "battle_floor"
-            decor_key = "battle_decor"
-
-        x1, y1, x2, y2 = self._get_room_tile_bounds(room_coord)
-
-        existing_blocks = set()
-        for b in self.blocks:
-            tx = int(b.rect.x / TILESIZE)
-            ty = int(b.rect.y / TILESIZE)
-            if x1 <= tx < x2 and y1 <= ty < y2:
-                existing_blocks.add((tx, ty))
-
-        door_blocks = []
-        for tx in range(x1, x2):
-            for ty in (y1, y2 - 1):
-                if (tx, ty) not in existing_blocks:
-                    b = Block(self, tx, ty)
-                    door_blocks.append(b)
-                    existing_blocks.add((tx, ty))
-        for ty in range(y1 + 1, y2 - 1):
-            for tx in (x1, x2 - 1):
-                if (tx, ty) not in existing_blocks:
-                    b = Block(self, tx, ty)
-                    door_blocks.append(b)
-                    existing_blocks.add((tx, ty))
-
-        for sprite in list(self.all_sprites):
-            if not self._is_sprite_in_room_bounds(sprite, x1, y1, x2, y2):
-                continue
-            if isinstance(sprite, Block):
-                sprite._orig_image = sprite.image
-                row, col = theme[wall_key]
-                sprite.image = self.terrain_spritesheet.get_image(
-                    col * TILESIZE, row * TILESIZE, TILESIZE, TILESIZE
-                )
-            elif isinstance(sprite, Ground):
-                sprite._orig_image = sprite.image
-                row, col = theme[floor_key]
-                sprite.image = self.terrain_spritesheet.get_image(
-                    col * TILESIZE, row * TILESIZE, TILESIZE, TILESIZE
-                )
-            elif isinstance(sprite, Decoration):
-                sprite._orig_image = sprite.image
-                row, col = theme[decor_key]
-                sprite.image = self.terrain_spritesheet.get_image(
-                    col * TILESIZE, row * TILESIZE, TILESIZE, TILESIZE
-                )
-                self.blocks.add(sprite)
-                sprite._battle_block = True
-
-        self._sealed_rooms[room_coord] = {
-            "door_blocks": door_blocks,
-            "bounds": (x1, y1, x2, y2),
-        }
+        if self.dungeon_manager:
+            self.dungeon_manager.seal_room(room_coord)
 
     def unseal_room(self, room_coord):
-        sealed = self._sealed_rooms.pop(room_coord, None)
-        if not sealed:
-            return
-
-        x1, y1, x2, y2 = sealed["bounds"]
-        for sprite in list(self.all_sprites):
-            if not self._is_sprite_in_room_bounds(sprite, x1, y1, x2, y2):
-                continue
-            # if hasattr(sprite, "_orig_image"): # Если так подумать, то прикольнее когда ассеты не меняются на изначальные
-            #     sprite.image = sprite._orig_image
-            if hasattr(sprite, "_battle_block"):
-                self.blocks.remove(sprite)
-
-        for block in sealed["door_blocks"]:
-            phys_name = f"block_{block.rect.x}_{block.rect.y}"
-            if self.physics:
-                self.physics.remove_shape(phys_name)
-            block.kill()
+        if self.dungeon_manager:
+            self.dungeon_manager.unseal_room(room_coord)
 
     def exit_dungeon(self, go_deeper=False):
         if self.dungeon_map:
@@ -1473,133 +1286,37 @@ class Game:
         if player_room and player_room.enemy_count > 0:
             return
 
-        player_center = self.player.hitbox.center
+        door_tile_x = int(self.player.hitbox.centerx / TILESIZE)
+        door_tile_y = int(self.player.hitbox.centery / TILESIZE)
         for door in self.doors:
-            door_center = door.rect.center
-            distance = (
-                               (player_center[0] - door_center[0]) ** 2
-                               + (player_center[1] - door_center[1]) ** 2
-                       ) ** 0.5
-            if distance < TILESIZE * 2:
-                self.transition_to_room(door.to_room_coord, door.direction)
-                break
+            dt_x = door.rect.x // TILESIZE
+            dt_y = door.rect.y // TILESIZE
+            if door.direction in ("east", "west"):
+                if door.direction == "east":
+                    zx0 = dt_x - 1
+                else:
+                    zx0 = dt_x - 4
+                if (zx0 <= door_tile_x < zx0 + 6
+                        and dt_y <= door_tile_y < dt_y + 2):
+                    self.transition_to_room(door.to_room_coord, door.direction)
+                    break
 
     def _is_player_fully_inside_room(self):
-        if not hasattr(self, "player") or not self.player:
-            return False
-
-        player_tile_x = int(self.player.hitbox.centerx / TILESIZE)
-        player_tile_y = int(self.player.hitbox.centery / TILESIZE)
-
-        room_tile_width = self.dungeon_generator.room_tile_width
-        room_tile_height = self.dungeon_generator.room_tile_height
-        wall_thickness = self.dungeon_generator.wall_thickness
-        room_unit_width = room_tile_width + wall_thickness * 2
-        room_unit_height = room_tile_height + wall_thickness * 2
-
-        player_room_x = player_tile_x // room_unit_width
-        player_room_y = player_tile_y // room_unit_height
-        room_coord = (player_room_x, player_room_y)
-
-        room = self.dungeon_generator.rooms.get(room_coord)
-        if not room:
-            return False
-
-        room_start_x = room_coord[0] * room_unit_width + wall_thickness
-        room_start_y = room_coord[1] * room_unit_height + wall_thickness
-        room_end_x = room_start_x + room_tile_width
-        room_end_y = room_start_y + room_tile_height
-
-        door_zone = 1
-
-        is_inside = (
-                player_tile_x >= room_start_x + door_zone
-                and player_tile_x < room_end_x - door_zone
-                and player_tile_y >= room_start_y + door_zone
-                and player_tile_y < room_end_y - door_zone
-        )
-        return is_inside
+        if self.dungeon_manager:
+            return self.dungeon_manager.is_player_fully_inside_room()
+        return False
 
     def transition_to_room(self, room_coord, direction):
-        # print(f"[DEBUG] transition_to_room: {room_coord}, direction: {direction}")
-        if room_coord not in self.dungeon_generator.rooms:
-            # print(f"[DEBUG] Room {room_coord} not in dungeon_generator.rooms")
-            return
-
-        room = self.dungeon_generator.rooms[room_coord]
-
-        self._show_room(room_coord)
-        self._rebuild_visible_rooms()
-
-        room_tile_width = self.dungeon_generator.room_tile_width
-        room_tile_height = self.dungeon_generator.room_tile_height
-        wall_thickness = self.dungeon_generator.wall_thickness
-        room_unit_width = room_tile_width + wall_thickness * 2
-        room_unit_height = room_tile_height + wall_thickness * 2
-
-        # print(f"[DEBUG] Transitioned to room {room_coord}, player stays at {self.player.rect.x}, {self.player.rect.y}")
+        if self.dungeon_manager:
+            self.dungeon_manager.transition_to_room(room_coord, direction)
 
     def _show_room(self, room_coord):
-        if room_coord not in self.dungeon_generator.rooms:
-            return
-
-        room = self.dungeon_generator.rooms[room_coord]
-        room.set_visible(True)
-        room.set_visited(True)
+        if self.dungeon_manager:
+            self.dungeon_manager.show_room(room_coord)
 
     def _rebuild_visible_rooms(self):
-        if not hasattr(self, "_tile_map_cache"):
-            self._tile_map_cache = self.dungeon_generator.generate_floor(self.current_dungeon_floor)
-            self._dungeon_built_rooms = set()
-
-        level = self._tile_map_cache
-
-        room_tile_width = self.dungeon_generator.room_tile_width
-        room_tile_height = self.dungeon_generator.room_tile_height
-        wall_thickness = self.dungeon_generator.wall_thickness
-        room_unit_width = room_tile_width + wall_thickness * 2
-        room_unit_height = room_tile_height + wall_thickness * 2
-
-        visible_count = 0
-        for (gx, gy), room in self.dungeon_generator.rooms.items():
-            if not room.visible:
-                continue
-            if (gx, gy) in self._dungeon_built_rooms:
-                continue
-
-            visible_count += 1
-            self._dungeon_built_rooms.add((gx, gy))
-
-            room_start_x = gx * room_unit_width
-            room_start_y = gy * room_unit_height
-            room_end_x = room_start_x + room_unit_width
-            room_end_y = room_start_y + room_unit_height
-
-            for i, row in enumerate(level):
-                if i < room_start_y or i >= room_end_y:
-                    continue
-                for j, column in enumerate(row):
-                    if j < room_start_x or j >= room_end_x:
-                        continue
-                    Ground(self, j, i)
-                    if column == "B":
-                        Block(self, j, i)
-                    elif column == "T":
-                        Decoration(self, j, i, "tree")
-                    elif column == "C":
-                        Chest(self, j, i)
-                    elif column == "H":
-                        Bed(self, j, i)
-                    elif column == "W":
-                        Wardrobe(self, j, i)
-
-            if room.room_type.value == "boss":
-                boss_pos = self.dungeon_generator.get_boss_position()
-                if boss_pos:
-                    portal = DungeonEntrance(self, boss_pos[0], boss_pos[1])
-                    portal.room_coord = (gx, gy)
-
-        # print(f"[DEBUG] _rebuild_visible_rooms: added {visible_count} new rooms, total built: {len(self._dungeon_built_rooms)}")
+        if self.dungeon_manager:
+            self.dungeon_manager.rebuild_visible_rooms()
 
     def handle_camera_movement(self):
         pass

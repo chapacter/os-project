@@ -1,0 +1,252 @@
+{
+  "entangled_ingress": {
+    "display_name": "Entangled Ingress",
+    "description": "Древняя техногенная руина. Металл, пар, искры.",
+    "palette": {
+      "base": [
+        "#101423",
+        "#1b2b44"
+      ],
+      "mid": [
+        "#556b8a",
+        "#7e8fa6"
+      ],
+      "accent": [
+        "#d28f3e",
+        "#f1d27a"
+      ]
+    },
+    "enemy_pool": [
+      0,
+      1,
+      2,
+      3
+    ],
+    "guardian_pool": [
+      "eye_construct",
+      "crab_bot",
+      "ancient_devil"
+    ],
+    "judge_id": "body_boulder",
+    "music_background": "assets/sounds/Floor1_background.ogg",
+    "music_boss": "assets/sounds/Floor1_boss.ogg",
+    "min_combat_rooms": 2,
+    "max_combat_rooms": 3,
+    "guardian_count": 1,
+    "has_shop": true,
+    "has_altar": true,
+    "visual_budget": {
+      "large_props": 3,
+      "medium_props": 5,
+      "small_props": 10,
+      "animated_props": 2,
+      "particle_density": 0.45
+    },
+    "slot_rules": {
+      "center_lane_forbidden": true,
+      "edge_priority": 0.8,
+      "background_priority": 0.9
+    },
+    "budget_multiplier": 1.0
+  },
+  "still_bastion": {
+    "display_name": "Still Bastion",
+    "description": "Замёрзшая крепость. Лёд, кристаллы, холодный туман.",
+    "palette": {
+      "base": [
+        "#0a1628",
+        "#1a2f4a"
+      ],
+      "mid": [
+        "#5a8aab",
+        "#8ab3ce"
+      ],
+      "accent": [
+        "#a0d8f0",
+        "#c8f0ff"
+      ]
+    },
+    "enemy_pool": [
+      4,
+      5,
+      6,
+      7
+    ],
+    "guardian_pool": [
+      "frost_sentinel",
+      "ice_construct",
+      "crystal_golem"
+    ],
+    "judge_id": "night_weaver",
+    "music_background": "assets/sounds/Floor2_background.ogg",
+    "music_boss": "assets/sounds/Floor2_boss.ogg",
+    "min_combat_rooms": 2,
+    "max_combat_rooms": 3,
+    "guardian_count": 1,
+    "has_shop": true,
+    "has_altar": true,
+    "visual_budget": {
+      "large_props": 3,
+      "medium_props": 5,
+      "small_props": 10,
+      "animated_props": 1,
+      "particle_density": 0.4
+    },
+    "slot_rules": {
+      "center_lane_forbidden": true,
+      "edge_priority": 0.8,
+      "background_priority": 0.9
+    },
+    "budget_multiplier": 1.1
+  },
+  "wasted_pit": {
+    "display_name": "Wasted Pit",
+    "description": "Пустошь. Камень, пыль, выжженный свет.",
+    "palette": {
+      "base": [
+        "#1a1410",
+        "#2a2018"
+      ],
+      "mid": [
+        "#7a6a50",
+        "#9a8a70"
+      ],
+      "accent": [
+        "#c84020",
+        "#e86030"
+      ]
+    },
+    "enemy_pool": [
+      5,
+      6,
+      7,
+      8
+    ],
+    "guardian_pool": [
+      "dust_devil",
+      "rock_behemoth",
+      "fire_wraith"
+    ],
+    "judge_id": "pit_lord",
+    "music_background": "assets/sounds/Floor3_background.ogg",
+    "music_boss": "assets/sounds/Floor3_boss.ogg",
+    "min_combat_rooms": 3,
+    "max_combat_rooms": 4,
+    "guardian_count": 2,
+    "has_shop": true,
+    "has_altar": true,
+    "visual_budget": {
+      "large_props": 3,
+      "medium_props": 6,
+      "small_props": 12,
+      "animated_props": 1,
+      "particle_density": 0.5
+    },
+    "slot_rules": {
+      "center_lane_forbidden": true,
+      "edge_priority": 0.7,
+      "background_priority": 0.8
+    },
+    "budget_multiplier": 1.2
+  },
+  "living_walls": {
+    "display_name": "Living Walls",
+    "description": "Живые стены. Корни, плоть, споры.",
+    "palette": {
+      "base": [
+        "#0a0a10",
+        "#1a0a20"
+      ],
+      "mid": [
+        "#3a2a4a",
+        "#5a4a6a"
+      ],
+      "accent": [
+        "#8a2a4a",
+        "#ba4a6a"
+      ]
+    },
+    "enemy_pool": [
+      8,
+      9,
+      10,
+      11
+    ],
+    "guardian_pool": [
+      "flesh_mother",
+      "root_king",
+      "spore_lord"
+    ],
+    "judge_id": "living_dread",
+    "music_background": "assets/sounds/Floor4_background.ogg",
+    "music_boss": "assets/sounds/Boss.ogg",
+    "min_combat_rooms": 3,
+    "max_combat_rooms": 4,
+    "guardian_count": 2,
+    "has_shop": true,
+    "has_altar": true,
+    "visual_budget": {
+      "large_props": 4,
+      "medium_props": 7,
+      "small_props": 12,
+      "animated_props": 2,
+      "particle_density": 0.5
+    },
+    "slot_rules": {
+      "center_lane_forbidden": true,
+      "edge_priority": 0.8,
+      "background_priority": 0.9
+    },
+    "budget_multiplier": 1.3
+  },
+  "the_old_world": {
+    "display_name": "The Old World",
+    "description": "Руины древней цивилизации. Золото, камень, монументы.",
+    "palette": {
+      "base": [
+        "#1a1410",
+        "#2a2218"
+      ],
+      "mid": [
+        "#6a5a3a",
+        "#8a7a5a"
+      ],
+      "accent": [
+        "#d4a030",
+        "#f4c050"
+      ]
+    },
+    "enemy_pool": [
+      11,
+      12,
+      13,
+      14
+    ],
+    "guardian_pool": [
+      "ancient_sentinel",
+      "golden_golem",
+      "rune_guardian"
+    ],
+    "judge_id": "old_god",
+    "music_background": "assets/sounds/Floor4_background.ogg",
+    "music_boss": "assets/sounds/Boss.ogg",
+    "min_combat_rooms": 3,
+    "max_combat_rooms": 5,
+    "guardian_count": 3,
+    "has_shop": false,
+    "has_altar": true,
+    "visual_budget": {
+      "large_props": 3,
+      "medium_props": 5,
+      "small_props": 8,
+      "animated_props": 2,
+      "particle_density": 0.4
+    },
+    "slot_rules": {
+      "center_lane_forbidden": true,
+      "edge_priority": 0.9,
+      "background_priority": 0.9
+    },
+    "budget_multiplier": 1.5
+  }
+}

@@ -1,0 +1,84 @@
+{
+  "enemies": {
+    "0": 10,
+    "1": 12,
+    "2": 15,
+    "3": 20,
+    "4": 15,
+    "5": 25,
+    "6": 25,
+    "7": 25,
+    "8": 30,
+    "9": 35,
+    "10": 30,
+    "11": 40,
+    "12": 40,
+    "13": 45,
+    "14": 45
+  },
+  "rooms": {
+    "combat": {
+      "base_budget": 100,
+      "min_waves": 2,
+      "max_waves": 2,
+      "wave_definitions": [
+        {
+          "wave_index": 0,
+          "budget_percent": 0.4,
+          "spawn_delay_frames": 30,
+          "min_enemies": 1,
+          "max_enemies": 5
+        },
+        {
+          "wave_index": 1,
+          "budget_percent": 0.6,
+          "spawn_delay_frames": 60,
+          "min_enemies": 2,
+          "max_enemies": 8
+        }
+      ]
+    },
+    "elite": {
+      "base_budget": 180,
+      "min_waves": 2,
+      "max_waves": 2,
+      "wave_definitions": [
+        {
+          "wave_index": 0,
+          "budget_percent": 0.5,
+          "spawn_delay_frames": 30,
+          "min_enemies": 2,
+          "max_enemies": 6
+        },
+        {
+          "wave_index": 1,
+          "budget_percent": 0.5,
+          "spawn_delay_frames": 90,
+          "min_enemies": 3,
+          "max_enemies": 10
+        }
+      ]
+    },
+    "guardian": {
+      "base_budget": 60,
+      "min_waves": 1,
+      "max_waves": 1,
+      "wave_definitions": [
+        {
+          "wave_index": 0,
+          "budget_percent": 0.3,
+          "spawn_delay_frames": 30,
+          "min_enemies": 1,
+          "max_enemies": 3
+        }
+      ]
+    }
+  },
+  "realm_multipliers": {
+    "entangled_ingress": 1.0,
+    "still_bastion": 1.1,
+    "wasted_pit": 1.2,
+    "living_walls": 1.3,
+    "the_old_world": 1.5
+  }
+}
