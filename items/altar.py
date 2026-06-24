@@ -43,5 +43,4 @@ class Altar(Item):
         self.used = True
         player = self.game.player
         if player:
-            player.current_hp = player.max_hp
-            player.energy = player.max_energy
+            player.health_comp.health = player.health_comp.max_health
