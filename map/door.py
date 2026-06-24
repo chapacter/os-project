@@ -13,7 +13,7 @@ class DoorState:
 class Door(pygame.sprite.Sprite):
     ANIMATION_SPEED = 3
 
-    def __init__(self, game, x, y, direction, from_room_coord, to_room_coord):
+    def __init__(self, game, x, y, direction, from_room_coord, to_room_coord, transform=None):
         self.game = game
         self._layer = GROUND_LAYER
         self.groups = game.all_sprites, game.doors
@@ -21,12 +21,13 @@ class Door(pygame.sprite.Sprite):
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
-        self.width = TILESIZE * 2
-        self.height = TILESIZE * 2
+        self.width = TILESIZE
+        self.height = TILESIZE
 
         self.direction = direction
         self.from_room_coord = from_room_coord
         self.to_room_coord = to_room_coord
+        self.transform = transform
 
         self.state = DoorState.OPEN
         self.frames = self._load_frames()
@@ -41,18 +42,18 @@ class Door(pygame.sprite.Sprite):
     def _load_frames(self):
         frames = []
         sheet = self.game.terrain_spritesheet
-        rows = min(8, 10)
-        cols = 2
-        start_col = 4
-        for row in range(rows):
-            frame = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
-            for fy in range(2):
-                for fx in range(2):
-                    sx = (row + fx) * TILESIZE
-                    sy = (start_col + fy) * TILESIZE
-                    tile = sheet.get_image(sx, sy, TILESIZE, TILESIZE)
-                    frame.blit(tile, (fx * TILESIZE, fy * TILESIZE))
-            frames.append(frame)
+        sprite_row = 4
+        for col in range(4):
+            sx = col * TILESIZE
+            sy = sprite_row * TILESIZE
+            tile = sheet.get_image(sx, sy, TILESIZE, TILESIZE)
+            if self.transform == "flip_h":
+                tile = pygame.transform.flip(tile, True, False)
+            elif self.transform == "rotate_90":
+                tile = pygame.transform.rotate(tile, 90)
+            elif self.transform == "rotate_270":
+                tile = pygame.transform.rotate(tile, 270)
+            frames.append(tile)
         return frames
 
     def close(self):

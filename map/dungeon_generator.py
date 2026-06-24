@@ -337,30 +337,30 @@ class DungeonGenerator(DungeonGeneratorOld):
             for direction, has_door in room.doors.items():
                 if not has_door:
                     continue
-                if direction == "east":
-                    x = gx * rw + 16
-                    y = gy * rh + 8
-                    to_room = (gx + 1, gy)
-                elif direction == "west":
-                    x = gx * rw + 1
-                    y = gy * rh + 8
-                    to_room = (gx - 1, gy)
-                elif direction == "north":
-                    x = gx * rw + 8
-                    y = gy * rh + 1
-                    to_room = (gx, gy - 1)
-                elif direction == "south":
-                    x = gx * rw + 8
-                    y = gy * rh + 16
-                    to_room = (gx, gy + 1)
+                horizontal = direction in ("north", "south")
+                if horizontal:
+                    pos1 = {"x": gx * rw + 8, "y": gy * rh + (1 if direction == "north" else 16), "transform": None}
+                    pos2 = {"x": gx * rw + 9, "y": gy * rh + (1 if direction == "north" else 16), "transform": "flip_h"}
                 else:
+                    x = gx * rw + (16 if direction == "east" else 1)
+                    pos1 = {"x": x, "y": gy * rh + 8, "transform": "rotate_90"}
+                    pos2 = {"x": x, "y": gy * rh + 9, "transform": "rotate_270"}
+                to_room = {
+                    "east": (gx + 1, gy),
+                    "west": (gx - 1, gy),
+                    "north": (gx, gy - 1),
+                    "south": (gx, gy + 1),
+                }[direction]
+                if to_room not in self.rooms:
                     continue
-                if to_room in self.rooms:
+                for pos in (pos1, pos2):
                     doors.append({
-                        "x": x, "y": y,
+                        "x": pos["x"],
+                        "y": pos["y"],
                         "direction": direction,
                         "from_room": (gx, gy),
                         "to_room": to_room,
+                        "transform": pos["transform"],
                     })
         return doors
 

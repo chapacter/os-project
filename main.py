@@ -372,7 +372,7 @@ class Game:
     def create_dungeon_doors(self):
         for door_info in self.dungeon_generator.get_doors():
             Door(self, door_info["x"], door_info["y"], door_info["direction"], door_info["from_room"],
-                 door_info["to_room"], )
+                 door_info["to_room"], transform=door_info.get("transform"))
 
     def _on_enemy_killed(self, entity) -> None:
         if isinstance(entity, Boss):
