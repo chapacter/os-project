@@ -74,6 +74,9 @@ class DungeonManager:
                         Bed(game, j, i)
                     elif column == "W":
                         Wardrobe(game, j, i)
+                    elif column == "A":
+                        from items.altar import Altar
+                        Altar(game, j, i)
 
             # Build void tiles in a 1-tile margin around the room so adjacent
             # transition tunnels are visible even when the neighbour room isn't.
@@ -237,28 +240,6 @@ class DungeonManager:
             if self._is_sprite_in_room_bounds(door, x1, y1, x2, y2):
                 door.close()
 
-        # Fill full perimeter with Block sprites (includes door positions for collision)
-        existing_blocks = set()
-        for b in game.blocks:
-            tx = int(b.rect.x / TILESIZE)
-            ty = int(b.rect.y / TILESIZE)
-            if x1 <= tx < x2 and y1 <= ty < y2:
-                existing_blocks.add((tx, ty))
-
-        door_blocks = []
-        for tx in range(x1, x2):
-            for ty in (y1, y2 - 1):
-                if (tx, ty) not in existing_blocks:
-                    b = Block(game, tx, ty)
-                    door_blocks.append(b)
-                    existing_blocks.add((tx, ty))
-        for ty in range(y1 + 1, y2 - 1):
-            for tx in (x1, x2 - 1):
-                if (tx, ty) not in existing_blocks:
-                    b = Block(game, tx, ty)
-                    door_blocks.append(b)
-                    existing_blocks.add((tx, ty))
-
         for sprite in list(game.all_sprites):
             if not self._is_sprite_in_room_bounds(sprite, x1, y1, x2, y2):
                 continue
@@ -284,7 +265,6 @@ class DungeonManager:
                 sprite._battle_block = True
 
         game._sealed_rooms[room_coord] = {
-            "door_blocks": door_blocks,
             "bounds": (x1, y1, x2, y2),
         }
 
@@ -294,30 +274,15 @@ class DungeonManager:
             return
 
         sealed = game._sealed_rooms.pop(room_coord)
-        door_blocks = sealed.get("door_blocks", [])
-        for b in door_blocks:
-            b.kill()
-            if game.physics and hasattr(b, "physics_name"):
-                game.physics.remove_body(b.physics_name)
-
         x1, y1, x2, y2 = sealed.get("bounds", self._get_room_tile_bounds(room_coord))
+
         for sprite in list(game.all_sprites):
             if not self._is_sprite_in_room_bounds(sprite, x1, y1, x2, y2):
                 continue
             if hasattr(sprite, "_battle_block"):
                 game.blocks.remove(sprite)
-
-        # Restore perimeter Ground sprites (including void tiles) to their original look
-        for sprite in list(game.all_sprites):
-            if not self._is_sprite_in_room_bounds(sprite, x1, y1, x2, y2):
-                continue
-            if not isinstance(sprite, Ground):
-                continue
-            tx = int(sprite.rect.x / TILESIZE)
-            ty = int(sprite.rect.y / TILESIZE)
-            if ty == y1 or ty == y2 - 1 or tx == x1 or tx == x2 - 1:
-                if hasattr(sprite, "_orig_image"):
-                    sprite.image = sprite._orig_image
+            if hasattr(sprite, "_orig_image"):
+                sprite.image = sprite._orig_image
 
         for door in list(game.doors):
             if self._is_sprite_in_room_bounds(door, x1, y1, x2, y2):
