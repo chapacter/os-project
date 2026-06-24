@@ -332,6 +332,7 @@ class Game:
         self.clear_sprites()
         self._dungeon_built_rooms = set()
         self._sealed_rooms = {}
+        self._transition_entries = set()
 
         level = self.dungeon_generator.generate_floor(self.current_dungeon_floor)
         self._tile_map_cache = level
@@ -1077,6 +1078,9 @@ class Game:
                 self._debug_drawn = True
             self.hud.draw(self.sc)
 
+            if hasattr(self, "_debug_show_zones") and self._debug_show_zones:
+                self._draw_transition_zones()
+
         if self.dungeon_map:
             self.dungeon_map.draw(self.sc)
 
@@ -1261,8 +1265,6 @@ class Game:
             if room and room.enemy_count == 0:
                 self.unseal_room(sealed_coord)
 
-        self._door_frame_counter += 1
-
         player_tile_x = int(self.player.hitbox.centerx / TILESIZE)
         player_tile_y = int(self.player.hitbox.centery / TILESIZE)
         room_tile_width = self.dungeon_generator.room_tile_width
@@ -1275,31 +1277,125 @@ class Game:
         player_room_y = player_tile_y // room_unit_height
         player_room_coord = (player_room_x, player_room_y)
 
-        if self._door_frame_counter % 2 == 0:
-            if self._is_player_fully_inside_room():
-                room = self.dungeon_generator.rooms.get(player_room_coord)
-                if room and room.enemy_count == 0:
-                    # print( f"[DEBUG] Spawning enemies in current room {player_room_coord}")
-                    self.spawn_dungeon_enemies(player_room_coord)
+        dg = self.dungeon_generator
+        player_room = dg.rooms.get(player_room_coord)
 
-        player_room = self.dungeon_generator.rooms.get(player_room_coord)
         if player_room and player_room.enemy_count > 0:
             return
 
-        door_tile_x = int(self.player.hitbox.centerx / TILESIZE)
-        door_tile_y = int(self.player.hitbox.centery / TILESIZE)
-        for door in self.doors:
-            dt_x = door.rect.x // TILESIZE
-            dt_y = door.rect.y // TILESIZE
-            if door.direction in ("east", "west"):
-                if door.direction == "east":
-                    zx0 = dt_x - 1
+        # ---- Entry trigger: player at door threshold of current room ----
+        if player_room:
+            local_x = player_tile_x - player_room_x * room_unit_width
+            local_y = player_tile_y - player_room_y * room_unit_height
+
+            for direction, has_door in player_room.doors.items():
+                if not has_door:
+                    continue
+                neighbor = None
+                if direction == "east":
+                    neighbor = (player_room_x + 1, player_room_y)
+                elif direction == "west":
+                    neighbor = (player_room_x - 1, player_room_y)
+                elif direction == "south":
+                    neighbor = (player_room_x, player_room_y + 1)
+                elif direction == "north":
+                    neighbor = (player_room_x, player_room_y - 1)
+                if neighbor is None or neighbor not in dg.rooms:
+                    continue
+
+                entered = False
+                if direction == "east":
+                    entered = local_x == 16
+                elif direction == "west":
+                    entered = local_x == 1
+                elif direction == "south":
+                    entered = local_y == 16
+                elif direction == "north":
+                    entered = local_y == 1
+
+                if entered:
+                    if (neighbor, direction) not in self._transition_entries:
+                        self._transition_entries.add((neighbor, direction))
+                        self.transition_to_room(neighbor, direction)
+
+        # ---- Completion trigger: player 2+ tiles into a pending room ----
+        for entry in list(self._transition_entries):
+            entry_room, entry_dir = entry
+            if player_room_coord != entry_room:
+                continue
+
+            local_x = player_tile_x - entry_room[0] * room_unit_width
+            local_y = player_tile_y - entry_room[1] * room_unit_height
+
+            completed = False
+            if entry_dir in ("east", "south"):
+                coord = local_x if entry_dir == "east" else local_y
+                completed = coord >= 2
+            else:
+                coord = local_x if entry_dir == "west" else local_y
+                completed = coord <= room_tile_width - 3
+
+            if completed:
+                self._transition_entries.discard(entry)
+                room = dg.rooms.get(entry_room)
+                if room and room.enemy_count == 0:
+                    self.spawn_dungeon_enemies(entry_room)
+
+    def _draw_transition_zones(self):
+        if self.mode != GameMode.DUNGEON or not hasattr(self, 'dungeon_generator'):
+            return
+        dg = self.dungeon_generator
+        rw = dg.room_tile_width + dg.wall_thickness * 2
+        rh = dg.room_tile_height + dg.wall_thickness * 2
+
+        for (gx, gy), room in dg.rooms.items():
+            if not room.visible:
+                continue
+            for direction, has_door in room.doors.items():
+                if not has_door:
+                    continue
+                color = (0, 255, 0, 80)
+                nx, ny = gx, gy
+                if direction == "east":
+                    x = gx * rw + 16
+                    y = gy * rh
+                    w, h = 1, rh
+                    nx = gx + 1
+                elif direction == "west":
+                    x = gx * rw + 1
+                    y = gy * rh
+                    w, h = 1, rh
+                    nx = gx - 1
+                elif direction == "south":
+                    x = gx * rw
+                    y = gy * rh + 16
+                    w, h = rw, 1
+                    ny = gy + 1
+                elif direction == "north":
+                    x = gx * rw
+                    y = gy * rh + 1
+                    w, h = rw, 1
+                    ny = gy - 1
                 else:
-                    zx0 = dt_x - 4
-                if (zx0 <= door_tile_x < zx0 + 6
-                        and dt_y <= door_tile_y < dt_y + 2):
-                    self.transition_to_room(door.to_room_coord, door.direction)
-                    break
+                    continue
+
+                entry_rect = pygame.Rect(x * TILESIZE, y * TILESIZE, w * TILESIZE, h * TILESIZE)
+                entry_rect = self.camera.apply_to_rect(entry_rect)
+                pygame.draw.rect(self.sc, color, entry_rect, 2)
+
+                nx, ny = nx, ny
+                if (nx, ny) in dg.rooms and dg.rooms[(nx, ny)].visible:
+                    comp_x = nx * rw
+                    comp_y = ny * rh
+                    color2 = (255, 255, 0, 80)
+                    if direction in ("east", "west"):
+                        cx = comp_x + 2 if direction == "east" else comp_x + rw - 3
+                        comp_rect = pygame.Rect(cx * TILESIZE, comp_y * TILESIZE, 1 * TILESIZE, rh * TILESIZE)
+                    else:
+                        cy = comp_y + 2 if direction == "south" else comp_y + rh - 3
+                        comp_rect = pygame.Rect(comp_x * TILESIZE, cy * TILESIZE, rw * TILESIZE, 1 * TILESIZE)
+                    comp_rect = self.camera.apply_to_rect(comp_rect)
+                    pygame.draw.rect(self.sc, color2, comp_rect, 2)
 
     def _is_player_fully_inside_room(self):
         if self.dungeon_manager:

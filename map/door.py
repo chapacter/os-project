@@ -48,8 +48,8 @@ class Door(pygame.sprite.Sprite):
             frame = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
             for fy in range(2):
                 for fx in range(2):
-                    sx = (start_col + fx) * TILESIZE
-                    sy = row * TILESIZE + fy * TILESIZE
+                    sx = (row + fx) * TILESIZE
+                    sy = (start_col + fy) * TILESIZE
                     tile = sheet.get_image(sx, sy, TILESIZE, TILESIZE)
                     frame.blit(tile, (fx * TILESIZE, fy * TILESIZE))
             frames.append(frame)
