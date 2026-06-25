@@ -1,0 +1,74 @@
+{
+  "defaults": {
+    "intro_delay_frames": 60,
+    "reward_delay_frames": 30,
+    "door_close_delay_frames": 15,
+    "door_open_delay_frames": 15
+  },
+  "room_types": {
+    "combat": {
+      "wave_count": 2,
+      "seal_doors": true,
+      "clear_condition": "all_enemies_killed",
+      "reward_table": [
+        "coins",
+        "health_drop"
+      ]
+    },
+    "elite": {
+      "wave_count": 2,
+      "seal_doors": true,
+      "clear_condition": "all_enemies_killed",
+      "reward_table": [
+        "coins",
+        "weapon_drop",
+        "health_drop"
+      ]
+    },
+    "guardian": {
+      "wave_count": 1,
+      "seal_doors": true,
+      "clear_condition": "guardian_killed",
+      "reward_table": [
+        "judge_blood",
+        "coins"
+      ]
+    },
+    "judge": {
+      "wave_count": 1,
+      "seal_doors": true,
+      "clear_condition": "boss_killed",
+      "reward_table": [
+        "judge_blood",
+        "coins",
+        "weapon_drop"
+      ]
+    },
+    "shop": {
+      "wave_count": 0,
+      "seal_doors": false
+    },
+    "altar": {
+      "wave_count": 0,
+      "seal_doors": false
+    },
+    "lore": {
+      "wave_count": 0,
+      "seal_doors": false
+    },
+    "secret": {
+      "wave_count": 1,
+      "seal_doors": false,
+      "clear_condition": "all_enemies_killed",
+      "reward_table": [
+        "coins",
+        "weapon_drop",
+        "food_drop"
+      ]
+    },
+    "lobby": {
+      "wave_count": 0,
+      "seal_doors": false
+    }
+  }
+}

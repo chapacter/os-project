@@ -4,7 +4,7 @@ import pygame
 
 from entity.components.render.animation import AnimationComponent
 from entity.components.tags import WeaponMarker
-from entity.ecs_helpers import ecs_register
+from entity.ecs_helpers import ecs_register, ecs_unregister
 from items.base import Item
 from items.loot import AnimatedLoot
 from utils.settings import GROUND_LAYER, WEAPON_TYPES, WEAPON_LAYER
@@ -33,6 +33,11 @@ class Weapon(Item):
             game.ecs_world.add_component(self, self.anim_comp)
             ecs_register(game.ecs_world, self, rect=self.rect, image=self.image)
             game.ecs_world.add_component(self, WeaponMarker())
+
+    def kill(self):
+        if self.game and self.game.ecs_world:
+            ecs_unregister(self.game.ecs_world, self)
+        super().kill()
 
 
 class WeaponLoot(AnimatedLoot):

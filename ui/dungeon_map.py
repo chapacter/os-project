@@ -10,6 +10,13 @@ ROOM_COLORS = {
     RoomType.LOOT: (255, 215, 0),
     RoomType.BOSS: (180, 0, 180),
     RoomType.EVENT: (0, 200, 200),
+    RoomType.COMBAT: (255, 165, 0),
+    RoomType.GUARDIAN: (255, 100, 150),
+    RoomType.JUDGE: (180, 0, 180),
+    RoomType.SHOP: (0, 200, 200),
+    RoomType.ALTAR: (255, 215, 0),
+    RoomType.LORE: (100, 100, 255),
+    RoomType.SECRET: (60, 60, 60),
 }
 
 ROOM_LABELS = {
@@ -19,6 +26,21 @@ ROOM_LABELS = {
     RoomType.LOOT: "LOOT",
     RoomType.BOSS: "BOSS",
     RoomType.EVENT: "EVENT",
+    RoomType.COMBAT: "COMBAT",
+    RoomType.GUARDIAN: "GUARD",
+    RoomType.JUDGE: "JUDGE",
+    RoomType.SHOP: "SHOP",
+    RoomType.ALTAR: "ALTAR",
+    RoomType.LORE: "LORE",
+    RoomType.SECRET: "SECRET",
+}
+
+SPECIAL_ICONS = {
+    RoomType.SHOP: "$",
+    RoomType.LOOT: "\u2726",
+    RoomType.ALTAR: "\u2020",
+    RoomType.LORE: "?",
+    RoomType.SECRET: "\u2605",
 }
 
 
@@ -92,6 +114,12 @@ class DungeonMap:
                 label_surf = self.game.services.font.render(label, 16, WHITE, shadow=BLACK)
                 label_rect = label_surf.get_rect(center=rect.center)
                 surface.blit(label_surf, label_rect)
+
+            if not room.visited and room.room_type in SPECIAL_ICONS:
+                icon = SPECIAL_ICONS[room.room_type]
+                icon_surf = self.game.services.font.render(icon, 14, (200, 200, 200), shadow=BLACK)
+                icon_rect = icon_surf.get_rect(center=rect.center)
+                surface.blit(icon_surf, icon_rect)
 
         # Legend on the right-bottom of the map
         legend_x = offset_x + map_w + 10

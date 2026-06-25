@@ -16,7 +16,7 @@ def get_screen_resolution():
 
 
 def calculate_initial_scale(screen_w, screen_h):
-    max_room_height_tiles = 16
+    max_room_height_tiles = 32
     max_room_height_px = max_room_height_tiles * TILESIZE
     scale = screen_h / max_room_height_px
     return scale

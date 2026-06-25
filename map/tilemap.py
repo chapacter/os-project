@@ -1,12 +1,7 @@
 import pygame
 
+from map.game_mode import GameMode
 from utils.settings import *
-
-
-class GameMode:
-    WORLD = "world"
-    DUNGEON = "dungeon"
-    TMX = "tmx"
 
 
 class Block(pygame.sprite.Sprite):
@@ -72,6 +67,15 @@ class Ground(pygame.sprite.Sprite):
         self.y = y * TILESIZE
         self.width = TILESIZE
         self.height = TILESIZE
+
+        if terrain_type == " ":  # Тут можно поиграться чтобы сделать прикольную рамку вокруг комнат
+            self.image = pygame.Surface((self.width, self.height))
+            self.image.fill((4, 4,
+                             4))  # это кстаи актуальный цвет для рамки, пока в виде еле заметного гало, чтобы смягчить переход к пустоте
+            self.rect = self.image.get_rect()
+            self.rect.x = self.x
+            self.rect.y = self.y
+            return
 
         if game.mode == GameMode.DUNGEON:
             floor = getattr(game, "current_dungeon_floor", 1)

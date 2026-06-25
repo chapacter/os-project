@@ -1,0 +1,1012 @@
+{
+  "mechanical": {
+    "biome_id": "mechanical",
+    "objects": [
+      {
+        "object_id": "broken_pipe",
+        "size_class": "medium",
+        "category": "structural",
+        "allowed_zones": [
+          "left_wall",
+          "right_wall",
+          "back_layer"
+        ],
+        "spawn_weight": 30,
+        "duplicate_limit": 2,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "elite"
+        ],
+        "variation": [
+          "pipe_a",
+          "pipe_b"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          96,
+          80,
+          72,
+          255
+        ]
+      },
+      {
+        "object_id": "hanging_cable",
+        "size_class": "medium",
+        "category": "ambient",
+        "allowed_zones": [
+          "ceiling"
+        ],
+        "spawn_weight": 45,
+        "duplicate_limit": 3,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "elite",
+          "lobby"
+        ],
+        "variation": [
+          "cable_a",
+          "cable_b"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          64,
+          56,
+          48,
+          255
+        ]
+      },
+      {
+        "object_id": "piston_block",
+        "size_class": "large",
+        "category": "structural",
+        "allowed_zones": [
+          "corner_anchors",
+          "left_wall",
+          "right_wall"
+        ],
+        "spawn_weight": 15,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "judge"
+        ],
+        "variation": [
+          "piston_a"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          120,
+          100,
+          80,
+          255
+        ]
+      },
+      {
+        "object_id": "sparking_panel",
+        "size_class": "medium",
+        "category": "interactive",
+        "allowed_zones": [
+          "back_layer"
+        ],
+        "spawn_weight": 20,
+        "duplicate_limit": 2,
+        "allowed_room_types": [
+          "combat",
+          "guardian"
+        ],
+        "variation": [
+          "panel_a"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          200,
+          180,
+          40,
+          255
+        ]
+      },
+      {
+        "object_id": "steam_vent",
+        "size_class": "small",
+        "category": "ambient",
+        "allowed_zones": [
+          "floor_edges",
+          "wall_base"
+        ],
+        "spawn_weight": 25,
+        "duplicate_limit": 2,
+        "allowed_room_types": [
+          "combat",
+          "guardian"
+        ],
+        "variation": [
+          "vent_a"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          160,
+          160,
+          180,
+          200
+        ]
+      },
+      {
+        "object_id": "gear_shadow",
+        "size_class": "large",
+        "category": "thematic",
+        "allowed_zones": [
+          "back_layer"
+        ],
+        "spawn_weight": 10,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "judge"
+        ],
+        "variation": [
+          "gear_a"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          40,
+          40,
+          50,
+          180
+        ]
+      },
+      {
+        "object_id": "rusted_beam",
+        "size_class": "medium",
+        "category": "structural",
+        "allowed_zones": [
+          "ceiling",
+          "left_wall",
+          "right_wall"
+        ],
+        "spawn_weight": 20,
+        "duplicate_limit": 2,
+        "allowed_room_types": [
+          "combat",
+          "elite"
+        ],
+        "variation": [
+          "beam_a",
+          "beam_b"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          110,
+          70,
+          50,
+          255
+        ]
+      },
+      {
+        "object_id": "debris_small",
+        "size_class": "small",
+        "category": "set_dressing",
+        "allowed_zones": [
+          "floor_edges",
+          "corner_anchors"
+        ],
+        "spawn_weight": 40,
+        "duplicate_limit": 4,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "elite",
+          "lobby",
+          "judge"
+        ],
+        "variation": [
+          "debris_a",
+          "debris_b",
+          "debris_c"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          80,
+          72,
+          64,
+          255
+        ]
+      }
+    ],
+    "forbidden_objects": [
+      "root_cluster",
+      "organic_pod",
+      "snow_drift",
+      "ice_crystal_small",
+      "rune_circle",
+      "altar_frame"
+    ],
+    "lighting": "cold_contrast",
+    "atmosphere": [
+      "sparks",
+      "steam"
+    ]
+  },
+  "ice": {
+    "biome_id": "ice",
+    "objects": [
+      {
+        "object_id": "ice_crystal_small",
+        "size_class": "small",
+        "category": "structural",
+        "allowed_zones": [
+          "floor_edges",
+          "left_wall",
+          "right_wall"
+        ],
+        "spawn_weight": 50,
+        "duplicate_limit": 4,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "elite"
+        ],
+        "variation": [
+          "crystal_s_a",
+          "crystal_s_b"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          180,
+          220,
+          255,
+          200
+        ]
+      },
+      {
+        "object_id": "ice_crystal_large",
+        "size_class": "large",
+        "category": "thematic",
+        "allowed_zones": [
+          "back_layer",
+          "left_wall",
+          "right_wall"
+        ],
+        "spawn_weight": 10,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "judge"
+        ],
+        "variation": [
+          "crystal_l_a"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          200,
+          230,
+          255,
+          180
+        ]
+      },
+      {
+        "object_id": "frozen_chain",
+        "size_class": "medium",
+        "category": "ambient",
+        "allowed_zones": [
+          "ceiling"
+        ],
+        "spawn_weight": 25,
+        "duplicate_limit": 2,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "judge"
+        ],
+        "variation": [
+          "chain_a"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          140,
+          180,
+          210,
+          255
+        ]
+      },
+      {
+        "object_id": "frost_rubble",
+        "size_class": "small",
+        "category": "set_dressing",
+        "allowed_zones": [
+          "floor_edges"
+        ],
+        "spawn_weight": 40,
+        "duplicate_limit": 3,
+        "allowed_room_types": [
+          "combat",
+          "elite",
+          "lobby"
+        ],
+        "variation": [
+          "rubble_a",
+          "rubble_b"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          160,
+          190,
+          210,
+          255
+        ]
+      },
+      {
+        "object_id": "cold_mist",
+        "size_class": "large",
+        "category": "ambient",
+        "allowed_zones": [
+          "back_layer"
+        ],
+        "spawn_weight": 70,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "judge",
+          "elite",
+          "lobby"
+        ],
+        "variation": [
+          "mist_a"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          200,
+          220,
+          240,
+          80
+        ]
+      },
+      {
+        "object_id": "shard_cluster",
+        "size_class": "medium",
+        "category": "thematic",
+        "allowed_zones": [
+          "back_layer",
+          "left_wall",
+          "right_wall"
+        ],
+        "spawn_weight": 20,
+        "duplicate_limit": 2,
+        "allowed_room_types": [
+          "combat",
+          "guardian"
+        ],
+        "variation": [
+          "shard_a",
+          "shard_b"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          170,
+          210,
+          255,
+          200
+        ]
+      },
+      {
+        "object_id": "snow_drift",
+        "size_class": "small",
+        "category": "set_dressing",
+        "allowed_zones": [
+          "floor_edges"
+        ],
+        "spawn_weight": 60,
+        "duplicate_limit": 4,
+        "allowed_room_types": [
+          "combat",
+          "elite"
+        ],
+        "variation": [
+          "drift_a",
+          "drift_b"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          220,
+          235,
+          250,
+          200
+        ]
+      }
+    ],
+    "forbidden_objects": [
+      "steam_vent",
+      "flesh_tendrils",
+      "ritual_lamp",
+      "broken_pipe"
+    ],
+    "lighting": "soft_cyan",
+    "atmosphere": [
+      "mist",
+      "ice_dust"
+    ]
+  },
+  "organic": {
+    "biome_id": "organic",
+    "objects": [
+      {
+        "object_id": "root_cluster",
+        "size_class": "medium",
+        "category": "structural",
+        "allowed_zones": [
+          "floor_edges",
+          "left_wall",
+          "right_wall"
+        ],
+        "spawn_weight": 40,
+        "duplicate_limit": 3,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "elite"
+        ],
+        "variation": [
+          "root_a",
+          "root_b"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          60,
+          40,
+          30,
+          255
+        ]
+      },
+      {
+        "object_id": "bone_spine",
+        "size_class": "large",
+        "category": "thematic",
+        "allowed_zones": [
+          "back_layer",
+          "left_wall",
+          "right_wall"
+        ],
+        "spawn_weight": 20,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "judge"
+        ],
+        "variation": [
+          "spine_a"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          160,
+          140,
+          120,
+          255
+        ]
+      },
+      {
+        "object_id": "flesh_tendrils",
+        "size_class": "medium",
+        "category": "ambient",
+        "allowed_zones": [
+          "back_layer"
+        ],
+        "spawn_weight": 25,
+        "duplicate_limit": 2,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "judge"
+        ],
+        "variation": [
+          "tendril_a",
+          "tendril_b"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          100,
+          30,
+          50,
+          200
+        ]
+      },
+      {
+        "object_id": "organic_pod",
+        "size_class": "medium",
+        "category": "thematic",
+        "allowed_zones": [
+          "secret_nooks",
+          "corner_anchors"
+        ],
+        "spawn_weight": 10,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "secret",
+          "lore"
+        ],
+        "variation": [
+          "pod_a"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          80,
+          120,
+          60,
+          255
+        ]
+      },
+      {
+        "object_id": "spores",
+        "size_class": "small",
+        "category": "ambient",
+        "allowed_zones": [
+          "back_layer"
+        ],
+        "spawn_weight": 50,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "elite",
+          "judge"
+        ],
+        "variation": [
+          "spore_a"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          120,
+          200,
+          80,
+          100
+        ]
+      },
+      {
+        "object_id": "pulsating_wall",
+        "size_class": "large",
+        "category": "thematic",
+        "allowed_zones": [
+          "back_layer"
+        ],
+        "spawn_weight": 15,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "judge"
+        ],
+        "variation": [
+          "pulse_a"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          80,
+          20,
+          50,
+          200
+        ]
+      },
+      {
+        "object_id": "sickly_vine",
+        "size_class": "small",
+        "category": "ambient",
+        "allowed_zones": [
+          "ceiling",
+          "left_wall",
+          "right_wall"
+        ],
+        "spawn_weight": 35,
+        "duplicate_limit": 3,
+        "allowed_room_types": [
+          "combat",
+          "elite"
+        ],
+        "variation": [
+          "vine_a",
+          "vine_b"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          70,
+          90,
+          40,
+          200
+        ]
+      }
+    ],
+    "forbidden_objects": [
+      "sparking_panel",
+      "steam_vent",
+      "ice_crystal_large",
+      "gear_shadow"
+    ],
+    "lighting": "sickly_low",
+    "atmosphere": [
+      "spores",
+      "pulsing_fog"
+    ]
+  },
+  "ritual": {
+    "biome_id": "ritual",
+    "objects": [
+      {
+        "object_id": "altar_frame",
+        "size_class": "large",
+        "category": "thematic",
+        "allowed_zones": [
+          "center_lane"
+        ],
+        "spawn_weight": 100,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "altar"
+        ],
+        "variation": [
+          "altar_a"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          180,
+          140,
+          60,
+          255
+        ]
+      },
+      {
+        "object_id": "rune_circle",
+        "size_class": "medium",
+        "category": "thematic",
+        "allowed_zones": [
+          "center_lane",
+          "floor_edges"
+        ],
+        "spawn_weight": 70,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "altar",
+          "judge"
+        ],
+        "variation": [
+          "rune_a",
+          "rune_b"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          200,
+          160,
+          40,
+          150
+        ]
+      },
+      {
+        "object_id": "pillar_statue",
+        "size_class": "large",
+        "category": "structural",
+        "allowed_zones": [
+          "left_wall",
+          "right_wall"
+        ],
+        "spawn_weight": 35,
+        "duplicate_limit": 2,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "judge",
+          "altar",
+          "lobby"
+        ],
+        "variation": [
+          "pillar_a"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          140,
+          120,
+          80,
+          255
+        ]
+      },
+      {
+        "object_id": "hanging_sigil",
+        "size_class": "medium",
+        "category": "ambient",
+        "allowed_zones": [
+          "ceiling"
+        ],
+        "spawn_weight": 50,
+        "duplicate_limit": 3,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "judge",
+          "altar"
+        ],
+        "variation": [
+          "sigil_a",
+          "sigil_b"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          160,
+          130,
+          60,
+          200
+        ]
+      },
+      {
+        "object_id": "ritual_lamp",
+        "size_class": "small",
+        "category": "interactive",
+        "allowed_zones": [
+          "left_wall",
+          "right_wall",
+          "floor_edges"
+        ],
+        "spawn_weight": 40,
+        "duplicate_limit": 2,
+        "allowed_room_types": [
+          "altar",
+          "judge",
+          "shop"
+        ],
+        "variation": [
+          "lamp_a"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          220,
+          180,
+          60,
+          255
+        ]
+      },
+      {
+        "object_id": "glyph_wall",
+        "size_class": "large",
+        "category": "thematic",
+        "allowed_zones": [
+          "back_layer"
+        ],
+        "spawn_weight": 20,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "judge",
+          "altar"
+        ],
+        "variation": [
+          "glyph_a"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          100,
+          80,
+          50,
+          180
+        ]
+      }
+    ],
+    "forbidden_objects": [
+      "rubble_pile",
+      "flesh_tendrils",
+      "steam_vent",
+      "organic_pod"
+    ],
+    "lighting": "golden_focus",
+    "atmosphere": [
+      "dust",
+      "embers"
+    ]
+  },
+  "cave": {
+    "biome_id": "cave",
+    "objects": [
+      {
+        "object_id": "rock_arch",
+        "size_class": "large",
+        "category": "structural",
+        "allowed_zones": [
+          "back_layer",
+          "left_wall",
+          "right_wall"
+        ],
+        "spawn_weight": 20,
+        "duplicate_limit": 2,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "elite"
+        ],
+        "variation": [
+          "arch_a",
+          "arch_b"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          90,
+          80,
+          70,
+          255
+        ]
+      },
+      {
+        "object_id": "stalactite_group",
+        "size_class": "medium",
+        "category": "structural",
+        "allowed_zones": [
+          "ceiling"
+        ],
+        "spawn_weight": 35,
+        "duplicate_limit": 3,
+        "allowed_room_types": [
+          "combat",
+          "elite",
+          "guardian"
+        ],
+        "variation": [
+          "stal_a",
+          "stal_b"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          100,
+          90,
+          80,
+          255
+        ]
+      },
+      {
+        "object_id": "rubble_pile",
+        "size_class": "small",
+        "category": "set_dressing",
+        "allowed_zones": [
+          "floor_edges"
+        ],
+        "spawn_weight": 55,
+        "duplicate_limit": 4,
+        "allowed_room_types": [
+          "combat",
+          "elite",
+          "guardian",
+          "lobby"
+        ],
+        "variation": [
+          "rubble_a",
+          "rubble_b",
+          "rubble_c"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          110,
+          95,
+          80,
+          255
+        ]
+      },
+      {
+        "object_id": "glowing_mineral",
+        "size_class": "small",
+        "category": "thematic",
+        "allowed_zones": [
+          "back_layer",
+          "left_wall",
+          "right_wall",
+          "floor_edges"
+        ],
+        "spawn_weight": 15,
+        "duplicate_limit": 2,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "elite"
+        ],
+        "variation": [
+          "mineral_a",
+          "mineral_b"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          80,
+          200,
+          220,
+          200
+        ]
+      },
+      {
+        "object_id": "dust_cloud",
+        "size_class": "large",
+        "category": "ambient",
+        "allowed_zones": [
+          "back_layer"
+        ],
+        "spawn_weight": 50,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "elite",
+          "judge"
+        ],
+        "variation": [
+          "dust_a"
+        ],
+        "animation_enabled": true,
+        "fallback_color": [
+          160,
+          140,
+          120,
+          60
+        ]
+      },
+      {
+        "object_id": "broken_bridge_piece",
+        "size_class": "large",
+        "category": "structural",
+        "allowed_zones": [
+          "left_wall",
+          "right_wall"
+        ],
+        "spawn_weight": 10,
+        "duplicate_limit": 1,
+        "allowed_room_types": [
+          "combat",
+          "guardian"
+        ],
+        "variation": [
+          "bridge_a"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          130,
+          110,
+          90,
+          255
+        ]
+      },
+      {
+        "object_id": "stone_pillar",
+        "size_class": "large",
+        "category": "structural",
+        "allowed_zones": [
+          "corner_anchors",
+          "left_wall",
+          "right_wall"
+        ],
+        "spawn_weight": 25,
+        "duplicate_limit": 2,
+        "allowed_room_types": [
+          "combat",
+          "guardian",
+          "judge"
+        ],
+        "variation": [
+          "stone_pillar_a"
+        ],
+        "animation_enabled": false,
+        "fallback_color": [
+          80,
+          75,
+          70,
+          255
+        ]
+      }
+    ],
+    "forbidden_objects": [
+      "altar_frame",
+      "steam_vent",
+      "hanging_sigil",
+      "organic_pod"
+    ],
+    "lighting": "dark_lowkey",
+    "atmosphere": [
+      "dust_cloud",
+      "falling_debris"
+    ]
+  }
+}

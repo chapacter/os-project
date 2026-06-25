@@ -1,0 +1,142 @@
+{
+  "entangled_ingress_combat_01_a": {
+    "variant_id": "entangled_ingress_combat_01_a",
+    "template_id": "entangled_ingress_combat_01",
+    "palette_override": {
+      "accent": [
+        "#d28f3e",
+        "#f7df9c"
+      ]
+    },
+    "decor_overrides": [
+      {
+        "object_id": "broken_pipe",
+        "count": 1
+      },
+      {
+        "object_id": "steam_vent",
+        "count": 2
+      }
+    ],
+    "lighting_profile": "cold_dim",
+    "particle_profile": "sparks_low"
+  },
+  "entangled_ingress_combat_01_b": {
+    "variant_id": "entangled_ingress_combat_01_b",
+    "template_id": "entangled_ingress_combat_01",
+    "palette_override": {
+      "accent": [
+        "#b07030",
+        "#d09050"
+      ]
+    },
+    "decor_overrides": [
+      {
+        "object_id": "hanging_cable",
+        "count": 2
+      },
+      {
+        "object_id": "sparking_panel",
+        "count": 1
+      }
+    ],
+    "lighting_profile": "warm_dim",
+    "particle_profile": "sparks_high"
+  },
+  "entangled_ingress_combat_02_a": {
+    "variant_id": "entangled_ingress_combat_02_a",
+    "template_id": "entangled_ingress_combat_02",
+    "decor_overrides": [
+      {
+        "object_id": "rusted_beam",
+        "count": 1
+      },
+      {
+        "object_id": "debris_small",
+        "count": 3
+      }
+    ],
+    "lighting_profile": "cold_dim",
+    "particle_profile": "steam_low"
+  },
+  "still_bastion_combat_01_a": {
+    "variant_id": "still_bastion_combat_01_a",
+    "template_id": "still_bastion_combat_01",
+    "decor_overrides": [
+      {
+        "object_id": "ice_crystal_small",
+        "count": 3
+      },
+      {
+        "object_id": "frost_rubble",
+        "count": 2
+      }
+    ],
+    "lighting_profile": "soft_cyan",
+    "particle_profile": "mist"
+  },
+  "still_bastion_combat_01_b": {
+    "variant_id": "still_bastion_combat_01_b",
+    "template_id": "still_bastion_combat_01",
+    "decor_overrides": [
+      {
+        "object_id": "frozen_chain",
+        "count": 1
+      },
+      {
+        "object_id": "shard_cluster",
+        "count": 1
+      }
+    ],
+    "lighting_profile": "soft_cyan",
+    "particle_profile": "ice_dust"
+  },
+  "wasted_pit_combat_01_a": {
+    "variant_id": "wasted_pit_combat_01_a",
+    "template_id": "wasted_pit_combat_01",
+    "decor_overrides": [
+      {
+        "object_id": "rubble_pile",
+        "count": 3
+      },
+      {
+        "object_id": "dust_cloud",
+        "count": 1
+      }
+    ],
+    "lighting_profile": "dark_lowkey",
+    "particle_profile": "dust"
+  },
+  "living_walls_combat_01_a": {
+    "variant_id": "living_walls_combat_01_a",
+    "template_id": "living_walls_combat_01",
+    "decor_overrides": [
+      {
+        "object_id": "root_cluster",
+        "count": 2
+      },
+      {
+        "object_id": "spores",
+        "count": 1
+      }
+    ],
+    "lighting_profile": "sickly_low",
+    "particle_profile": "spores"
+  },
+  "the_old_world_combat_01_a": {
+    "variant_id": "the_old_world_combat_01_a",
+    "template_id": "the_old_world_combat_01",
+    "decor_overrides": [
+      {
+        "object_id": "pillar_statue",
+        "count": 2
+      },
+      {
+        "object_id": "hanging_sigil",
+        "count": 1
+      }
+    ],
+    "lighting_profile": "golden_focus",
+    "particle_profile": "dust"
+  }
+}
