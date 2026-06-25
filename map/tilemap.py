@@ -68,7 +68,10 @@ class Ground(pygame.sprite.Sprite):
         self.width = TILESIZE
         self.height = TILESIZE
 
+        self.is_void = False
+
         if terrain_type == " ":  # Тут можно поиграться чтобы сделать прикольную рамку вокруг комнат
+            self.is_void = True
             self.image = pygame.Surface((self.width, self.height))
             self.image.fill((4, 4,
                              4))  # это кстаи актуальный цвет для рамки, пока в виде еле заметного гало, чтобы смягчить переход к пустоте

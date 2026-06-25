@@ -273,6 +273,8 @@ class DungeonManager:
                     col * TILESIZE, row * TILESIZE, TILESIZE, TILESIZE
                 )
             elif isinstance(sprite, Ground):
+                if getattr(sprite, "is_void", False):
+                    continue
                 row, col = theme[floor_key]
                 combat_image = game.terrain_spritesheet.get_image(
                     col * TILESIZE, row * TILESIZE, TILESIZE, TILESIZE
@@ -341,8 +343,13 @@ class DungeonManager:
         gx, gy = room_coord
         ruw = dg.room_tile_width + dg.wall_thickness * 2
         ruh = dg.room_tile_height + dg.wall_thickness * 2
-        origin_x = gx * ruw + ruw // 2
-        origin_y = gy * ruh + ruh // 2
+        player = game.player
+        if player:
+            origin_x = int(player.rect.centerx / TILESIZE)
+            origin_y = int(player.rect.centery / TILESIZE)
+        else:
+            origin_x = gx * ruw + ruw // 2
+            origin_y = gy * ruh + ruh // 2
 
         tr = RoomTransitionData(
             room_coord=room_coord,
