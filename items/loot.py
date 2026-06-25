@@ -5,7 +5,7 @@ import random
 import pygame
 
 from entity.components.tags import LootMarker
-from entity.ecs_helpers import ecs_register
+from entity.ecs_helpers import ecs_register, ecs_unregister
 from items.base import Item
 from utils.settings import WEAPON_LAYER, LOOT_ANIMATION_STEP, LOOT_ANIMATION_MAX_ANGLE, LOOT_FLY_DURATION, PLAYER_HEALTH
 
@@ -104,6 +104,11 @@ class AnimatedLoot(Item):
                 self.rect.y = self.end_pos.y
 
         self.animate()
+
+    def kill(self):
+        if self.game and self.game.ecs_world:
+            ecs_unregister(self.game.ecs_world, self)
+        super().kill()
 
     def on_pickup(self, player):
         if hasattr(player, "health_comp"):
