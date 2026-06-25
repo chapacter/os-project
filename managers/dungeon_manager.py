@@ -64,7 +64,7 @@ class DungeonManager:
                     if column == " ":
                         Ground(game, j, i, " ")
                     elif column == "D":
-                        pass
+                        Ground(game, j, i)
                     else:
                         Ground(game, j, i)
                     if column == "B":
@@ -166,6 +166,26 @@ class DungeonManager:
                     game.services.audio.load_music(boss_music)
                     mult = 1.5 if game.current_dungeon_floor == 3 else 1.0
                     game.services.audio.play_music(context="dungeon", volume_multiplier=mult)
+
+                if cfg.spawn_weak_count > 0:
+                    room_start_x = gx * room_unit_width + wall_thickness
+                    room_start_y = gy * room_unit_height + wall_thickness
+                    margin = 2
+                    for _ in range(cfg.spawn_weak_count):
+                        enemy_type = self._pick_enemy_type(game.current_dungeon_floor)
+                        ex = random.randint(
+                            room_start_x + margin,
+                            room_start_x + room_tile_width - 1 - margin,
+                        )
+                        ey = random.randint(
+                            room_start_y + margin,
+                            room_start_y + room_tile_height - 1 - margin,
+                        )
+                        Enemy(game, ex, ey, enemy_type=enemy_type)
+                        room.enemy_count += 1
+                        total_enemies += 1
+
+                spawned_rooms.append((gx, gy))
                 continue
 
             if not cfg.spawns_enemies:

@@ -33,6 +33,7 @@ class RoomConfig:
     has_portal: bool = False
     spawn_count_range: tuple[int, int] = (0, 0)
     hp_multiplier: float = 1.0
+    spawn_weak_count: int = 0
 
 
 ROOM_CONFIGS: dict[RoomType, RoomConfig] = {
@@ -58,7 +59,7 @@ ROOM_CONFIGS: dict[RoomType, RoomConfig] = {
         wall_theme="boss_wall", floor_theme="boss_floor", decor_theme="boss_decor",
     ),
     RoomType.JUDGE: RoomConfig(
-        is_boss=True, has_portal=True,
+        is_boss=True, has_portal=True, spawn_weak_count=2,
         wall_theme="boss_wall", floor_theme="boss_floor", decor_theme="boss_decor",
     ),
     RoomType.SHOP: RoomConfig(seal_on_enter=False),

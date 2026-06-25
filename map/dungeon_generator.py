@@ -50,7 +50,7 @@ def _rotate_template(template, rot, room_size=18):
 
     tm = t.get("tile_map", [])
     if isinstance(tm, list) and len(tm) == W:
-        grid = [list(row) for row in tm]
+        grid = [list(row.ljust(W)) for row in tm]
         for _ in range(rot):
             grid = [list(col) for col in zip(*grid[::-1])]
         t["tile_map"] = ["".join(row) for row in grid]
