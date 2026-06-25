@@ -16,6 +16,9 @@ class RoomTileData:
     state: RoomTileState = RoomTileState.NORMAL
     original_image: Optional[pygame.Surface] = None
     combat_image: Optional[pygame.Surface] = None
+    flash_counter: int = 0
+    _flash_target: str = ""
+    edge_mask: dict = field(default_factory=dict)
 
 
 @dataclass

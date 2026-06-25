@@ -3,6 +3,7 @@ from enum import Enum
 
 class RoomTileState(Enum):
     NORMAL = "normal"
+    FLASH = "flash"
     COMBAT = "combat"
 
 

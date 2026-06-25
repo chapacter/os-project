@@ -5,6 +5,8 @@ Extracted incrementally from Game class (main.py) during refactoring.
 
 import random
 
+import pygame
+
 from entity.boss import Boss
 from entity.enemy import Enemy
 from items.chest import Chest
@@ -293,6 +295,48 @@ class DungeonManager:
                 combat_image=combat_image,
             )
             tile_data_list.append(tile_data)
+
+        # Compute edge masks and render edge glow
+        coord_set = {(t.tile_x, t.tile_y) for t in tile_data_list}
+        glow_colors = [
+            (0, 255, 100),
+            (50, 150, 255),
+            (200, 100, 255),
+            (255, 80, 50),
+        ]
+        glow_color = glow_colors[min(floor - 1, 3)]
+
+        for tile in tile_data_list:
+            mask = {}
+            for d, dx, dy in (
+                    ("left", -1, 0),
+                    ("right", 1, 0),
+                    ("top", 0, -1),
+                    ("bottom", 0, 1),
+            ):
+                nx, ny = tile.tile_x + dx, tile.tile_y + dy
+                if not (x1 <= nx < x2 and y1 <= ny < y2):
+                    mask[d] = True
+                elif (nx, ny) not in coord_set:
+                    mask[d] = True
+                else:
+                    mask[d] = False
+            tile.edge_mask = mask
+
+            if tile.combat_image is not None and any(mask.values()):
+                img = tile.combat_image
+                w, h = img.get_size()
+                for d, exposed in mask.items():
+                    if not exposed:
+                        continue
+                    if d == "left":
+                        pygame.draw.line(img, glow_color, (1, 0), (1, h - 1), 2)
+                    elif d == "right":
+                        pygame.draw.line(img, glow_color, (w - 2, 0), (w - 2, h - 1), 2)
+                    elif d == "top":
+                        pygame.draw.line(img, glow_color, (0, 1), (w - 1, 1), 2)
+                    elif d == "bottom":
+                        pygame.draw.line(img, glow_color, (0, h - 2), (w - 1, h - 2), 2)
 
         gx, gy = room_coord
         ruw = dg.room_tile_width + dg.wall_thickness * 2
