@@ -1,18 +1,11 @@
 import pygame
 
+from map.door_physics import DoorPhysics
+from map.door_state import DoorStateMachine
 from utils.settings import *
 
 
-class DoorState:
-    OPEN = "open"
-    CLOSING = "closing"
-    CLOSED = "closed"
-    OPENING = "opening"
-
-
 class Door(pygame.sprite.Sprite):
-    ANIMATION_SPEED = 3
-
     def __init__(self, game, x, y, direction, from_room_coord, to_room_coord, transform=None):
         self.game = game
         self._layer = GROUND_LAYER
@@ -29,15 +22,17 @@ class Door(pygame.sprite.Sprite):
         self.to_room_coord = to_room_coord
         self.transform = transform
 
-        self.state = DoorState.OPEN
+        self.state_machine = DoorStateMachine()
+        self.physics = DoorPhysics(game)
         self.frames = self._load_frames()
-        self.anim_frame = 0
-        self.anim_counter = 0
-
         self.image = self.frames[-1]
         self.rect = self.image.get_rect()
         self.rect.x = self.x
         self.rect.y = self.y
+
+    @property
+    def state(self):
+        return self.state_machine.state
 
     def _load_frames(self):
         frames = []
@@ -57,55 +52,28 @@ class Door(pygame.sprite.Sprite):
         return frames
 
     def close(self):
-        if self.state == DoorState.CLOSED:
+        if not self.state_machine.start_closing(len(self.frames)):
             return
-        self.state = DoorState.CLOSING
-        self.anim_frame = len(self.frames) - 1
-        self.anim_counter = 0
 
     def open(self):
-        if self.state == DoorState.OPEN:
+        if not self.state_machine.start_opening():
             return
-        self.state = DoorState.OPENING
-        self.anim_frame = 0
-        self.anim_counter = 0
-        self._remove_physics()
+        self.physics.remove(self.rect)
         self._layer = GROUND_LAYER
         if self in self.game.blocks:
             self.game.blocks.remove(self)
 
     def _register_physics(self):
-        if self.game.physics_enabled and self.game.physics:
-            self.game.physics.add_static_block(
-                self.rect.x, self.rect.y,
-                self.rect.width, self.rect.height,
-                f"door_{self.rect.x}_{self.rect.y}",
-            )
+        self.physics.register(self.rect)
 
     def _remove_physics(self):
-        if self.game.physics:
-            self.game.physics.remove_shape(f"door_{self.rect.x}_{self.rect.y}")
+        self.physics.remove(self.rect)
 
     def update(self):
-        if self.state == DoorState.CLOSING:
-            self.anim_counter += 1
-            if self.anim_counter >= self.ANIMATION_SPEED:
-                self.anim_counter = 0
-                self.anim_frame -= 1
-                if self.anim_frame <= 0:
-                    self.anim_frame = 0
-                    self.state = DoorState.CLOSED
-                    self._register_physics()
-                    self._layer = BLOCKS_LAYER
-                    self.game.blocks.add(self)
-                self.image = self.frames[self.anim_frame]
-
-        elif self.state == DoorState.OPENING:
-            self.anim_counter += 1
-            if self.anim_counter >= self.ANIMATION_SPEED:
-                self.anim_counter = 0
-                self.anim_frame += 1
-                if self.anim_frame >= len(self.frames) - 1:
-                    self.anim_frame = len(self.frames) - 1
-                    self.state = DoorState.OPEN
-                self.image = self.frames[self.anim_frame]
+        result = self.state_machine.update(len(self.frames))
+        if result == "closed":
+            self._register_physics()
+            self._layer = BLOCKS_LAYER
+            self.game.blocks.add(self)
+        if result in ("closed", "animating", "opened"):
+            self.image = self.frames[self.state_machine.anim_frame]

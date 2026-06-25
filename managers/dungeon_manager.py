@@ -93,7 +93,7 @@ class DungeonManager:
                     if level[i][j] == " ":
                         Ground(game, j, i, " ")
 
-            if room.room_type.value in ("boss", "judge"):
+            if room.config and room.config.has_portal:
                 boss_pos = dg.get_boss_position()
                 if boss_pos:
                     portal = DungeonEntrance(game, boss_pos[0], boss_pos[1])
@@ -133,12 +133,17 @@ class DungeonManager:
                 continue
             room.enemy_count = 0
 
-            if room.room_type.value in ("lobby", "shop", "altar", "lore"):
+            cfg = room.config
+            if not cfg:
+                continue
+
+            if not cfg.spawns_enemies:
                 room.enemies_spawned = True
                 continue
 
-            if room.room_type.value in ("boss", "judge"):
-                room.enemies_spawned = True
+            room.enemies_spawned = True
+
+            if cfg.is_boss:
                 boss_pos = dg.get_boss_position()
                 if boss_pos:
                     Boss(game, boss_pos[0], boss_pos[1], floor=game.current_dungeon_floor)
@@ -151,15 +156,14 @@ class DungeonManager:
                     game.services.audio.load_music(boss_music)
                     mult = 1.5 if game.current_dungeon_floor == 3 else 1.0
                     game.services.audio.play_music(context="dungeon", volume_multiplier=mult)
-                spawned_rooms.append((gx, gy))
-
-            elif room.room_type.value in ("enemy", "combat"):
-                room.enemies_spawned = True
+            else:
                 room_start_x = gx * room_unit_width + wall_thickness
                 room_start_y = gy * room_unit_height + wall_thickness
                 margin = 2
                 floor = game.current_dungeon_floor
-                for _ in range(random.randint(2, 4)):
+                min_count, max_count = cfg.spawn_count_range
+                hp_mult = cfg.hp_multiplier
+                for _ in range(random.randint(min_count, max_count)):
                     enemy_type = self._pick_enemy_type(floor)
                     ex = random.randint(
                         room_start_x + margin, room_start_x + room_tile_width - 1 - margin
@@ -167,29 +171,11 @@ class DungeonManager:
                     ey = random.randint(
                         room_start_y + margin, room_start_y + room_tile_height - 1 - margin
                     )
-                    Enemy(game, ex, ey, enemy_type=enemy_type)
+                    Enemy(game, ex, ey, enemy_type=enemy_type, hp_multiplier=hp_mult)
                     room.enemy_count += 1
                     total_enemies += 1
-                spawned_rooms.append((gx, gy))
 
-            elif room.room_type.value == "elite":
-                room.enemies_spawned = True
-                room_start_x = gx * room_unit_width + wall_thickness
-                room_start_y = gy * room_unit_height + wall_thickness
-                margin = 2
-                floor = game.current_dungeon_floor
-                for _ in range(random.randint(6, 12)):
-                    enemy_type = self._pick_enemy_type(floor)
-                    ex = random.randint(
-                        room_start_x + margin, room_start_x + room_tile_width - 1 - margin
-                    )
-                    ey = random.randint(
-                        room_start_y + margin, room_start_y + room_tile_height - 1 - margin
-                    )
-                    Enemy(game, ex, ey, enemy_type=enemy_type, hp_multiplier=1.5)
-                    room.enemy_count += 1
-                    total_enemies += 1
-                spawned_rooms.append((gx, gy))
+            spawned_rooms.append((gx, gy))
 
         for sr in spawned_rooms:
             self.seal_room(sr)
@@ -216,22 +202,15 @@ class DungeonManager:
         game = self.game
         dg = self.dg
         room = dg.rooms.get(room_coord)
-        if not room or room.room_type.value in (
-                "lobby", "loot", "event", "shop", "altar", "lore", "secret"
-        ):
+        if not room or not room.config or not room.config.seal_on_enter:
             return
 
         floor = game.current_dungeon_floor
         theme = FLOOR_THEMES.get(floor, FLOOR_THEMES[1])
 
-        if room.room_type.value in ("boss", "judge"):
-            wall_key = "boss_wall"
-            floor_key = "boss_floor"
-            decor_key = "boss_decor"
-        else:
-            wall_key = "battle_wall"
-            floor_key = "battle_floor"
-            decor_key = "battle_decor"
+        wall_key = room.config.wall_theme
+        floor_key = room.config.floor_theme
+        decor_key = room.config.decor_theme
 
         x1, y1, x2, y2 = self._get_room_tile_bounds(room_coord)
 

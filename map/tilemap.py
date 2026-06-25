@@ -1,12 +1,7 @@
 import pygame
 
+from map.game_mode import GameMode
 from utils.settings import *
-
-
-class GameMode:
-    WORLD = "world"
-    DUNGEON = "dungeon"
-    TMX = "tmx"
 
 
 class Block(pygame.sprite.Sprite):

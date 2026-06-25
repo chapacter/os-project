@@ -2,15 +2,9 @@ import copy
 import random
 
 from map.dungeon_generator_old import DungeonGeneratorOld
-from map.models import RoomType as NewRoomType
-from map.room import Room, RoomType
-from utils.config_loader import ConfigLoader
-
-
-def _load_json_config(name):
-    data = ConfigLoader.get(name)
-    return data
-
+from map.models import RoomType
+from map.providers.json_config_provider import JsonConfigProvider
+from map.room import Room
 
 REALM_FLOOR_MAP = {
     1: "entangled_ingress",
@@ -105,23 +99,51 @@ def _rotate_template(template, rot, room_size=18):
     return t
 
 
-class DungeonGenerator(DungeonGeneratorOld):
+class DungeonGenerator:
     """New DungeonGenerator with progression path and room templates.
 
     Builds a graph: LOBBY → COMBAT×N → SHOP/ALTAR → GUARDIAN → COMBAT×N → JUDGE
     with optional branches (SECRET, LORE, LOOT).
     Picks room templates from configs and generates tile maps from them.
-    Falls back to DungeonGeneratorOld if no templates available.
+    Falls back to procedural generation if no templates available.
     """
 
-    def __init__(self, grid_width=4, grid_height=4, seed=None):
-        super().__init__(grid_width, grid_height, seed)
+    def __init__(self, grid_width=4, grid_height=4, seed=None, config_provider=None):
+        self.grid_width = grid_width
+        self.grid_height = grid_height
+        self.seed = seed if seed is not None else random.randint(0, 1000000)
+        random.seed(self.seed)
+
+        self.rooms = {}
+        self.floor_number = 1
+        self.room_tile_width = 18
+        self.room_tile_height = 18
         self.wall_thickness = 0
-        self.realm_configs = _load_json_config("realm_config")
-        self.room_templates = _load_json_config("room_templates")
-        self.room_variants = _load_json_config("room_variants")
+        self.door_width = 2
+        self.map_width = 0
+        self.map_height = 0
+
+        provider = config_provider or JsonConfigProvider()
+        self.realm_configs = provider.get("realm_config")
+        self.room_templates = provider.get_room_templates()
+        self.room_variants = provider.get_room_variants()
         self._graph = []
         self._room_instances = {}
+
+    def _fallback_generate(self, floor_number):
+        old_gen = DungeonGeneratorOld(
+            grid_width=self.grid_width,
+            grid_height=self.grid_height,
+            seed=self.seed,
+        )
+        tile_map = old_gen.generate_floor(floor_number)
+        self.rooms = old_gen.rooms
+        self.room_tile_width = old_gen.room_tile_width
+        self.room_tile_height = old_gen.room_tile_height
+        self.wall_thickness = old_gen.wall_thickness
+        self.map_width = old_gen.map_width
+        self.map_height = old_gen.map_height
+        return tile_map
 
     def generate_floor(self, floor_number):
         self.floor_number = floor_number
@@ -135,14 +157,14 @@ class DungeonGenerator(DungeonGeneratorOld):
         realm_id = REALM_FLOOR_MAP.get(floor_number, "entangled_ingress")
         realm = self.realm_configs.get(realm_id, {})
         if not realm:
-            return super().generate_floor(floor_number)
+            return self._fallback_generate(floor_number)
 
         self._realm_id = realm_id
         self._realm = realm
 
         templates = self._get_templates_for_realm(realm_id)
         if not templates:
-            return super().generate_floor(floor_number)
+            return self._fallback_generate(floor_number)
 
         graph = self._build_main_path(realm)
         graph = self._add_optional_branches(graph)
@@ -255,13 +277,13 @@ class DungeonGenerator(DungeonGeneratorOld):
     def _str_to_roomtype(self, type_str):
         mapping = {
             "LOBBY": RoomType.LOBBY,
-            "COMBAT": NewRoomType.COMBAT,
-            "GUARDIAN": NewRoomType.GUARDIAN,
-            "JUDGE": NewRoomType.JUDGE,
-            "SHOP": NewRoomType.SHOP,
-            "ALTAR": NewRoomType.ALTAR,
-            "LORE": NewRoomType.LORE,
-            "SECRET": NewRoomType.SECRET,
+            "COMBAT": RoomType.COMBAT,
+            "GUARDIAN": RoomType.GUARDIAN,
+            "JUDGE": RoomType.JUDGE,
+            "SHOP": RoomType.SHOP,
+            "ALTAR": RoomType.ALTAR,
+            "LORE": RoomType.LORE,
+            "SECRET": RoomType.SECRET,
             "LOOT": RoomType.LOOT,
             "BOSS": RoomType.BOSS,
         }
@@ -435,7 +457,7 @@ class DungeonGenerator(DungeonGeneratorOld):
             if self._room_instances.get((gx, gy), {}).get("template"):
                 continue
 
-            if room.room_type in (RoomType.LOOT, NewRoomType.SECRET):
+            if room.room_type in (RoomType.LOOT, RoomType.SECRET):
                 cx = room_start_x + room_tile_width // 2
                 cy = room_start_y + room_tile_height // 2
                 if 0 <= cy < total_height and 0 <= cx < total_width:
@@ -460,7 +482,7 @@ class DungeonGenerator(DungeonGeneratorOld):
         rw = self.room_unit_width
         rh = self.room_unit_height
         for coord, room in self.rooms.items():
-            if room.room_type in (RoomType.BOSS, NewRoomType.JUDGE):
+            if room.room_type in (RoomType.BOSS, RoomType.JUDGE):
                 room_start_x = coord[0] * rw
                 room_start_y = coord[1] * rh
                 return room_start_x + 3, room_start_y + 2
@@ -470,7 +492,7 @@ class DungeonGenerator(DungeonGeneratorOld):
         rw = self.room_unit_width
         rh = self.room_unit_height
         for coord, room in self.rooms.items():
-            if room.room_type == NewRoomType.LORE:
+            if room.room_type == RoomType.LORE:
                 room_start_x = coord[0] * rw
                 room_start_y = coord[1] * rh
                 return room_start_x + 3, room_start_y + 2
@@ -495,3 +517,43 @@ class DungeonGenerator(DungeonGeneratorOld):
                 nx, ny = gx + dx, gy + dy
                 if (nx, ny) in self.rooms and not room.has_door(direction):
                     room.connect_to(self.rooms[(nx, ny)], direction)
+
+    def get_start_position(self):
+        room_tile_width = self.room_tile_width
+        room_tile_height = self.room_tile_height
+        wall_thickness = self.wall_thickness
+        room_unit_width = room_tile_width + wall_thickness * 2
+        room_unit_height = room_tile_height + wall_thickness * 2
+
+        for coord, room in self.rooms.items():
+            if room.room_type == RoomType.LOBBY:
+                room_start_x = coord[0] * room_unit_width + wall_thickness
+                room_start_y = coord[1] * room_unit_height + wall_thickness
+                return (
+                    room_start_x + room_tile_width // 2,
+                    room_start_y + room_tile_height // 2,
+                )
+        return 3, 2
+
+    def set_start_room_visible(self):
+        for coord, room in self.rooms.items():
+            if room.room_type == RoomType.LOBBY:
+                room.set_visible(True)
+                room.set_visited(True)
+                break
+
+    def set_room_visible(self, room_coord):
+        if room_coord in self.rooms:
+            self.rooms[room_coord].set_visible(True)
+            self.rooms[room_coord].set_visited(True)
+
+    def get_room_at(self, tile_x, tile_y):
+        room_unit_width = self.room_tile_width + self.wall_thickness * 2
+        room_unit_height = self.room_tile_height + self.wall_thickness * 2
+        room_x = tile_x // room_unit_width
+        room_y = tile_y // room_unit_height
+        return (room_x, room_y)
+
+    def get_current_room(self, tile_x, tile_y):
+        room_coord = self.get_room_at(tile_x, tile_y)
+        return self.rooms.get(room_coord)

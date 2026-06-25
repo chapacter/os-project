@@ -30,6 +30,7 @@ from items.weapon import Weapon
 from managers.dungeon_manager import DungeonManager
 from map.arena_generator import ArenaGenerator
 from map.door import Door
+from map.dungeon_data import DungeonData
 from map.dungeon_generator import DungeonGenerator
 from map.tilemap import Block, Ground, DungeonEntrance, Water, NPC
 from map.tmx_loader import TiledLoader
@@ -47,14 +48,7 @@ from utils.camera import Camera
 from utils.physics import PhysicsEngine
 from utils.settings import *
 
-
-# ─── AI Helpers ───────────────────────────────────────────────
-
-
-class GameMode:
-    WORLD = "world"
-    DUNGEON = "dungeon"
-    TMX = "tmx"
+from map.game_mode import GameMode
 
 
 
@@ -81,7 +75,7 @@ class Game:
         self.world_seed = None
         self.dungeon_seed = None
         self.world_generator = None
-        self.dungeon_generator = None
+        self.dungeon_generator: DungeonData | None = None
         self.current_dungeon_floor = 1
         self._bosses_defeated: set[int] = set()
         self._run_enemies_killed = 0

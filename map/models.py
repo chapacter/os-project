@@ -4,7 +4,68 @@ from dataclasses import dataclass, field
 from enum import Enum
 from typing import Optional
 
-from map.room import RoomType
+
+class RoomType(str, Enum):
+    LOBBY = "lobby"
+    EMPTY = "empty"
+    ENEMY = "enemy"
+    ELITE = "elite"
+    LOOT = "loot"
+    BOSS = "boss"
+    EVENT = "event"
+    COMBAT = "combat"
+    GUARDIAN = "guardian"
+    JUDGE = "judge"
+    SHOP = "shop"
+    ALTAR = "altar"
+    LORE = "lore"
+    SECRET = "secret"
+
+
+@dataclass
+class RoomConfig:
+    spawns_enemies: bool = False
+    is_boss: bool = False
+    seal_on_enter: bool = True
+    wall_theme: str = "battle_wall"
+    floor_theme: str = "battle_floor"
+    decor_theme: str = "battle_decor"
+    has_portal: bool = False
+    spawn_count_range: tuple[int, int] = (0, 0)
+    hp_multiplier: float = 1.0
+
+
+ROOM_CONFIGS: dict[RoomType, RoomConfig] = {
+    RoomType.LOBBY: RoomConfig(seal_on_enter=False),
+    RoomType.EMPTY: RoomConfig(seal_on_enter=False),
+    RoomType.ENEMY: RoomConfig(
+        spawns_enemies=True, spawn_count_range=(2, 4),
+    ),
+    RoomType.ELITE: RoomConfig(
+        spawns_enemies=True, spawn_count_range=(6, 12), hp_multiplier=1.5,
+    ),
+    RoomType.LOOT: RoomConfig(seal_on_enter=False),
+    RoomType.BOSS: RoomConfig(
+        is_boss=True, has_portal=True,
+        wall_theme="boss_wall", floor_theme="boss_floor", decor_theme="boss_decor",
+    ),
+    RoomType.EVENT: RoomConfig(seal_on_enter=False),
+    RoomType.COMBAT: RoomConfig(
+        spawns_enemies=True, spawn_count_range=(2, 4),
+    ),
+    RoomType.GUARDIAN: RoomConfig(
+        is_boss=True, has_portal=True,
+        wall_theme="boss_wall", floor_theme="boss_floor", decor_theme="boss_decor",
+    ),
+    RoomType.JUDGE: RoomConfig(
+        is_boss=True, has_portal=True,
+        wall_theme="boss_wall", floor_theme="boss_floor", decor_theme="boss_decor",
+    ),
+    RoomType.SHOP: RoomConfig(seal_on_enter=False),
+    RoomType.ALTAR: RoomConfig(seal_on_enter=False),
+    RoomType.LORE: RoomConfig(seal_on_enter=False),
+    RoomType.SECRET: RoomConfig(seal_on_enter=False),
+}
 
 
 class RoomState(str, Enum):

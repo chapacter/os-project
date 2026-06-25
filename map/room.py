@@ -1,22 +1,6 @@
 import random
-from enum import Enum
 
-
-class RoomType(str, Enum):
-    LOBBY = "lobby"
-    EMPTY = "empty"
-    ENEMY = "enemy"
-    ELITE = "elite"
-    LOOT = "loot"
-    BOSS = "boss"
-    EVENT = "event"
-    COMBAT = "combat"
-    GUARDIAN = "guardian"
-    JUDGE = "judge"
-    SHOP = "shop"
-    ALTAR = "altar"
-    LORE = "lore"
-    SECRET = "secret"
+from map.models import ROOM_CONFIGS, RoomType
 
 
 class Room:
@@ -32,6 +16,10 @@ class Room:
         self.enemy_count = 0
         self.enemies_spawned = False
         self.door_positions = {}  # {direction: (x, y)}
+
+    @property
+    def config(self):
+        return ROOM_CONFIGS.get(self.room_type)
 
     def has_door(self, direction):
         return self.doors.get(direction, False)
