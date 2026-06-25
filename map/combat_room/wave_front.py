@@ -17,7 +17,7 @@ class WaveFront:
         groups = defaultdict(list)
         for tile in tiles:
             d = abs(tile.tile_x - origin_x) + abs(tile.tile_y - origin_y)
-            groups[d].append(tile)
+            groups[d // 3].append(tile)
 
         self._sorted = []
         for d in sorted(groups.keys()):
