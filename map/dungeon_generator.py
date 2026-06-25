@@ -427,8 +427,8 @@ class DungeonGenerator:
                     pos2 = {"x": gx * rw + 9, "y": gy * rh + (1 if direction == "north" else 16), "transform": "flip_h"}
                 else:
                     x = gx * rw + (16 if direction == "east" else 1)
-                    pos1 = {"x": x, "y": gy * rh + 8, "transform": "rotate_90"}
-                    pos2 = {"x": x, "y": gy * rh + 9, "transform": "rotate_270"}
+                    pos1 = {"x": x, "y": gy * rh + 8, "transform": "rotate_270"}
+                    pos2 = {"x": x, "y": gy * rh + 9, "transform": "rotate_90"}
                 to_room = {
                     "east": (gx + 1, gy),
                     "west": (gx - 1, gy),
