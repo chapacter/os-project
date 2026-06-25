@@ -5,9 +5,14 @@ Extracted incrementally from Game class (main.py) during refactoring.
 
 import random
 
+import pygame
+
 from entity.boss import Boss
 from entity.enemy import Enemy
 from items.chest import Chest
+from map.combat_room.enums import RoomCombatState
+from map.combat_room.models import RoomTileData, RoomTransitionData
+from map.combat_room.wave_front import WaveFront
 from map.door import Door
 from map.tilemap import Block, Ground, DungeonEntrance, Decoration, Bed, Wardrobe
 from utils import weighted_choice
@@ -19,6 +24,7 @@ class DungeonManager:
 
     def __init__(self, game):
         self.game = game
+        self._room_transitions: dict[tuple[int, int], RoomTransitionData] = {}
 
     @property
     def dg(self):
@@ -253,29 +259,104 @@ class DungeonManager:
             if self._is_sprite_in_room_bounds(door, x1, y1, x2, y2):
                 door.close()
 
+        tile_data_list = []
+
         for sprite in list(game.all_sprites):
             if not self._is_sprite_in_room_bounds(sprite, x1, y1, x2, y2):
                 continue
+            tile_x = int(sprite.rect.x / TILESIZE)
+            tile_y = int(sprite.rect.y / TILESIZE)
+
             if isinstance(sprite, Block):
-                sprite._orig_image = sprite.image
                 row, col = theme[wall_key]
-                sprite.image = game.terrain_spritesheet.get_image(
+                combat_image = game.terrain_spritesheet.get_image(
                     col * TILESIZE, row * TILESIZE, TILESIZE, TILESIZE
                 )
             elif isinstance(sprite, Ground):
-                sprite._orig_image = sprite.image
+                if getattr(sprite, "is_void", False):
+                    continue
                 row, col = theme[floor_key]
-                sprite.image = game.terrain_spritesheet.get_image(
+                combat_image = game.terrain_spritesheet.get_image(
                     col * TILESIZE, row * TILESIZE, TILESIZE, TILESIZE
                 )
             elif isinstance(sprite, Decoration):
-                sprite._orig_image = sprite.image
                 row, col = theme[decor_key]
-                sprite.image = game.terrain_spritesheet.get_image(
+                combat_image = game.terrain_spritesheet.get_image(
                     col * TILESIZE, row * TILESIZE, TILESIZE, TILESIZE
                 )
-                game.blocks.add(sprite)
-                sprite._battle_block = True
+                # game.blocks.add(sprite)
+                # sprite._battle_block = True
+            else:
+                continue
+
+            tile_data = RoomTileData(
+                sprite=sprite,
+                tile_x=tile_x,
+                tile_y=tile_y,
+                original_image=sprite.image,
+                combat_image=combat_image,
+            )
+            tile_data_list.append(tile_data)
+
+        # Compute edge masks and render edge glow
+        coord_set = {(t.tile_x, t.tile_y) for t in tile_data_list}
+        glow_colors = [
+            (0, 255, 100),
+            (50, 150, 255),
+            (200, 100, 255),
+            (255, 80, 50),
+        ]
+        glow_color = glow_colors[min(floor - 1, 3)]
+
+        for tile in tile_data_list:
+            mask = {}
+            for d, dx, dy in (
+                    ("left", -1, 0),
+                    ("right", 1, 0),
+                    ("top", 0, -1),
+                    ("bottom", 0, 1),
+            ):
+                nx, ny = tile.tile_x + dx, tile.tile_y + dy
+                if not (x1 <= nx < x2 and y1 <= ny < y2):
+                    mask[d] = True
+                elif (nx, ny) not in coord_set:
+                    mask[d] = True
+                else:
+                    mask[d] = False
+            tile.edge_mask = mask
+
+            if tile.combat_image is not None and any(mask.values()):
+                img = tile.combat_image
+                w, h = img.get_size()
+                for d, exposed in mask.items():
+                    if not exposed:
+                        continue
+                    if d == "left":
+                        pygame.draw.line(img, glow_color, (1, 0), (1, h - 1), 2)
+                    elif d == "right":
+                        pygame.draw.line(img, glow_color, (w - 2, 0), (w - 2, h - 1), 2)
+                    elif d == "top":
+                        pygame.draw.line(img, glow_color, (0, 1), (w - 1, 1), 2)
+                    elif d == "bottom":
+                        pygame.draw.line(img, glow_color, (0, h - 2), (w - 1, h - 2), 2)
+
+        gx, gy = room_coord
+        ruw = dg.room_tile_width + dg.wall_thickness * 2
+        ruh = dg.room_tile_height + dg.wall_thickness * 2
+        player = game.player
+        if player:
+            origin_x = int(player.rect.centerx / TILESIZE)
+            origin_y = int(player.rect.centery / TILESIZE)
+        else:
+            origin_x = gx * ruw + ruw // 2
+            origin_y = gy * ruh + ruh // 2
+
+        tr = RoomTransitionData(
+            room_coord=room_coord,
+            tiles=tile_data_list,
+            propagator=WaveFront(tile_data_list, origin_x, origin_y),
+        )
+        self._room_transitions[room_coord] = tr
 
         game._sealed_rooms[room_coord] = {
             "bounds": (x1, y1, x2, y2),
@@ -292,8 +373,8 @@ class DungeonManager:
         for sprite in list(game.all_sprites):
             if not self._is_sprite_in_room_bounds(sprite, x1, y1, x2, y2):
                 continue
-            if hasattr(sprite, "_battle_block"):
-                game.blocks.remove(sprite)
+            # if hasattr(sprite, "_battle_block"):
+            #     game.blocks.remove(sprite)
             if hasattr(sprite, "_orig_image"):
                 sprite.image = sprite._orig_image
 
@@ -355,3 +436,23 @@ class DungeonManager:
             return
         self.show_room(room_coord)
         self.rebuild_visible_rooms()
+
+    def get_transition(self, room_coord):
+        return self._room_transitions.get(room_coord)
+
+    def get_active_transitions(self):
+        return self._room_transitions
+
+    def start_room_clear(self, room_coord):
+        tr = self._room_transitions.get(room_coord)
+        if not tr:
+            return
+        tr.state = RoomCombatState.CLEARING_COMBAT
+        tr.propagator.start_retract()
+
+    def _open_room_doors(self, room_coord):
+        game = self.game
+        x1, y1, x2, y2 = self._get_room_tile_bounds(room_coord)
+        for door in list(game.doors):
+            if self._is_sprite_in_room_bounds(door, x1, y1, x2, y2):
+                door.open()
