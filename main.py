@@ -29,6 +29,8 @@ from entity.systems.movement_system import MovementSystem
 from items.weapon import Weapon
 from managers.dungeon_manager import DungeonManager
 from map.arena_generator import ArenaGenerator
+from map.combat_room.enums import RoomCombatState
+from map.combat_room.transition_system import CombatRoomTransitionSystem
 from map.dungeon_data import DungeonData
 from map.dungeon_generator import DungeonGenerator
 from map.game_mode import GameMode
@@ -642,6 +644,7 @@ class Game:
         self.ecs_world.add_system(
             EntityCollisionSystem(self.ecs_world, lambda: self.blocks, all_sprites=self.all_sprites))
         self.ecs_world.add_system(KnockbackSystem(self.ecs_world))
+        self.ecs_world.add_system(CombatRoomTransitionSystem(self.ecs_world, lambda: self.dungeon_manager))
 
         self.create_tile_map()
 
@@ -1245,7 +1248,12 @@ class Game:
         for sealed_coord in list(self._sealed_rooms.keys()):
             room = self.dungeon_generator.rooms.get(sealed_coord)
             if room and room.enemy_count == 0:
-                self.unseal_room(sealed_coord)
+                tr = self.dungeon_manager.get_transition(sealed_coord)
+                if tr and tr.state in (
+                        RoomCombatState.CLEARING_COMBAT, RoomCombatState.RECOVERED,
+                ):
+                    continue
+                self.dungeon_manager.start_room_clear(sealed_coord)
 
         player_tile_x = int(self.player.hitbox.centerx / TILESIZE)
         player_tile_y = int(self.player.hitbox.centery / TILESIZE)
