@@ -8,6 +8,7 @@ import random
 from entity.boss import Boss
 from entity.enemy import Enemy
 from items.chest import Chest
+from map.door import Door
 from map.tilemap import Block, Ground, DungeonEntrance, Decoration, Bed, Wardrobe
 from utils import weighted_choice
 from utils.settings import TILESIZE, FLOOR_THEMES, ENEMY_TYPES, FLOOR_MUSIC_MAP
@@ -62,6 +63,8 @@ class DungeonManager:
                         continue
                     if column == " ":
                         Ground(game, j, i, " ")
+                    elif column == "D":
+                        pass
                     else:
                         Ground(game, j, i)
                     if column == "B":
@@ -98,6 +101,17 @@ class DungeonManager:
                 if boss_pos:
                     portal = DungeonEntrance(game, boss_pos[0], boss_pos[1])
                     portal.room_coord = (gx, gy)
+
+            self._create_room_doors(game, dg, gx, gy)
+
+    def _create_room_doors(self, game, dg, gx, gy):
+        for door_info in dg.get_doors():
+            fx, fy = door_info["from_room"]
+            if (fx, fy) != (gx, gy):
+                continue
+            Door(game, door_info["x"], door_info["y"], door_info["direction"],
+                 door_info["from_room"], door_info["to_room"],
+                 transform=door_info.get("transform"))
 
     def spawn_enemies(self, room_coord=None):
         """Spawn enemies for visible rooms based on room type."""
@@ -137,10 +151,6 @@ class DungeonManager:
             if not cfg:
                 continue
 
-            if not cfg.spawns_enemies:
-                room.enemies_spawned = True
-                continue
-
             room.enemies_spawned = True
 
             if cfg.is_boss:
@@ -156,24 +166,28 @@ class DungeonManager:
                     game.services.audio.load_music(boss_music)
                     mult = 1.5 if game.current_dungeon_floor == 3 else 1.0
                     game.services.audio.play_music(context="dungeon", volume_multiplier=mult)
-            else:
-                room_start_x = gx * room_unit_width + wall_thickness
-                room_start_y = gy * room_unit_height + wall_thickness
-                margin = 2
-                floor = game.current_dungeon_floor
-                min_count, max_count = cfg.spawn_count_range
-                hp_mult = cfg.hp_multiplier
-                for _ in range(random.randint(min_count, max_count)):
-                    enemy_type = self._pick_enemy_type(floor)
-                    ex = random.randint(
-                        room_start_x + margin, room_start_x + room_tile_width - 1 - margin
-                    )
-                    ey = random.randint(
-                        room_start_y + margin, room_start_y + room_tile_height - 1 - margin
-                    )
-                    Enemy(game, ex, ey, enemy_type=enemy_type, hp_multiplier=hp_mult)
-                    room.enemy_count += 1
-                    total_enemies += 1
+                continue
+
+            if not cfg.spawns_enemies:
+                continue
+
+            room_start_x = gx * room_unit_width + wall_thickness
+            room_start_y = gy * room_unit_height + wall_thickness
+            margin = 2
+            floor = game.current_dungeon_floor
+            min_count, max_count = cfg.spawn_count_range
+            hp_mult = cfg.hp_multiplier
+            for _ in range(random.randint(min_count, max_count)):
+                enemy_type = self._pick_enemy_type(floor)
+                ex = random.randint(
+                    room_start_x + margin, room_start_x + room_tile_width - 1 - margin
+                )
+                ey = random.randint(
+                    room_start_y + margin, room_start_y + room_tile_height - 1 - margin
+                )
+                Enemy(game, ex, ey, enemy_type=enemy_type, hp_multiplier=hp_mult)
+                room.enemy_count += 1
+                total_enemies += 1
 
             spawned_rooms.append((gx, gy))
 

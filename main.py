@@ -29,7 +29,6 @@ from entity.systems.movement_system import MovementSystem
 from items.weapon import Weapon
 from managers.dungeon_manager import DungeonManager
 from map.arena_generator import ArenaGenerator
-from map.door import Door
 from map.dungeon_data import DungeonData
 from map.dungeon_generator import DungeonGenerator
 from map.game_mode import GameMode
@@ -338,8 +337,6 @@ class Game:
 
         self._rebuild_visible_rooms()
 
-        self.create_dungeon_doors()
-
         self.spawn_dungeon_enemies()
 
         start_x, start_y = self.dungeon_generator.get_start_position()
@@ -359,11 +356,6 @@ class Game:
             # print(f"[DEBUG] Camera map_size set to: {self.camera.map_width}x{self.camera.map_height}")
             self.camera.center_on(self.player.rect.x, self.player.rect.y)
             # print(f"[DEBUG] Camera centered: scroll={self.camera.scroll_x},{self.camera.scroll_y}")
-
-    def create_dungeon_doors(self):
-        for door_info in self.dungeon_generator.get_doors():
-            Door(self, door_info["x"], door_info["y"], door_info["direction"], door_info["from_room"],
-                 door_info["to_room"], transform=door_info.get("transform"))
 
     def _on_enemy_killed(self, entity) -> None:
         if isinstance(entity, Boss):
@@ -462,7 +454,6 @@ class Game:
         )
         self.dungeon_generator.set_start_room_visible()
         self._rebuild_visible_rooms()
-        self.create_dungeon_doors()
         self.spawn_dungeon_enemies()
         start_x, start_y = self.dungeon_generator.get_start_position()
         self.player = Player(self, start_x, start_y,
