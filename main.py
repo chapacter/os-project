@@ -32,6 +32,7 @@ from map.arena_generator import ArenaGenerator
 from map.door import Door
 from map.dungeon_data import DungeonData
 from map.dungeon_generator import DungeonGenerator
+from map.game_mode import GameMode
 from map.tilemap import Block, Ground, DungeonEntrance, Water, NPC
 from map.tmx_loader import TiledLoader
 from map.world_generator import WorldGenerator
@@ -47,10 +48,6 @@ from ui.settings import SettingsMenu
 from utils.camera import Camera
 from utils.physics import PhysicsEngine
 from utils.settings import *
-
-from map.game_mode import GameMode
-
-
 
 
 class Game:
@@ -315,7 +312,7 @@ class Game:
     def enter_dungeon(self):
         self.mode = GameMode.DUNGEON
         self._bosses_defeated.clear()
-        self.dungeon_generator = DungeonGenerator(seed=self.dungeon_seed)
+        self.dungeon_generator = DungeonGenerator(seed=self.dungeon_seed, placement="organic")
         self.dungeon_manager = DungeonManager(self)
         self.load_dungeon_floor()
 

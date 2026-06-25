@@ -5,6 +5,7 @@ from map.dungeon_generator_old import DungeonGeneratorOld
 from map.models import RoomType
 from map.providers.json_config_provider import JsonConfigProvider
 from map.room import Room
+from map.room_graph import RoomGraph
 
 REALM_FLOOR_MAP = {
     1: "entangled_ingress",
@@ -102,17 +103,21 @@ def _rotate_template(template, rot, room_size=18):
 class DungeonGenerator:
     """New DungeonGenerator with progression path and room templates.
 
-    Builds a graph: LOBBY → COMBAT×N → SHOP/ALTAR → GUARDIAN → COMBAT×N → JUDGE
-    with optional branches (SECRET, LORE, LOOT).
+    Two placement modes:
+      - "linear":  builds a linear graph LOBBY→COMBAT×N→SHOP/ALTAR→GUARDIAN→COMBAT×N→JUDGE
+      - "organic": uses Prim's MST from DungeonGeneratorOld for room placement,
+                   then assigns progression types by distance from LOBBY
+
     Picks room templates from configs and generates tile maps from them.
     Falls back to procedural generation if no templates available.
     """
 
-    def __init__(self, grid_width=4, grid_height=4, seed=None, config_provider=None):
+    def __init__(self, grid_width=4, grid_height=4, seed=None, config_provider=None, placement="linear"):
         self.grid_width = grid_width
         self.grid_height = grid_height
         self.seed = seed if seed is not None else random.randint(0, 1000000)
         random.seed(self.seed)
+        self.placement = placement
 
         self.rooms = {}
         self.floor_number = 1
@@ -166,6 +171,9 @@ class DungeonGenerator:
         if not templates:
             return self._fallback_generate(floor_number)
 
+        if self.placement == "organic":
+            return self._generate_organic(floor_number, realm, templates)
+
         graph = self._build_main_path(realm)
         graph = self._add_optional_branches(graph)
         self._graph = graph
@@ -178,6 +186,31 @@ class DungeonGenerator:
         self._validate_graph(graph)
 
         return self._generate_tile_map_from_templates(graph)
+
+    def _generate_organic(self, floor_number, realm, templates):
+        graph = RoomGraph(grid_width=8, grid_height=8, seed=self.seed + floor_number)
+        graph.room_tile_width = self.room_tile_width
+        graph.room_tile_height = self.room_tile_height
+        graph.wall_thickness = self.wall_thickness
+        graph.door_width = self.door_width
+
+        room_count = realm.get("min_combat_rooms", 3) + realm.get("max_combat_rooms", 3) + 4
+        graph.create_rooms(room_count=room_count)
+        graph.connect_rooms()
+        graph.assign_progression_types(
+            has_shop=realm.get("has_shop", True),
+            has_altar=realm.get("has_altar", True),
+        )
+
+        self.rooms = graph.rooms
+        self.grid_width = graph.grid_width
+        self.grid_height = graph.grid_height
+        self.room_tile_width = graph.room_tile_width
+        self.room_tile_height = graph.room_tile_height
+        self.wall_thickness = graph.wall_thickness
+
+        self._assign_templates_organic(templates)
+        return self._generate_tile_map_from_templates(init_void=True)
 
     def _get_templates_for_realm(self, realm_id):
         return [
@@ -321,6 +354,35 @@ class DungeonGenerator:
 
         return random.choice(candidates), 0
 
+    def _roomtype_to_str(self, room_type):
+        mapping = {
+            RoomType.LOBBY: "LOBBY",
+            RoomType.COMBAT: "COMBAT",
+            RoomType.GUARDIAN: "GUARDIAN",
+            RoomType.JUDGE: "JUDGE",
+            RoomType.SHOP: "SHOP",
+            RoomType.ALTAR: "ALTAR",
+            RoomType.LORE: "LORE",
+            RoomType.SECRET: "SECRET",
+            RoomType.LOOT: "LOOT",
+            RoomType.BOSS: "BOSS",
+        }
+        return mapping.get(room_type, "COMBAT")
+
+    def _assign_templates_organic(self, templates):
+        self._room_instances = {}
+        for coord, room in self.rooms.items():
+            needed_sides = {s for s in ["north", "south", "east", "west"] if room.has_door(s)}
+            type_str = self._roomtype_to_str(room.room_type)
+            template, rot = self._get_template_for_node(type_str, templates, needed_sides)
+            if template:
+                rotated = _rotate_template(template, rot, room_size=self.room_tile_width)
+                self._room_instances[coord] = {
+                    "template": rotated,
+                    "node_type": type_str,
+                    "rotation": rot,
+                }
+
     def _assign_templates(self, graph, templates):
         self._room_instances = {}
         room_list = list(self.rooms.items())
@@ -386,7 +448,7 @@ class DungeonGenerator:
                     })
         return doors
 
-    def _generate_tile_map_from_templates(self, graph):
+    def _generate_tile_map_from_templates(self, graph=None, init_void=False):
         room_tile_width = self.room_tile_width
         room_tile_height = self.room_tile_height
         rw = self.room_unit_width
@@ -395,7 +457,8 @@ class DungeonGenerator:
         total_width = self.grid_width * rw
         total_height = self.grid_height * rh
 
-        tile_map = [["." for _ in range(total_width)] for _ in range(total_height)]
+        init_char = " " if init_void else "."
+        tile_map = [[init_char for _ in range(total_width)] for _ in range(total_height)]
 
         for (gx, gy), room in self.rooms.items():
             instance = self._room_instances.get((gx, gy))

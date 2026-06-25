@@ -138,6 +138,56 @@ class RoomGraph:
                 if (nx, ny) in self.rooms and not room.has_door(direction):
                     room.connect_to(self.rooms[(nx, ny)], direction)
 
+    def assign_progression_types(self, has_shop=True, has_altar=True):
+        coords = list(self.rooms.keys())
+        if not coords:
+            return
+
+        lobby = random.choice(coords)
+        self.rooms[lobby].room_type = RoomType.LOBBY
+
+        if len(coords) == 1:
+            return
+
+        remaining = [c for c in coords if c != lobby]
+        remaining.sort(key=lambda c: abs(c[0] - lobby[0]) + abs(c[1] - lobby[1]))
+
+        judge = remaining.pop()
+        self.rooms[judge].room_type = RoomType.JUDGE
+
+        if not remaining:
+            return
+
+        n = len(remaining)
+        guardian_idx = min(n * 2 // 3, n - 1)
+        shop_idx = n // 2
+        if shop_idx >= guardian_idx:
+            shop_idx = max(0, guardian_idx - 1)
+
+        for i, coord in enumerate(remaining):
+            room = self.rooms[coord]
+            if i == shop_idx and (has_shop or has_altar):
+                if has_shop and has_altar:
+                    room.room_type = random.choice([RoomType.SHOP, RoomType.ALTAR])
+                elif has_shop:
+                    room.room_type = RoomType.SHOP
+                else:
+                    room.room_type = RoomType.ALTAR
+            elif i == guardian_idx:
+                room.room_type = RoomType.GUARDIAN
+            else:
+                room.room_type = RoomType.COMBAT
+
+        combat_coords = [c for c in remaining if self.rooms[c].room_type == RoomType.COMBAT]
+        bonus_count = min(2, len(combat_coords))
+        if bonus_count > 0:
+            bonus_coords = random.sample(combat_coords, bonus_count)
+            for coord in bonus_coords:
+                if random.random() < 0.3:
+                    self.rooms[coord].room_type = random.choice([
+                        RoomType.LORE, RoomType.SECRET, RoomType.LOOT,
+                    ])
+
     def assign_room_types(self):
         all_coords = list(self.rooms.keys())
 
