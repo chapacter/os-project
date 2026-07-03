@@ -252,8 +252,16 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
 
         if self.shoot_state == "shoot":
             player = self.game.player
-            start_x = self.hitbox.centerx
-            start_y = self.hitbox.centery
+            base_x = self.hitbox.centerx
+            base_y = self.hitbox.centery
+            dx_player = player.hitbox.centerx - base_x
+            dy_player = player.hitbox.centery - base_y
+            dist_player = math.hypot(dx_player, dy_player)
+            if dist_player > 0:
+                start_x = base_x + (dx_player / dist_player) * BULLET_SPAWN_OFFSET
+                start_y = base_y + (dy_player / dist_player) * BULLET_SPAWN_OFFSET
+            else:
+                start_x, start_y = base_x, base_y
             if ENEMY_TYPES[self.enemy_type].get("cone_attack"):
                 cone_spread = 0.2
                 target_x = player.hitbox.centerx

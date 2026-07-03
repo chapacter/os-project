@@ -1,11 +1,17 @@
+import math
+
 import pygame
 
 from core.ecs_world import System, World
 from entity.components.bullet import BulletComponent
 from entity.components.collision.block_collider import BlockColliderComponent
+from entity.components.collision.circle_collider import CircleColliderComponent
+from entity.components.combat.penetration import PenetrationComponent
+from entity.components.movement.velocity import VelocityComponent
 from entity.components.tags import BulletMarker, EnemyMarker, LootMarker, PlayerMarker, WeaponMarker
 from entity.factories.effect_factory import EffectFactory
 from entity.systems.bullet_system import explode_bullet
+from utils.collision import circle_vs_rect
 from utils.settings import CONTACT_KNOCKBACK_FORCE, CONTACT_KNOCKBACK_INTERVAL, KNOCKBACK_DURATION
 
 
@@ -56,52 +62,82 @@ class EntityCollisionSystem(System):
     def _bullet_vs_block(self, bullet, blocks):
         if not blocks:
             return
-        if not hasattr(bullet, "rect"):
-            return
         bc = self.world.get_component(bullet, BulletComponent)
+        if bc is None:
+            return
+        cc = self.world.get_component(bullet, CircleColliderComponent)
+        if cc is None:
+            return
         for block in blocks:
-            if bullet.rect.colliderect(block.rect):
-                if bc and bc.explosive:
-                    explode_bullet(self.world, bc, bullet.rect.centerx, bullet.rect.centery, self._all_sprites)
+            if not hasattr(block, "rect"):
+                continue
+            if not circle_vs_rect(bc.pos_x, bc.pos_y, cc.radius, block.rect):
+                continue
+            if bc.explosive:
+                explode_bullet(self.world, bc, bc.pos_x, bc.pos_y, self._all_sprites)
+            pen = self.world.get_component(bullet, PenetrationComponent)
+            if pen is not None and pen.remaining > 0:
+                if not pen.penetrating:
+                    pen.penetrating = True
+                    EffectFactory.create_ecs_effect(self.world, bc.pos_x, bc.pos_y, "hit",
+                                                    groups=[self._all_sprites] if self._all_sprites else None, )
+                vel = self.world.get_component(bullet, VelocityComponent)
+                speed = math.hypot(vel.dx, vel.dy) if vel else 1.0
+                pen.remaining -= speed
+                if pen.remaining <= 0:
+                    bullet.kill()
+                return
+            else:
+                EffectFactory.create_ecs_effect(self.world, bc.pos_x, bc.pos_y, "hit",
+                                                groups=[self._all_sprites] if self._all_sprites else None, )
                 bullet.kill()
                 return
 
     def _bullet_vs_enemy(self, bullet, enemies):
-        if not hasattr(bullet, "rect"):
-            return
         bc = self.world.get_component(bullet, BulletComponent)
         if bc is None or not bc.hits_enemies:
+            return
+        cc = self.world.get_component(bullet, CircleColliderComponent)
+        if cc is None:
             return
         for enemy in enemies:
             ec = self.world.get_component(enemy, BlockColliderComponent)
             if ec is None:
                 continue
-            if bullet.rect.colliderect(ec.hitbox) and enemy not in bc.hit_enemies:
-                bc.hit_enemies.append(enemy)
+            if enemy in bc.hit_enemies:
+                continue
+            if not circle_vs_rect(bc.pos_x, bc.pos_y, cc.radius, ec.hitbox):
+                continue
+            bc.hit_enemies.append(enemy)
 
-                knockback_dir = pygame.math.Vector2(
-                    enemy.rect.centerx - bullet.rect.centerx,
-                    enemy.rect.centery - bullet.rect.centery,
-                )
-                if knockback_dir.length() > 0:
-                    knockback_dir = knockback_dir.normalize()
-                else:
-                    knockback_dir = pygame.math.Vector2(bc.hit_dir_x, bc.hit_dir_y)
+            knockback_dir = pygame.math.Vector2(
+                enemy.rect.centerx - bullet.rect.centerx,
+                enemy.rect.centery - bullet.rect.centery,
+            )
+            if knockback_dir.length() > 0:
+                knockback_dir = knockback_dir.normalize()
+            else:
+                knockback_dir = pygame.math.Vector2(bc.hit_dir_x, bc.hit_dir_y)
 
-                EffectFactory.create_ecs_effect(
-                    self.world, bullet.rect.centerx, bullet.rect.centery, "hit",
-                    groups=[self._all_sprites] if self._all_sprites else None,
-                )
+            EffectFactory.create_ecs_effect(self.world, bullet.rect.centerx, bullet.rect.centery, "hit",
+                                            groups=[self._all_sprites] if self._all_sprites else None, )
 
-                enemy.take_knockback(knockback_dir, bc.knockback_force)
-                enemy.damage(bc.damage)
+            enemy.take_knockback(knockback_dir, bc.knockback_force)
+            enemy.damage(bc.damage)
 
-                if bc.explosive:
-                    explode_bullet(self.world, bc, bullet.rect.centerx, bullet.rect.centery, self._all_sprites)
-                    if not bc.piercing:
+            if bc.explosive:
+                explode_bullet(self.world, bc, bullet.rect.centerx, bullet.rect.centery, self._all_sprites)
+
+            if not bc.piercing:
+                pen = self.world.get_component(bullet, PenetrationComponent)
+                if pen is not None and pen.remaining > 0:
+                    vel = self.world.get_component(bullet, VelocityComponent)
+                    speed = math.hypot(vel.dx, vel.dy) if vel else 1.0
+                    pen.remaining -= speed
+                    if pen.remaining <= 0:
                         bullet.kill()
                         return
-                elif not bc.piercing:
+                else:
                     bullet.kill()
                     return
 
@@ -109,20 +145,33 @@ class EntityCollisionSystem(System):
         bc = self.world.get_component(bullet, BulletComponent)
         if bc is None or not bc.hits_player:
             return
-        if not hasattr(bullet, "rect"):
+        cc = self.world.get_component(bullet, CircleColliderComponent)
+        if cc is None:
             return
         for player in players:
             if not hasattr(player, "hitbox"):
                 continue
-            if not bullet.rect.colliderect(player.hitbox):
+            if not circle_vs_rect(bc.pos_x, bc.pos_y, cc.radius, player.hitbox):
                 continue
+            if player in bc.hit_players:
+                continue
+            bc.hit_players.append(player)
             EffectFactory.create_ecs_effect(
                 self.world, bullet.rect.centerx, bullet.rect.centery, "hit",
                 groups=[self._all_sprites] if self._all_sprites else None,
             )
             player.damage(bc.damage)
-            bullet.kill()
-            return
+            pen = self.world.get_component(bullet, PenetrationComponent)
+            if pen is not None and pen.remaining > 0:
+                vel = self.world.get_component(bullet, VelocityComponent)
+                speed = math.hypot(vel.dx, vel.dy) if vel else 1.0
+                pen.remaining -= speed
+                if pen.remaining <= 0:
+                    bullet.kill()
+                return
+            else:
+                bullet.kill()
+                return
 
     # ── Player collision helpers ──────────────────────────────────
 

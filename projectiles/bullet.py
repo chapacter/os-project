@@ -4,6 +4,8 @@ import random
 import pygame
 
 from entity.components.bullet import BulletComponent
+from entity.components.collision.circle_collider import CircleColliderComponent
+from entity.components.combat.penetration import PenetrationComponent
 from entity.components.movement.velocity import VelocityComponent
 from entity.components.tags import BulletMarker
 from entity.ecs_helpers import ecs_register, ecs_unregister
@@ -52,6 +54,8 @@ class Bullet(pygame.sprite.Sprite):
         if game.ecs_world:
             ecs_register(game.ecs_world, self, image=self.image)
             game.ecs_world.add_component(self, BulletMarker())
+            game.ecs_world.add_component(self, CircleColliderComponent(radius=BULLET_HITBOX_RADIUS))
+            game.ecs_world.add_component(self, PenetrationComponent(remaining=BULLET_PENETRATION_DEPTH))
             game.ecs_world.add_component(
                 self,
                 BulletComponent(
@@ -105,6 +109,8 @@ class Enemy_Bullet(pygame.sprite.Sprite):
         if game.ecs_world:
             ecs_register(game.ecs_world, self, image=self.image)
             game.ecs_world.add_component(self, BulletMarker())
+            game.ecs_world.add_component(self, CircleColliderComponent(radius=BULLET_HITBOX_RADIUS))
+            game.ecs_world.add_component(self, PenetrationComponent(remaining=BULLET_PENETRATION_DEPTH))
             game.ecs_world.add_component(
                 self,
                 BulletComponent(
