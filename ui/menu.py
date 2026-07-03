@@ -257,7 +257,8 @@ class MainMenu:
             segments.append((current, depth > 0))
         return segments, depth, trim_leading_spaces
 
-    def _draw_colored_line(self, surface, text, x, y, font_size, default_color, shadow_color, start_depth=0, start_trim_spaces=False):
+    def _draw_colored_line(self, surface, text, x, y, font_size, default_color, shadow_color, start_depth=0,
+                           start_trim_spaces=False):
         segments, _, _ = self._parse_colored_segments(text, start_depth, start_trim_spaces)
         offset_x = x
         for segment_text, is_bracketed in segments:
@@ -371,12 +372,14 @@ class MainMenu:
             panel_rect_content = pygame.Rect(panel_x, panel_y, panel_width, panel_height)
             self.story_panel_rect = pygame.Rect(panel_x, panel_y, panel_width + tail_size, panel_height)
 
-            self._draw_speech_bubble(surface, panel_rect_content, PANEL_BG, BORDER_COLOR, tail_size=tail_size, border_radius=15, tail_y=tail_y)
+            self._draw_speech_bubble(surface, panel_rect_content, PANEL_BG, BORDER_COLOR, tail_size=tail_size,
+                                     border_radius=15, tail_y=tail_y)
 
             for i, line in enumerate(lines):
                 depth = line_depths[i - 1] if i > 0 else 0
                 trim = line_trims[i - 1] if i > 0 else False
-                self._draw_colored_line(surface, line, panel_x + 20, panel_y + 20 + i * line_height, 18, YELLOW, BLACK, depth, trim)
+                self._draw_colored_line(surface, line, panel_x + 20, panel_y + 20 + i * line_height, 18, YELLOW, BLACK,
+                                        depth, trim)
 
         if self.notification and self.notification_timer > 0:
             notif_surf = self.game.services.font.render(self.notification, 24, YELLOW, shadow=BLACK)

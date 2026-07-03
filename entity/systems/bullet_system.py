@@ -58,6 +58,8 @@ class BulletSystem(System):
             if bc.distance_traveled >= bc.max_distance:
                 if bc.explosive:
                     explode_bullet(self.world, bc, bc.pos_x, bc.pos_y, self._all_sprites)
+                EffectFactory.create_ecs_effect(self.world, bc.pos_x, bc.pos_y, "hit",
+                                                groups=[self._all_sprites] if self._all_sprites else None, )
                 entity.kill()
 
     def _handle_boomerang(self, entity, bc, vel):

@@ -362,10 +362,18 @@ class Player(VectorEntity, pygame.sprite.Sprite):
 
     def _spawn_bullet(self, target_x, target_y):
         force = SWORD_KNOCKBACK_FORCE if self.sword_equipped else BULLET_KNOCKBACK_FORCE
+        dx = target_x - self.hitbox.centerx
+        dy = target_y - self.hitbox.centery
+        dist = math.hypot(dx, dy)
+        if dist > 0:
+            start_x = self.hitbox.centerx + (dx / dist) * BULLET_SPAWN_OFFSET
+            start_y = self.hitbox.centery + (dy / dist) * BULLET_SPAWN_OFFSET
+        else:
+            start_x, start_y = self.hitbox.center
         Bullet(
             self.game,
-            self.hitbox.centerx,
-            self.hitbox.centery,
+            start_x,
+            start_y,
             target_x,
             target_y,
             knockback_force=force,

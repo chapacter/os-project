@@ -18,3 +18,4 @@ class BulletComponent:
     hits_enemies: bool = True
     hits_player: bool = False
     hit_enemies: list = field(default_factory=list)
+    hit_players: list = field(default_factory=list)

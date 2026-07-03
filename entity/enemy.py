@@ -124,7 +124,8 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self._set_patrol_target()
 
         self.physics_name = f"enemy_{id(self)}"
-        VectorEntity.__init__(self, game, self.physics_name, collision_type=COLLISION_ENTITY, max_health=int(cfg["hp"] * hp_multiplier))
+        VectorEntity.__init__(self, game, self.physics_name, collision_type=COLLISION_ENTITY,
+                              max_health=int(cfg["hp"] * hp_multiplier))
         self.knockback_comp.decay = ENEMY_KNOCKBACK_DECAY
         self.block_collider_comp.use_float_pos = True
         self.block_collider_comp.pos_x = float(self.hitbox.x)
@@ -252,8 +253,16 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
 
         if self.shoot_state == "shoot":
             player = self.game.player
-            start_x = self.hitbox.centerx
-            start_y = self.hitbox.centery
+            base_x = self.hitbox.centerx
+            base_y = self.hitbox.centery
+            dx_player = player.hitbox.centerx - base_x
+            dy_player = player.hitbox.centery - base_y
+            dist_player = math.hypot(dx_player, dy_player)
+            if dist_player > 0:
+                start_x = base_x + (dx_player / dist_player) * BULLET_SPAWN_OFFSET
+                start_y = base_y + (dy_player / dist_player) * BULLET_SPAWN_OFFSET
+            else:
+                start_x, start_y = base_x, base_y
             if ENEMY_TYPES[self.enemy_type].get("cone_attack"):
                 cone_spread = 0.2
                 target_x = player.hitbox.centerx
