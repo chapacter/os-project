@@ -41,18 +41,49 @@ class ShearScaleStrategy(PerspectiveTransformStrategy):
 
     def transform_image(self, surface: pygame.Surface, cx: float, cy: float, center_x: float) -> tuple:
         w, h = surface.get_size()
-        scale = 1.0 + cy * self.k_perspective
-        if scale < 0.1:
-            scale = 0.1
+        k = self.k_perspective
 
-        sx_left = int((cx - center_x) * scale + center_x)
-        sx_right = int((cx + w - center_x) * scale + center_x)
-        w_result = max(1, sx_right - sx_left)
+        N = max(4, h // 4)
+        strip_h = h / N
+        strips = []
 
-        h_result = max(1, int(h * scale))
+        for i in range(N):
+            orig_y = i * strip_h
+            orig_h = strip_h if i < N - 1 else h - orig_y
 
-        result = pygame.transform.scale(surface, (w_result, h_result))
-        return result, 0, 0
+            s = 1.0 + (cy + orig_y + orig_h / 2) * k
+
+            ix_left = math.floor((cx - center_x) * s + center_x)
+            ix_right = math.floor((cx + w - center_x) * s + center_x)
+
+            w_strip = max(1, ix_right - ix_left)
+            h_strip = max(1, int(orig_h * s))
+
+            src = pygame.Rect(0, int(orig_y), w, max(1, int(orig_h)))
+            strips.append((src, w_strip, h_strip, ix_left, ix_right))
+
+        if not strips:
+            return surface, 0, 0
+
+        min_x = min(ixl for _, _, _, ixl, _ in strips)
+        max_x = max(ixr for _, _, _, _, ixr in strips)
+        w_result = max(1, max_x - min_x)
+        h_result = sum(hs for _, hs, _, _, _ in strips)
+
+        s_top = 1.0 + cy * k
+        sx = (cx - center_x) * s_top + center_x
+        dx = min_x - int(sx)
+
+        result = pygame.Surface((w_result, h_result), pygame.SRCALPHA)
+        y_pos = 0
+        for src, w_strip, h_strip, ix_left, _ in strips:
+            x_in_result = ix_left - min_x
+            sub = surface.subsurface(src)
+            scaled = pygame.transform.scale(sub, (w_strip, h_strip))
+            result.blit(scaled, (x_in_result, y_pos))
+            y_pos += h_strip
+
+        return result, dx, 0
 
     def inv_transform_point(self, sx: float, sy: float, center_x: float) -> tuple[float, float]:
         cy = sy
