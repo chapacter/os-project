@@ -7,6 +7,7 @@ class TileSprite(pygame.sprite.Sprite):
     def __init__(self, game, x, y, layer, groups, width=TILESIZE, height=TILESIZE):
         super().__init__()
         self.game = game
+        self.render_mode = "perspective"
         self._layer = layer
         if hasattr(game, 'all_sprites'):
             sprite_groups = [g for g in groups if hasattr(game, g)]

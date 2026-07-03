@@ -11,6 +11,7 @@ class Particle(pygame.sprite.Sprite):
         self.game = game
         self.groups = game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
         self.image = pygame.Surface((4, 4))
         self.image.fill(RED)
         self.rect = self.image.get_rect()
@@ -35,6 +36,7 @@ class AreaDamageParticle(pygame.sprite.Sprite):
         self.game = game
         self.groups = game.all_sprites, game.area_particles
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
 
         self.image = pygame.Surface((30, 30), pygame.SRCALPHA)
         pygame.draw.circle(self.image, (255, 50, 50, 180), (15, 15), 15)

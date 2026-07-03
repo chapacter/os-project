@@ -9,6 +9,7 @@ class Item(pygame.sprite.Sprite):
         self._layer = layer
         self.groups = groups
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "orthogonal"
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE

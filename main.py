@@ -47,6 +47,7 @@ from ui.menu import MainMenu
 from ui.pause import PauseMenu
 from ui.settings import SettingsMenu
 from utils.camera import Camera
+from utils.perspective import PerspectiveConfig, ShearScaleStrategy
 from utils.physics import PhysicsEngine
 from utils.settings import *
 
@@ -134,6 +135,9 @@ class Game:
         self.scale_speed = 0.1
         self.total_coins = self.services.save.total_coins
 
+        self.perspective_config = PerspectiveConfig(angle_deg=15)
+        self.perspective_strategy = None
+
     async def async_init(self):
         self.terrain_spritesheet = Spritesheet("assets/blocs.png")
         self.player_spritesheet = Spritesheet(SPRITE_PLAYER["sheet"])
@@ -209,6 +213,7 @@ class Game:
         if hasattr(self, "camera"):
             self.camera.screen_width = self.render_surface.get_width()
             self.camera.screen_height = self.render_surface.get_height()
+        self._init_perspective()
         if hasattr(self, "ui_manager"):
             self.ui_manager = pygame_gui.UIManager(
                 (self.sc.get_width(), self.sc.get_height())
@@ -654,6 +659,16 @@ class Game:
         camera_w = self.render_surface.get_width()
         camera_h = self.render_surface.get_height()
         self.camera = Camera(self, camera_w, camera_h, map_w, map_h)
+        self._init_perspective()
+
+    def _init_perspective(self):
+        if not self.render_surface:
+            return
+        w = self.render_surface.get_width()
+        h = self.render_surface.get_height()
+        self.perspective_strategy = ShearScaleStrategy(self.perspective_config, w, h)
+        if self.camera:
+            self.camera.set_perspective(self.perspective_strategy)
 
     def init_physics_world(self):
         if self.physics:
@@ -1009,6 +1024,48 @@ class Game:
             elif self.game_state == "final_menu":
                 self.final_menu.handle_event(event)
 
+    def _draw_sprites(self, surface):
+        center_x = surface.get_width() / 2
+        perspective = self.perspective_strategy
+        camera = self.camera
+        scroll_x = camera.scroll_x
+        scroll_y = camera.scroll_y
+
+        visible = []
+        for sprite in self.all_sprites.sprites():
+            if not self.is_sprite_in_active_zone(sprite):
+                continue
+            cx = sprite.rect.x - scroll_x
+            cy = sprite.rect.y - scroll_y
+
+            if perspective:
+                sx, sy, scale = perspective.transform_point(cx, cy, center_x)
+            else:
+                sx, sy, scale = cx, cy, 1.0
+
+            visible.append((sprite, sx, sy, scale))
+
+        visible.sort(key=lambda item: (item[0]._layer, item[2]))
+
+        for sprite, sx, sy, scale in visible:
+            if perspective and getattr(sprite, 'render_mode', 'orthogonal') == 'perspective':
+                img = perspective.transform_image(sprite.image, scale)
+            else:
+                img = sprite.image
+            surface.blit(img, (int(sx), int(sy)))
+
+    def _draw_game_frame(self):
+        self.render_surface.fill(BLACK)
+        self._draw_sprites(self.render_surface)
+
+        if self.game_state == "playing":
+            self._draw_interact_hints()
+
+        scaled = pygame.transform.scale(
+            self.render_surface, (self.sc.get_width(), self.sc.get_height())
+        )
+        self.sc.blit(scaled, (0, 0))
+
     def draw(self):
         if self.game_state == "menu":
             self.sc.fill(BLACK)
@@ -1017,56 +1074,23 @@ class Game:
             self.sc.fill(BLACK)
             self.settings_menu.draw(self.sc)
         elif self.game_state == "game_over":
-            self.render_surface.fill(BLACK)
-            for sprite in self.all_sprites.sprites():
-                if self.is_sprite_in_active_zone(sprite):
-                    self.render_surface.blit(sprite.image, self.camera.apply(sprite))
-            scaled = pygame.transform.scale(
-                self.render_surface, (self.sc.get_width(), self.sc.get_height())
-            )
-            self.sc.blit(scaled, (0, 0))
+            self._draw_game_frame()
             self.game_over_menu.draw(self.sc)
         elif self.game_state == "paused":
-            self.render_surface.fill(BLACK)
-            for sprite in self.all_sprites.sprites():
-                if self.is_sprite_in_active_zone(sprite):
-                    self.render_surface.blit(sprite.image, self.camera.apply(sprite))
-            scaled = pygame.transform.scale(
-                self.render_surface, (self.sc.get_width(), self.sc.get_height())
-            )
-            self.sc.blit(scaled, (0, 0))
+            self._draw_game_frame()
             self.pause_menu.draw(self.sc)
         elif self.game_state == "final_menu":
-            self.render_surface.fill(BLACK)
-            for sprite in self.all_sprites.sprites():
-                if self.is_sprite_in_active_zone(sprite):
-                    self.render_surface.blit(sprite.image, self.camera.apply(sprite))
-            scaled = pygame.transform.scale(
-                self.render_surface, (self.sc.get_width(), self.sc.get_height())
-            )
-            self.sc.blit(scaled, (0, 0))
+            self._draw_game_frame()
             self.final_menu.draw(self.sc)
         elif self.game_state == "playing":
-            self.render_surface.fill(BLACK)
-            drawn = 0
-            for sprite in self.all_sprites.sprites():
-                if self.is_sprite_in_active_zone(sprite):
-                    self.render_surface.blit(sprite.image, self.camera.apply(sprite))
-                    drawn += 1
-            self._draw_interact_hints()
-            scaled = pygame.transform.scale(
-                self.render_surface, (self.sc.get_width(), self.sc.get_height())
-            )
-            self.sc.blit(scaled, (0, 0))
-            if not hasattr(self, "_debug_drawn") or drawn > 0:
-                # print(f"[DEBUG] Drawn sprites: {drawn}")
-                self._debug_drawn = True
-            self.hud.draw(self.sc)
+            self._draw_game_frame()
+            if self.hud:
+                self.hud.draw(self.sc)
 
             if hasattr(self, "_debug_show_zones") and self._debug_show_zones:
                 self._draw_transition_zones()
 
-        if self.dungeon_map:
+        if self.dungeon_map and hasattr(self.dungeon_map, 'draw'):
             self.dungeon_map.draw(self.sc)
 
         if self.is_fading:
@@ -1095,17 +1119,37 @@ class Game:
         if not closest:
             return
 
+        center_x = self.render_surface.get_width() / 2
+        perspective = self.perspective_strategy
+        scroll_x = self.camera.scroll_x
+        scroll_y = self.camera.scroll_y
+
         hint_rect = closest.visual_rect if hasattr(closest, "visual_rect") else closest.rect
+
         outline = hint_rect.copy()
         outline.inflate_ip(4, 4)
-        screen_outline = self.camera.apply_rect(outline)
+        if perspective:
+            cx = outline.centerx - scroll_x
+            cy = outline.centery - scroll_y
+            sx, sy, scale = perspective.transform_point(cx, cy, center_x)
+            scaled_w = int(outline.width * scale)
+            scaled_h = int(outline.height * scale)
+            screen_outline = pygame.Rect(int(sx - scaled_w / 2), int(sy - scaled_h / 2), scaled_w, scaled_h)
+        else:
+            screen_outline = self.camera.apply_rect(outline)
         pygame.draw.rect(self.render_surface, WHITE, screen_outline, 2)
 
         e_size = 20
         e_box = pygame.Rect(0, 0, e_size, e_size)
         e_box.centerx = hint_rect.centerx
         e_box.bottom = hint_rect.top - 8
-        screen_e = self.camera.apply_rect(e_box)
+        if perspective:
+            cx = e_box.centerx - scroll_x
+            cy = e_box.centery - scroll_y
+            sx, sy, _ = perspective.transform_point(cx, cy, center_x)
+            screen_e = pygame.Rect(int(sx - e_size / 2), int(sy - e_size / 2), e_size, e_size)
+        else:
+            screen_e = self.camera.apply_rect(e_box)
 
         pygame.draw.rect(self.render_surface, BLACK, screen_e)
         pygame.draw.rect(self.render_surface, WHITE, screen_e, 1)

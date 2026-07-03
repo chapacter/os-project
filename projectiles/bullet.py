@@ -33,6 +33,7 @@ class Bullet(pygame.sprite.Sprite):
         self._layer = PLAYER_LAYER
         self.groups = game.all_sprites, game.bullets
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
 
         angle = math.atan2(target_y - start_y, target_x - start_x)
         if scatter:
@@ -89,6 +90,7 @@ class Enemy_Bullet(pygame.sprite.Sprite):
         self._layer = ENEMY_LAYER
         self.groups = game.all_sprites, game.bullets
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
 
         angle = math.atan2(target_y - start_y, target_x - start_x)
         if scatter:

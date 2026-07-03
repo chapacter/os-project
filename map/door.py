@@ -11,6 +11,7 @@ class Door(pygame.sprite.Sprite):
         self._layer = GROUND_LAYER
         self.groups = game.all_sprites, game.doors
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE

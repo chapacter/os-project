@@ -10,6 +10,7 @@ class Block(pygame.sprite.Sprite):
         self._layer = BLOCKS_LAYER
         self.groups = game.all_sprites, game.blocks
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
@@ -62,6 +63,7 @@ class Ground(pygame.sprite.Sprite):
         self._layer = GROUND_LAYER
         self.groups = game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
@@ -111,6 +113,7 @@ class DungeonEntrance(pygame.sprite.Sprite):
         self._layer = BLOCKS_LAYER
         self.groups = game.all_sprites, game.dungeon_entrances, game.interactables
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
@@ -154,6 +157,7 @@ class Decoration(pygame.sprite.Sprite):
         self._layer = BLOCKS_LAYER - 1
         self.groups = game.all_sprites, game.decorations
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
@@ -184,6 +188,7 @@ class Water(pygame.sprite.Sprite):
         self._layer = GROUND_LAYER
         self.groups = game.all_sprites, game.water
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
@@ -205,6 +210,7 @@ class NPC(pygame.sprite.Sprite):
         self._layer = BLOCKS_LAYER
         self.groups = game.all_sprites, game.npcs
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "orthogonal"
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
@@ -229,6 +235,7 @@ class Bed(pygame.sprite.Sprite):
         self._layer = BLOCKS_LAYER - 1
         self.groups = game.all_sprites, game.decorations, game.interactables
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
@@ -262,6 +269,7 @@ class Wardrobe(pygame.sprite.Sprite):
         self._layer = GROUND_LAYER + 1
         self.groups = game.all_sprites, game.decorations, game.blocks
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE
