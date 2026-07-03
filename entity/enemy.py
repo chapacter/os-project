@@ -124,7 +124,8 @@ class Enemy(VectorEntity, pygame.sprite.Sprite):
         self._set_patrol_target()
 
         self.physics_name = f"enemy_{id(self)}"
-        VectorEntity.__init__(self, game, self.physics_name, collision_type=COLLISION_ENTITY, max_health=int(cfg["hp"] * hp_multiplier))
+        VectorEntity.__init__(self, game, self.physics_name, collision_type=COLLISION_ENTITY,
+                              max_health=int(cfg["hp"] * hp_multiplier))
         self.knockback_comp.decay = ENEMY_KNOCKBACK_DECAY
         self.block_collider_comp.use_float_pos = True
         self.block_collider_comp.pos_x = float(self.hitbox.x)

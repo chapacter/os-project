@@ -35,16 +35,16 @@ class AreaDamageParticle(pygame.sprite.Sprite):
         self.game = game
         self.groups = game.all_sprites, game.area_particles
         pygame.sprite.Sprite.__init__(self, self.groups)
-        
+
         self.image = pygame.Surface((30, 30), pygame.SRCALPHA)
         pygame.draw.circle(self.image, (255, 50, 50, 180), (15, 15), 15)
         self.rect = self.image.get_rect()
         self.rect.centerx = x
         self.rect.centery = y
-        
+
         self.hitbox = pygame.Rect(0, 0, 30, 30)
         self.hitbox.center = self.rect.center
-        
+
         self.damage = damage
         self.lifetime = 180
         self.counter = 0
@@ -54,8 +54,8 @@ class AreaDamageParticle(pygame.sprite.Sprite):
         if self.counter >= self.lifetime:
             self.kill()
             return
-        
+
         self.hitbox.center = self.rect.center
-        
+
         if self.game.player and self.hitbox.colliderect(self.game.player.hitbox):
             self.game.player.damage(self.damage)
