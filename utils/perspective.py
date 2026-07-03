@@ -16,7 +16,7 @@ class PerspectiveTransformStrategy(ABC):
         ...
 
     @abstractmethod
-    def transform_image(self, surface: pygame.Surface, scale: float) -> pygame.Surface:
+    def transform_image(self, surface: pygame.Surface, cx: float, cy: float, center_x: float) -> tuple:
         ...
 
     @abstractmethod
@@ -39,12 +39,47 @@ class ShearScaleStrategy(PerspectiveTransformStrategy):
         sy = cy * scale
         return sx, sy, scale
 
-    def transform_image(self, surface: pygame.Surface, scale: float) -> pygame.Surface:
-        if abs(scale - 1.0) < 0.001:
-            return surface
-        new_w = max(1, int(surface.get_width() * scale))
-        new_h = max(1, int(surface.get_height() * scale))
-        return pygame.transform.scale(surface, (new_w, new_h))
+    def transform_image(self, surface: pygame.Surface, cx: float, cy: float, center_x: float) -> tuple:
+        w, h = surface.get_size()
+        k = self.k_perspective
+        s_top = 1.0 + cy * k
+
+        N = max(4, h // 4)
+        strip_h = h / N
+        strips = []
+        y_acc = 0.0
+
+        for i in range(N):
+            orig_y = i * strip_h
+            orig_h = strip_h if i < N - 1 else h - orig_y
+
+            strip_cy = cy + orig_y + orig_h / 2
+            s = 1.0 + strip_cy * k
+
+            w_strip = max(1, int(w * s))
+            h_strip = max(1, int(orig_h * s))
+
+            src = pygame.Rect(0, int(orig_y), w, max(1, int(orig_h)))
+            sub = surface.subsurface(src)
+            scaled = pygame.transform.scale(sub, (w_strip, h_strip))
+
+            left_off = (cx - center_x) * (s - s_top)
+            strips.append((scaled, left_off, y_acc))
+            y_acc += h_strip
+
+        if not strips:
+            return surface, 0, 0
+
+        h_result = int(y_acc)
+        min_x = min(off for _, off, _ in strips)
+        max_x = max(off + s.get_width() for s, off, _ in strips)
+        w_result = max(1, int(max_x - min_x))
+
+        result = pygame.Surface((w_result, h_result), pygame.SRCALPHA)
+        for scaled, left_off, y_pos in strips:
+            result.blit(scaled, (int(left_off - min_x), int(y_pos)))
+
+        return result, int(min_x), 0
 
     def inv_transform_point(self, sx: float, sy: float, center_x: float) -> tuple[float, float]:
         k = self.k_perspective

@@ -1043,16 +1043,20 @@ class Game:
             else:
                 sx, sy, scale = cx, cy, 1.0
 
-            visible.append((sprite, sx, sy, scale))
+            visible.append((sprite, cx, cy, sx, sy, scale))
 
-        visible.sort(key=lambda item: (item[0]._layer, item[2]))
+        visible.sort(key=lambda item: (item[0]._layer, item[4]))
 
-        for sprite, sx, sy, scale in visible:
+        sw, sh = surface.get_width(), surface.get_height()
+        for sprite, cx, cy, sx, sy, scale in visible:
+            if not (-128 < sx < sw + 128 and -128 < sy < sh + 128):
+                continue
+
             if perspective and getattr(sprite, 'render_mode', 'orthogonal') == 'perspective':
-                img = perspective.transform_image(sprite.image, scale)
+                img, dx, dy = perspective.transform_image(sprite.image, cx, cy, center_x)
             else:
-                img = sprite.image
-            surface.blit(img, (int(sx), int(sy)))
+                img, dx, dy = sprite.image, 0, 0
+            surface.blit(img, (int(sx) + dx, int(sy) + dy))
 
     def _draw_game_frame(self):
         self.render_surface.fill(BLACK)
