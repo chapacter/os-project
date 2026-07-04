@@ -7,7 +7,6 @@ import sys
 import pygame
 import pygame_gui
 import pytmx
-from pygame.gfxdraw import textured_polygon
 
 from core.ecs_world import World
 from core.event_bus import EventBus
@@ -136,7 +135,7 @@ class Game:
         self.scale_speed = 0.1
         self.total_coins = self.services.save.total_coins
 
-        self.perspective_config = PerspectiveConfig(angle_deg=25)
+        self.perspective_config = PerspectiveConfig(angle_deg=15)
         self.perspective_strategy = None
 
     async def async_init(self):
@@ -902,7 +901,6 @@ class Game:
             if hasattr(self, "camera"):
                 self.camera.screen_width = self.render_surface.get_width()
                 self.camera.screen_height = self.render_surface.get_height()
-            self._init_perspective()
 
     def update(self):
         self.update_scale()
@@ -1027,8 +1025,8 @@ class Game:
                 self.final_menu.handle_event(event)
 
     def _draw_sprites(self, surface):
-        perspective = self.perspective_strategy
         center_x = surface.get_width() / 2
+        perspective = self.perspective_strategy
         camera = self.camera
         scroll_x = camera.scroll_x
         scroll_y = camera.scroll_y
@@ -1052,27 +1050,16 @@ class Game:
 
         visible.sort(key=lambda item: (item[0]._layer, item[4]))
 
-        sw = surface.get_width()
-        sh = surface.get_height()
+        sw, sh = surface.get_width(), surface.get_height()
         for sprite, cx, cy, sx, sy, scale in visible:
             if not (-128 < sx < sw + 128 and -128 < sy < sh + 128):
                 continue
 
             if perspective and getattr(sprite, 'render_mode', 'orthogonal') == 'perspective':
-                corners = perspective.get_quad_corners(cx, cy, sprite.image.get_width(), sprite.image.get_height(),
-                                                       center_x)
-                if corners:
-                    xs = [c[0] for c in corners]
-                    ys = [c[1] for c in corners]
-                    bb_w = max(1, max(xs) - min(xs))
-                    bb_h = max(1, max(ys) - min(ys))
-                    tex = pygame.transform.scale(sprite.image, (bb_w, bb_h))
-                    try:
-                        textured_polygon(surface, corners, tex, 0, 0)
-                    except pygame.error:
-                        pass
+                img, dx, dy = perspective.transform_image(sprite.image, cx, cy, center_x)
             else:
-                surface.blit(sprite.image, (int(sx), int(sy)))
+                img, dx, dy = sprite.image, 0, 0
+            surface.blit(img, (int(sx) + dx, int(sy) + dy))
 
     def _draw_game_frame(self):
         self.render_surface.fill(BLACK)
