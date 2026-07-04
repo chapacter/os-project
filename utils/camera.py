@@ -26,6 +26,11 @@ class Camera:
 
         self.parallax_layers = []
 
+        self.perspective = None
+
+    def set_perspective(self, perspective_strategy):
+        self.perspective = perspective_strategy
+
     def set_map_size(self, map_width, map_height):
         self.map_width = map_width
         self.map_height = map_height
@@ -139,16 +144,30 @@ class Camera:
         )
 
     def to_world(self, screen_pos):
-        scale = self.game.current_scale
-        x = screen_pos[0] / scale + self.scroll_x
-        y = screen_pos[1] / scale + self.scroll_y
-        return x, y
+        global_scale = self.game.current_scale
+        sx = screen_pos[0] / global_scale
+        sy = screen_pos[1] / global_scale
+
+        if self.perspective:
+            center_x = self.screen_width / 2
+            cx, cy = self.perspective.inv_transform_point(sx, sy, center_x)
+        else:
+            cx, cy = sx, sy
+
+        return cx + self.scroll_x, cy + self.scroll_y
 
     def to_screen(self, world_pos):
-        scale = self.game.current_scale
-        x = (world_pos[0] - self.scroll_x) * scale
-        y = (world_pos[1] - self.scroll_y) * scale
-        return x, y
+        cx = world_pos[0] - self.scroll_x
+        cy = world_pos[1] - self.scroll_y
+
+        if self.perspective:
+            center_x = self.screen_width / 2
+            sx, sy, _ = self.perspective.transform_point(cx, cy, center_x)
+        else:
+            sx, sy = cx, cy
+
+        global_scale = self.game.current_scale
+        return sx * global_scale, sy * global_scale
 
 
 class CameraGroup(pygame.sprite.LayeredUpdates):

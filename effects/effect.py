@@ -9,6 +9,7 @@ class Effect(pygame.sprite.Sprite):
         self._layer = HEALTH_LAYER
         self.groups = game.all_sprites
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "perspective"
 
         self.effect_cfg = SPRITE_EFFECTS
         self.effect_info = self.effect_cfg["effects"][effect_name]

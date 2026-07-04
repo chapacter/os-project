@@ -77,6 +77,9 @@ class ConfigService:
         if "font" not in self._config["Game"]:
             self._config["Game"]["font"] = "0"
 
+        if "angle_deg" not in self._config["Display"]:
+            self._config["Display"]["angle_deg"] = "0"
+
         self._save()
 
     def _save(self):
@@ -164,6 +167,13 @@ class ConfigService:
 
     def get_num_displays(self):
         return pygame.display.get_num_displays()
+
+    def get_perspective_angle(self):
+        return self._config.getfloat("Display", "angle_deg", fallback=0.0)
+
+    def set_perspective_angle(self, angle_deg):
+        self._config["Display"]["angle_deg"] = str(angle_deg)
+        self._save()
 
     def get_display_resolution(self, display_index=None):
         if display_index is None:

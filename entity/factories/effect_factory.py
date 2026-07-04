@@ -39,6 +39,7 @@ class EffectFactory:
         anim_speed = SPRITE_EFFECTS.get("animation_speed", 0.6)
 
         sprite = pygame.sprite.Sprite()
+        sprite.render_mode = "perspective"
         sprite._layer = HEALTH_LAYER
         if groups:
             for g in groups:
@@ -60,6 +61,7 @@ class EffectFactory:
     @classmethod
     def create_spark_particle(cls, world: World, x: float, y: float, groups: list | None = None, ) -> object:
         sprite = pygame.sprite.Sprite()
+        sprite.render_mode = "perspective"
         sprite._layer = HEALTH_LAYER
         if groups:
             for g in groups:
@@ -80,6 +82,7 @@ class EffectFactory:
     def create_area_damage(cls, world: World, x: float, y: float, damage: float,
                            groups: list | None = None, ) -> object:
         sprite = pygame.sprite.Sprite()
+        sprite.render_mode = "perspective"
         sprite._layer = GROUND_LAYER + 1
         if groups:
             for g in groups:

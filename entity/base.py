@@ -12,6 +12,7 @@ from utils.settings import *
 class VectorEntity:
     def __init__(self, game, physics_name=None, collision_type=None, create_body=True, max_health=None):
         self.game = game
+        self.render_mode = "orthogonal"
         self.velocity = pygame.math.Vector2(0, 0)
         self.direction = "right"
         self.physics_name = physics_name
@@ -116,6 +117,7 @@ class Healthbar(pygame.sprite.Sprite):
         self._layer = HEALTH_LAYER
         self.groups = game.all_sprites, game.healthbar
         pygame.sprite.Sprite.__init__(self, self.groups)
+        self.render_mode = "orthogonal"
 
         self.x = x * TILESIZE
         self.y = y * TILESIZE

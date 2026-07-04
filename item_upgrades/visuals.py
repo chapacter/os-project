@@ -10,6 +10,7 @@ class UpgradeVisual(pygame.sprite.Sprite):
         self.game = game
         self.x = x
         self.y = y
+        self.render_mode = "orthogonal"
         self.upgrade_type = upgrade_type
         self.width = 32
         self.height = 32
