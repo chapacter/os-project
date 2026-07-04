@@ -135,7 +135,11 @@ class Game:
         self.scale_speed = 0.1
         self.total_coins = self.services.save.total_coins
 
-        self.perspective_config = PerspectiveConfig(angle_deg=15)
+        initial_angle = self.services.config.get_perspective_angle()
+        self.perspective_config = PerspectiveConfig(angle_deg=initial_angle)
+        self.target_angle = initial_angle
+        self.current_angle = initial_angle
+        self.angle_speed = 0.1
         self.perspective_strategy = None
 
     async def async_init(self):
@@ -902,8 +906,23 @@ class Game:
                 self.camera.screen_width = self.render_surface.get_width()
                 self.camera.screen_height = self.render_surface.get_height()
 
+    def update_perspective_angle(self):
+        if not self.perspective_strategy:
+            return
+        if abs(self.current_angle - self.target_angle) > 0.05:
+            self.current_angle += (
+                                          self.target_angle - self.current_angle
+                                  ) * self.angle_speed
+            self.perspective_config.set_angle(self.current_angle)
+            self.perspective_strategy.sync_config()
+        elif self.current_angle != self.target_angle:
+            self.current_angle = self.target_angle
+            self.perspective_config.set_angle(self.current_angle)
+            self.perspective_strategy.sync_config()
+
     def update(self):
         self.update_scale()
+        self.update_perspective_angle()
         self.all_sprites.update()
 
         if self.ecs_world:
@@ -946,9 +965,11 @@ class Game:
                 elif event.key == pygame.K_F11:
                     self.toggle_fullscreen()
                 elif event.key == pygame.K_MINUS or event.key == pygame.K_KP_MINUS:
-                    self.services.audio.adjust_sfx_volume(-0.05)
+                    self.target_angle = max(-360, min(360, self.target_angle - 5))
+                    self.services.config.set_perspective_angle(self.target_angle)
                 elif event.key == pygame.K_EQUALS or event.key == pygame.K_KP_PLUS:
-                    self.services.audio.adjust_sfx_volume(0.05)
+                    self.target_angle = max(-360, min(360, self.target_angle + 5))
+                    self.services.config.set_perspective_angle(self.target_angle)
                 elif event.key == pygame.K_e:
                     if self.game_state == "playing" and hasattr(self, "player"):
                         self.player.interact()

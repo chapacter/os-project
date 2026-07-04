@@ -5,7 +5,11 @@ import pygame
 
 
 class PerspectiveConfig:
-    def __init__(self, angle_deg: float = 15.0):
+    def __init__(self, angle_deg: float = 0.0):
+        self.angle_deg = angle_deg
+        self.shear_tan = math.tan(math.radians(angle_deg))
+
+    def set_angle(self, angle_deg: float):
         self.angle_deg = angle_deg
         self.shear_tan = math.tan(math.radians(angle_deg))
 
@@ -26,11 +30,17 @@ class PerspectiveTransformStrategy(ABC):
 
 class ShearScaleStrategy(PerspectiveTransformStrategy):
     def __init__(self, config: PerspectiveConfig, screen_width: int, screen_height: int):
-        self.shear_tan = config.shear_tan
+        self.config = config
         self.screen_width = screen_width
         self.screen_height = screen_height
-        self.k_perspective = config.shear_tan / max(screen_height, 1)
         self.world_anchor_delta = 0.0
+        self._recalculate()
+
+    def sync_config(self):
+        self._recalculate()
+
+    def _recalculate(self):
+        self.k_perspective = self.config.shear_tan / max(self.screen_height, 1)
 
     def _anchor_cy(self, cy):
         return cy + self.world_anchor_delta
