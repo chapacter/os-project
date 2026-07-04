@@ -1031,6 +1031,9 @@ class Game:
         scroll_x = camera.scroll_x
         scroll_y = camera.scroll_y
 
+        eye_y = self.player.rect.centery if self.player else scroll_y + surface.get_height() / 2
+        perspective.world_anchor_delta = scroll_y - eye_y
+
         visible = []
         for sprite in self.all_sprites.sprites():
             if not self.is_sprite_in_active_zone(sprite):
