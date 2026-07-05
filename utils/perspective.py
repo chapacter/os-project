@@ -33,7 +33,7 @@ class ShearScaleStrategy(PerspectiveTransformStrategy):
         self.config = config
         self.screen_width = screen_width
         self.screen_height = screen_height
-        self.world_anchor_delta = 0.0
+        self._center_y = screen_height / 2.0
         self._recalculate()
 
     def sync_config(self):
@@ -42,16 +42,14 @@ class ShearScaleStrategy(PerspectiveTransformStrategy):
     def _recalculate(self):
         self.k_perspective = self.config.shear_tan / max(self.screen_height, 1)
 
-    def _anchor_cy(self, cy):
-        return cy + self.world_anchor_delta
-
     def _screen_y(self, cy):
-        wad = self.world_anchor_delta
-        k = self.k_perspective
-        return cy * (1.0 + k * wad) + k * cy * cy / 2.0
+        return cy - (cy - self._center_y) * self.k_perspective * self._center_y
+
+    def _scale_at(self, cy):
+        return 1.0 + (cy - self._center_y) * self.k_perspective
 
     def transform_point(self, cx: float, cy: float, center_x: float) -> tuple[float, float, float]:
-        scale = 1.0 + self._anchor_cy(cy) * self.k_perspective
+        scale = self._scale_at(cy)
         if scale < 0.1:
             scale = 0.1
         sx = (cx - center_x) * scale + center_x
@@ -61,6 +59,7 @@ class ShearScaleStrategy(PerspectiveTransformStrategy):
     def transform_image(self, surface: pygame.Surface, cx: float, cy: float, center_x: float) -> tuple:
         w, h = surface.get_size()
         k = self.k_perspective
+        center_y = self._center_y
 
         N = max(4, h // 4)
         strip_h = h / N
@@ -78,7 +77,7 @@ class ShearScaleStrategy(PerspectiveTransformStrategy):
             orig_y = i * strip_h
             orig_h = strip_h if i < N - 1 else h - orig_y
 
-            s = 1.0 + self._anchor_cy(cy + orig_y + orig_h / 2) * k
+            s = 1.0 + (cy + orig_y + orig_h / 2 - center_y) * k
 
             ix_left = math.floor((cx - center_x) * s + center_x)
             ix_right = math.floor((cx + w - center_x) * s + center_x)
@@ -95,7 +94,7 @@ class ShearScaleStrategy(PerspectiveTransformStrategy):
         max_x = max(ixr for *_, _, ixr, _, _ in strips)
         w_result = max(1, max_x - min_x)
 
-        s_top = 1.0 + self._anchor_cy(cy) * k
+        s_top = 1.0 + (cy - center_y) * k
         sx = (cx - center_x) * s_top + center_x
         dx = min_x - int(sx)
 
@@ -113,16 +112,13 @@ class ShearScaleStrategy(PerspectiveTransformStrategy):
 
     def inv_transform_point(self, sx: float, sy: float, center_x: float) -> tuple[float, float]:
         k = self.k_perspective
-        wad = self.world_anchor_delta
-        b = 1.0 + k * wad
-        if abs(k) < 1e-10:
+        center = self._center_y
+        denom = 1.0 - k * center
+        if abs(denom) < 1e-10:
             cy = sy
         else:
-            disc = b * b + 2.0 * k * sy
-            if disc < 0.0:
-                disc = 0.0
-            cy = (-b + math.sqrt(disc)) / k
-        scale = 1.0 + self._anchor_cy(cy) * k
+            cy = (sy - k * center * center) / denom
+        scale = 1.0 + (cy - center) * k
         if abs(scale) < 0.001:
             scale = 0.001
         cx = (sx - center_x) / scale + center_x
