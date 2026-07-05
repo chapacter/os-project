@@ -45,6 +45,9 @@ class ShearScaleStrategy(PerspectiveTransformStrategy):
     def _screen_y(self, cy):
         return cy - (cy - self._center_y) * self.k_perspective * self._center_y
 
+    def ortho_dy(self, sprite_height: int) -> float:
+        return -sprite_height * self.k_perspective * self._center_y
+
     def _scale_at(self, cy):
         return 1.0 + (cy - self._center_y) * self.k_perspective
 

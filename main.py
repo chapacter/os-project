@@ -1077,6 +1077,8 @@ class Game:
                 img, dx, dy = perspective.transform_image(sprite.image, cx, cy, center_x)
             else:
                 img, dx, dy = sprite.image, 0, 0
+                if perspective:
+                    dy = int(perspective.ortho_dy(sprite.rect.height))
             surface.blit(img, (int(sx) + dx, int(sy) + dy))
 
     def _draw_game_frame(self):
