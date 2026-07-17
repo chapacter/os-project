@@ -164,10 +164,40 @@ class Game:
         self.services.audio.load_sound("menu_move", "assets/sounds/Menu Move.ogg")
         self.services.audio.load_music("assets/sounds/Menu_beholder.ogg")
         self.services.audio.play_music(context="menu", volume_multiplier=2.0)
-        print(f"[DEBUG] Audio initialized: {self.services.audio.initialized}")
-        print(f"[DEBUG] Loaded sounds: {list(self.services.audio.sounds.keys())}")
+        # print(f"[DEBUG] Audio initialized: {self.services.audio.initialized}")
+        # print(f"[DEBUG] Loaded sounds: {list(self.services.audio.sounds.keys())}")
 
         self.tmx_loader = TiledLoader(self)
+
+        self.DIRECTION_OFFSETS = {
+            "east": (1, 0),
+            "west": (-1, 0),
+            "south": (0, 1),
+            "north": (0, -1)
+        }
+
+        self.DIRECTION_CHECKS = {
+            "east": lambda x, y: x == 16,
+            "west": lambda x, y: x == 1,
+            "south": lambda x, y: y == 16,
+            "north": lambda x, y: y == 1
+        }
+
+        self.TRANSITION_ZONE_CONFIG = {
+            "east": lambda gx, gy, rw, rh: (gx * rw + 16, gy * rh, 1, rh, gx + 1, gy),
+            "west": lambda gx, gy, rw, rh: (gx * rw + 1, gy * rh, 1, rh, gx - 1, gy),
+            "south": lambda gx, gy, rw, rh: (gx * rw, gy * rh + 16, rw, 1, gx, gy + 1),
+            "north": lambda gx, gy, rw, rh: (gx * rw, gy * rh + 1, rw, 1, gx, gy - 1),
+        }
+
+        self.state_handlers = {
+            "menu": lambda dt: self.main_menu.update(dt),
+            "settings": lambda dt: self.settings_menu.update(dt),
+            "game_over": lambda dt: self.game_over_menu.update(dt),
+            "paused": lambda dt: self.pause_menu.update(dt),
+            "final_menu": lambda dt: self.final_menu.update(dt),
+        }
+
 
     def create_window(self):
         mode = self.services.config.get_window_mode()
@@ -255,46 +285,46 @@ class Game:
         level = self.world[(zone_x, zone_y)]
         # print(f"[DEBUG] Zone size: {len(level)} rows x {len(level[0]) if level else 0} cols")
 
-        sprite_count = 0
-        ground_count = 0
+        # sprite_count = 0
+        # ground_count = 0
         for i, row in enumerate(level):
             for j, column in enumerate(row):
                 if column == "P":
                     self.player = Player(self, j, i)
-                    sprite_count += 1
+                    # sprite_count += 1
                 elif column == "E" and self.mode == GameMode.WORLD:
                     if random.random() < 0.3:
                         Enemy(self, j, i)
-                        sprite_count += 1
+                        # sprite_count += 1
                 elif column == "W":
                     Weapon(self, j, i)
-                    sprite_count += 1
+                    # sprite_count += 1
                 elif column == "D":
                     self.create_dungeon_entrance(j, i)
-                    sprite_count += 1
+                    # sprite_count += 1
                 elif column == "X":
                     self.create_portal(j, i)
-                    sprite_count += 1
+                    # sprite_count += 1
                 elif column == "V":
                     Ground(self, j, i, "V")
-                    sprite_count += 1
-                    ground_count += 1
+                    # sprite_count += 1
+                    # ground_count += 1
                 elif column == "H":
                     Ground(self, j, i, "H")
-                    sprite_count += 1
-                    ground_count += 1
+                    # sprite_count += 1
+                    # ground_count += 1
                 elif column == "N":
                     Ground(self, j, i, "N")
                     self.create_npc(j, i)
-                    sprite_count += 1
-                    ground_count += 1
+                    # sprite_count += 1
+                    # ground_count += 1
                 else:
                     Ground(self, j, i, column)
-                    sprite_count += 1
-                    ground_count += 1
+                    # sprite_count += 1
+                    # ground_count += 1
                     if column == "B" or column == "L":
                         Block(self, j, i)
-                        sprite_count += 1
+                        # sprite_count += 1
 
         in_sprites = hasattr(self.player, "rect") and self.player in self.all_sprites
         if not in_sprites:
@@ -1242,6 +1272,42 @@ class Game:
                     self.fade_callback()
                 self.fade_callback = None
 
+    def _execute_zone_transition(self, new_zone):
+        old_zone = self.current_zone
+        old_tile_x = int(self.player.rect.x / TILESIZE)
+        old_tile_y = int(self.player.rect.y / TILESIZE)
+
+        zone_w = WORLD_ZONE_WIDTH
+        zone_h = WORLD_ZONE_HEIGHT
+
+        self.current_zone = new_zone
+        self.load_zone(new_zone[0], new_zone[1])
+
+        spawn_x = 2
+        spawn_y = 2
+        if new_zone[0] > old_zone[0]:
+            spawn_x = 2
+            spawn_y = max(2, min(old_tile_y, zone_h - 3))
+        elif new_zone[0] < old_zone[0]:
+            spawn_x = zone_w - 3
+            spawn_y = max(2, min(old_tile_y, zone_h - 3))
+        elif new_zone[1] > old_zone[1]:
+            spawn_y = 2
+            spawn_x = max(2, min(old_tile_x, zone_w - 3))
+        elif new_zone[1] < old_zone[1]:
+            spawn_y = zone_h - 3
+            spawn_x = max(2, min(old_tile_x, zone_w - 3))
+
+        self.player.rect.x = spawn_x * TILESIZE
+        self.player.rect.y = spawn_y * TILESIZE
+
+        if self.camera_enabled and hasattr(self, "camera"):
+            self.camera.set_map_size(
+                (zone_w + 4) * TILESIZE, (zone_h + 4) * TILESIZE
+            )
+
+        self.fade_in()
+
     def check_zone_transition(self):
         if self.mode != GameMode.WORLD:
             return
@@ -1273,41 +1339,7 @@ class Game:
             # print(f"[DEBUG] Transition down to {new_zone}")
 
         if new_zone and -1 <= new_zone[0] <= 1 and -1 <= new_zone[1] <= 1:
-
-            def do_transition():
-                old_zone = self.current_zone
-                old_tile_x = int(self.player.rect.x / TILESIZE)
-                old_tile_y = int(self.player.rect.y / TILESIZE)
-
-                self.current_zone = new_zone
-                self.load_zone(new_zone[0], new_zone[1])
-
-                spawn_x = 2
-                spawn_y = 2
-                if new_zone[0] > old_zone[0]:
-                    spawn_x = 2
-                    spawn_y = max(2, min(old_tile_y, zone_h - 3))
-                elif new_zone[0] < old_zone[0]:
-                    spawn_x = zone_w - 3
-                    spawn_y = max(2, min(old_tile_y, zone_h - 3))
-                elif new_zone[1] > old_zone[1]:
-                    spawn_y = 2
-                    spawn_x = max(2, min(old_tile_x, zone_w - 3))
-                elif new_zone[1] < old_zone[1]:
-                    spawn_y = zone_h - 3
-                    spawn_x = max(2, min(old_tile_x, zone_w - 3))
-
-                self.player.rect.x = spawn_x * TILESIZE
-                self.player.rect.y = spawn_y * TILESIZE
-
-                if self.camera_enabled and hasattr(self, "camera"):
-                    self.camera.set_map_size(
-                        (zone_w + 4) * TILESIZE, (zone_h + 4) * TILESIZE
-                    )
-
-                self.fade_in()
-
-            self.fade_out(do_transition)
+            self.fade_out(lambda: self._execute_zone_transition(new_zone))
 
     def check_dungeon_transition(self):
         if self.mode != GameMode.DUNGEON:
@@ -1353,31 +1385,22 @@ class Game:
                 if not has_door:
                     continue
                 neighbor = None
-                if direction == "east":
-                    neighbor = (player_room_x + 1, player_room_y)
-                elif direction == "west":
-                    neighbor = (player_room_x - 1, player_room_y)
-                elif direction == "south":
-                    neighbor = (player_room_x, player_room_y + 1)
-                elif direction == "north":
-                    neighbor = (player_room_x, player_room_y - 1)
+
+                dx, dy = self.DIRECTION_OFFSETS[direction]
+                neighbor = (player_room_x + dx, player_room_y + dy)
+
                 if neighbor is None or neighbor not in dg.rooms:
                     continue
 
                 entered = False
-                if direction == "east":
-                    entered = local_x == 16
-                elif direction == "west":
-                    entered = local_x == 1
-                elif direction == "south":
-                    entered = local_y == 16
-                elif direction == "north":
-                    entered = local_y == 1
 
-                if entered:
-                    if (neighbor, direction) not in self._transition_entries:
-                        self._transition_entries.add((neighbor, direction))
-                        self.transition_to_room(neighbor, direction)
+                check_func = self.DIRECTION_CHECKS.get(direction)
+                if check_func:
+                    entered = check_func(local_x, local_y)
+
+                if entered and (neighbor, direction) not in self._transition_entries:
+                    self._transition_entries.add((neighbor, direction))
+                    self.transition_to_room(neighbor, direction)
 
         # ---- Completion trigger: player 2+ tiles into a pending room ----
         for entry in list(self._transition_entries):
@@ -1415,36 +1438,19 @@ class Game:
             for direction, has_door in room.doors.items():
                 if not has_door:
                     continue
-                color = (0, 255, 0, 80)
-                nx, ny = gx, gy
-                if direction == "east":
-                    x = gx * rw + 16
-                    y = gy * rh
-                    w, h = 1, rh
-                    nx = gx + 1
-                elif direction == "west":
-                    x = gx * rw + 1
-                    y = gy * rh
-                    w, h = 1, rh
-                    nx = gx - 1
-                elif direction == "south":
-                    x = gx * rw
-                    y = gy * rh + 16
-                    w, h = rw, 1
-                    ny = gy + 1
-                elif direction == "north":
-                    x = gx * rw
-                    y = gy * rh + 1
-                    w, h = rw, 1
-                    ny = gy - 1
-                else:
+
+                config_func = self.TRANSITION_ZONE_CONFIG.get(direction)
+                if not config_func:
                     continue
+
+                color = (0, 255, 0, 80)
+                x, y, w, h, nx, ny = config_func(gx, gy, rw, rh)
 
                 entry_rect = pygame.Rect(x * TILESIZE, y * TILESIZE, w * TILESIZE, h * TILESIZE)
                 entry_rect = self.camera.apply_to_rect(entry_rect)
                 pygame.draw.rect(self.sc, color, entry_rect, 2)
 
-                nx, ny = nx, ny
+                # nx, ny = nx, ny
                 if (nx, ny) in dg.rooms and dg.rooms[(nx, ny)].visible:
                     comp_x = nx * rw
                     comp_y = ny * rh
@@ -1485,17 +1491,7 @@ class Game:
         self.draw()
 
     async def _update(self, dt):
-        if self.game_state == "menu":
-            self.main_menu.update(dt)
-        elif self.game_state == "settings":
-            self.settings_menu.update(dt)
-        elif self.game_state == "game_over":
-            self.game_over_menu.update(dt)
-        elif self.game_state == "paused":
-            self.pause_menu.update(dt)
-        elif self.game_state == "final_menu":
-            self.final_menu.update(dt)
-        elif self.game_state == "playing":
+        if self.game_state == "playing":
             self.update_fade()
             if not self.is_fading or self.fade_direction == -1:
                 if self.game_mode != "arena":
@@ -1507,6 +1503,10 @@ class Game:
                 self.camera.follow_sprite(self.player)
                 self.camera.update(1.0 / 60.0)
             self.hud.update(dt)
+        else:
+            handler = self.state_handlers.get(self.game_state)
+            if handler:
+                handler(dt)
 
     async def _game_loop(self):
         while self.running:
